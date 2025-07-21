@@ -329,30 +329,6 @@ npm run test:e2e
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
 
-## 📄 Lisans
-
-Bu proje MIT lisansı altında lisanslanmıştır.
-
-## 👥 Takım
-
-- **Frontend**: React + TypeScript
-- **Backend**: Python + FastAPI
-- **AI**: Ollama + LangChain
-- **Design**: UpSchool Corporate Identity
-
-## 🙏 Teşekkürler
-
-- **UpSchool** - Teknoloji kadınları topluluğuna güç verdiği için
-- **Ollama** - Açık kaynak LLM altyapısı için
-- **LangChain** - AI uygulama framework'ü için
-- **ChromaDB** - Vector database çözümü için
-
-## 📞 İletişim
-
-- **Website**: [HireHer AI](https://hireher.ai)
-- **Email**: hello@hireher.ai
-- **LinkedIn**: [@hireher-ai](https://linkedin.com/company/hireher-ai)
-
 ---
 
 **🌟 "Her teknoloji kadınının hikayesi, geleceğin teknolojisini şekillendiriyor." 🌟**
