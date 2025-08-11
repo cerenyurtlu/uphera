@@ -8,7 +8,7 @@ import json
 import random
 from datetime import datetime
 
-# Demo veriler - Sadece kadın adaylar (HireHer kadınlara yönelik platform)
+# Demo veriler - Sadece kadın adaylar (UpHera kadınlara yönelik platform)
 DEMO_CANDIDATES = [
     {
         "name": "Ayşe Yılmaz",

@@ -24,7 +24,7 @@ import {
   Award,
   FileText
 } from 'lucide-react';
-import HireHerLogo from '../components/HireHerLogo';
+import BrandLogo from '../components/BrandLogo';
 import NotificationBell from '../components/NotificationBell';
 import ModernButton from '../components/ModernButton';
 import ModernCard from '../components/ModernCard';
@@ -334,7 +334,7 @@ const EventsScreen: React.FC = () => {
               </button>
               
               <div className="flex items-center space-x-3">
-                <HireHerLogo size={60} clickable={true} variant="default" />
+                <BrandLogo size={60} />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
                     Etkinlikler

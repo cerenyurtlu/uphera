@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import HireHerLogo from '../components/HireHerLogo';
+import BrandLogo from '../components/BrandLogo';
 
 const LoginScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -309,10 +309,10 @@ const LoginScreen: React.FC = () => {
             <div className="flex items-center space-x-4">
               {/* Up Hera Logo */}
               <div className="flex items-center space-x-3">
-                <HireHerLogo size={100} clickable={true} variant="default" />
+                <BrandLogo size={100} />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    Up Hera
+                    UpHera
                   </h1>
                   <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
                     UpSchool mezunları için AI destekli platform
@@ -335,7 +335,7 @@ const LoginScreen: React.FC = () => {
             <div className="text-center mb-8">
               {/* Up Hera Logo */}
               <div className="flex justify-center mb-6">
-                <HireHerLogo size={200} clickable={true} variant="large" />
+                <BrandLogo size={200} />
               </div>
               <h2 className="up-page-title text-2xl">
                 {isRegistering ? 'Hesap Oluştur' : 'Up Hera\'ya Giriş Yap'}
@@ -939,9 +939,9 @@ const LoginScreen: React.FC = () => {
         <div className="up-container">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <HireHerLogo size={60} clickable={true} variant="compact" />
+              <BrandLogo size={60} />
               <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                Up Hera
+                UpHera
               </span>
             </div>
             
@@ -950,7 +950,7 @@ const LoginScreen: React.FC = () => {
             </p>
             
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 Up Hera</span>
+              <span>© 2025 UpHera</span>
               <span>•</span>
               <span>UpSchool Partnership</span>
               <span>•</span>

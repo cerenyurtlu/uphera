@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, Target, MessageCircle, BookOpen, Clock, Award, CheckCircle, Star, Zap, Brain, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import HireHerLogo from '../components/HireHerLogo';
+import BrandLogo from '../components/BrandLogo';
 import AIChatbot from '../components/AIChatbot';
 
 const InterviewPrepScreen: React.FC = () => {
@@ -109,7 +109,7 @@ const InterviewPrepScreen: React.FC = () => {
               >
                 <ChevronLeft className="h-5 w-5" style={{ color: 'var(--up-primary)' }} />
               </button>
-              <HireHerLogo size={32} clickable={true} variant="compact" />
+              <BrandLogo size={32} />
               <div>
                 <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
                   Mülakat Hazırlık Merkezi
@@ -307,7 +307,7 @@ const InterviewPrepScreen: React.FC = () => {
         <div className="up-container">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <HireHerLogo size={40} clickable={true} variant="compact" />
+              <BrandLogo size={40} />
               <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
                 Up Hera
               </span>

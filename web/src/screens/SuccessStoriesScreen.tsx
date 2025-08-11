@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { ChevronLeft, Star, MapPin, Calendar, TrendingUp, Award, Heart, Quote, Sparkles, Target, Trophy } from 'lucide-react';
-import HireHerLogo from '../components/HireHerLogo';
+import BrandLogo from '../components/BrandLogo';
 import NotificationBell from '../components/NotificationBell';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
@@ -205,7 +205,7 @@ const SuccessStoriesScreen: React.FC = () => {
                 <span>Geri Dön</span>
               </button>
               <div className="flex items-center space-x-3">
-                <HireHerLogo size={64} clickable={true} variant="default" />
+                <BrandLogo size={64} />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
                     UpSchool Başarı Hikayeleri 🌟

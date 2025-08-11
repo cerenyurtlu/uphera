@@ -9,7 +9,7 @@ from datetime import datetime
 
 def create_demo_data():
     # Database bağlantısı
-    conn = sqlite3.connect('hireher.db')
+    conn = sqlite3.connect('uphera.db')
     cursor = conn.cursor()
     
     # Users tablosunu oluştur

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Clock, DollarSign, Users, Star, Calendar, MapPin, Bookmark, Share2, Filter, Search, Briefcase, Code, Palette, BarChart, Smartphone, Globe, Award, MessageCircle, Zap, Flame } from 'lucide-react';
-import HireHerLogo from '../components/HireHerLogo';
+import BrandLogo from '../components/BrandLogo';
 import NotificationBell from '../components/NotificationBell';
 import ModernButton from '../components/ModernButton';
 import ModernCard from '../components/ModernCard';
@@ -215,7 +215,7 @@ const FreelanceProjectsScreen: React.FC = () => {
               </button>
               
               <div className="flex items-center space-x-3">
-                <HireHerLogo size={60} clickable={true} variant="default" />
+                <BrandLogo size={60} />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
                     Freelance Projeler

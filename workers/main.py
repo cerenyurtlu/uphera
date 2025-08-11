@@ -9,7 +9,7 @@ import json
 
 # Celery app configuration
 celery_app = Celery(
-    "hireher_workers",
+    "uphera_workers",
     broker=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
     backend=os.getenv("REDIS_URL", "redis://localhost:6379/0")
 )

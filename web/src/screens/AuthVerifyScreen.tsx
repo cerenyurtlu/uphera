@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import HireHerLogo from '../components/HireHerLogo';
+import BrandLogo from '../components/BrandLogo';
 
 const AuthVerifyScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ const AuthVerifyScreen: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--up-light-gray)' }}>
       <div className="up-card p-8 text-center">
         <div className="mb-6">
-                                                     <HireHerLogo size={96} clickable={true} variant="large" />
+                                                     <BrandLogo size={96} />
         </div>
         
         {isVerifying ? (

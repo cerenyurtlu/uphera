@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import HireHerLogo from '../components/HireHerLogo';
+import BrandLogo from '../components/BrandLogo';
 import NotificationBell from '../components/NotificationBell';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
@@ -192,7 +192,7 @@ const NotificationListScreen: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
-                <HireHerLogo size={64} clickable={true} variant="default" />
+                <BrandLogo size={64} />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
                     Up Hera
@@ -378,7 +378,7 @@ const NotificationListScreen: React.FC = () => {
         <div className="up-container">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <HireHerLogo size={40} clickable={true} variant="compact" />
+              <BrandLogo size={40} />
               <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
                 Up Hera
               </span>
