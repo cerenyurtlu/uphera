@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import BrandLogo from '../components/BrandLogo';
-import NotificationBell from '../components/NotificationBell';
+import Header from '../components/Header';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
+import BrandLogo from '../components/BrandLogo';
 import AIChatbot from '../components/AIChatbot';
+import { apiService } from '../services/api';
 import { FiUser } from 'react-icons/fi';
 
 interface NetworkMember {
@@ -30,6 +31,8 @@ const NetworkScreen: React.FC = () => {
   const [filterLocation, setFilterLocation] = useState('');
   const [filterRole, setFilterRole] = useState('');
   const [showAIChat, setShowAIChat] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [networkMembers, setNetworkMembers] = useState<NetworkMember[]>([]);
   const [currentUser, setCurrentUser] = useState({
     name: "Yükleniyor...",
     email: "",
@@ -39,40 +42,49 @@ const NetworkScreen: React.FC = () => {
     experienceLevel: "entry"
   });
 
-  // Kullanıcı bilgilerini localStorage'dan yükle
-  React.useEffect(() => {
-    const userData = localStorage.getItem('uphera_user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      setCurrentUser({
-        name: user.name,
-        email: user.email,
-        skills: user.skills || [],
-        upschool_batch: user.program || "Data Science",
-        graduation_date: "",
-        experienceLevel: "entry"
-      });
-    }
-  }, []);
+  // Kullanıcı bilgilerini ve network üyelerini yükle
+  useEffect(() => {
+    const fetchNetworkData = async () => {
+      try {
+        setLoading(true);
+        
+        // Kullanıcı bilgilerini localStorage'dan yükle
+        const userData = localStorage.getItem('uphera_user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setCurrentUser({
+            name: user.name || `${user.firstName} ${user.lastName}` || 'Kullanıcı',
+            email: user.email,
+            skills: user.skills || [],
+            upschool_batch: user.program || user.upschoolProgram || "Data Science",
+            graduation_date: user.graduationDate || '',
+            experienceLevel: user.experienceLevel || 'entry'
+          });
+        }
 
-  // Network data - Sadece kullanıcının kendi bilgileri
-  const [networkMembers] = useState<NetworkMember[]>([
-    {
-      id: 'current_user',
-      name: currentUser.name,
-      role: `${currentUser.experienceLevel} Developer`,
-      company: 'UpSchool Mezunu',
-      location: 'Türkiye',
-      skills: currentUser.skills,
-      experience: 'Yeni mezun',
-      bootcamp: currentUser.upschool_batch,
-      graduationYear: currentUser.graduation_date || '2024',
-      profileImage: <FiUser className="text-3xl text-purple-600" />,
-      isOnline: true,
-      mentorAvailable: false,
-      commonSkills: currentUser.skills.length
-    }
-  ]);
+        // API'den network üyelerini getir
+        const response = await apiService.getNetworkMembers();
+        if (response.success) {
+          const processedMembers = response.members.map((member: any) => ({
+            ...member,
+            role: member.currentRole || member.role,
+            profileImage: <FiUser className="text-3xl text-purple-600" />,
+            mentorAvailable: member.connectionStatus === 'connected'
+          }));
+          setNetworkMembers(processedMembers);
+        } else {
+          toast.error('Network üyeleri yüklenirken hata oluştu');
+        }
+      } catch (error) {
+        console.error('Network verisi yükleme hatası:', error);
+        toast.error('Network verisi yüklenirken hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNetworkData();
+  }, []);
 
   const filteredMembers = networkMembers.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -103,36 +115,24 @@ const NetworkScreen: React.FC = () => {
     setFilterRole('');
   };
 
-  return (
-    <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
-      {/* Header */}
-      <div className="up-page-header">
-        <div className="up-container">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-4">
-                <BrandLogo size={120} />
-                <div>
-            <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-              Teknolojide Öncü Kadınlar Topluluğu
-            </h1>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <NotificationBell />
-              <div className="text-sm text-right">
-                <div className="font-medium" style={{ color: 'var(--up-primary-dark)' }}>
-                  {currentUser.name}
-                </div>
-                <div style={{ color: 'var(--up-dark-gray)' }}>
-                  UpSchool Mezunu
-                </div>
-              </div>
-            </div>
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
+        <Header />
+        <div className="up-container py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Network yükleniyor...</p>
           </div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
+      <Header />
 
       {/* Main Content */}
       <div className="up-container py-8">

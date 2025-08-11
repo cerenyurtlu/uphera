@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { ChevronLeft, ChevronRight, Heart, Users, Sparkles, Target, Trophy, BookOpen, MessageCircle, ArrowRight, Star, MapPin, Calendar, TrendingUp, Award, Zap, X, UserCheck, Briefcase } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, Users, Sparkles, Target, Trophy, BookOpen, MessageCircle, ArrowRight, Star, MapPin, Calendar, TrendingUp, Award, Zap, X, UserCheck, Briefcase, User, Settings, Bell, LogOut } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo';
 import NotificationBell from '../components/NotificationBell';
 import ModernCard from '../components/ModernCard';
@@ -47,7 +47,32 @@ const JobListScreen: React.FC = () => {
       try {
         const userData = localStorage.getItem('uphera_user');
         if (!userData) {
-          navigate('/login');
+          // Demo kullanıcı oluştur
+          const demoUser = {
+            id: 'demo-user-123',
+            name: 'Demo Kullanıcı',
+            email: 'demo@uphera.com',
+            program: 'Frontend Development',
+            isLoggedIn: true,
+            token: 'demo-token-123',
+            loginAt: new Date().toISOString(),
+            userType: 'mezun'
+          };
+          localStorage.setItem('uphera_user', JSON.stringify(demoUser));
+          setCurrentUser({
+            name: demoUser.name,
+            email: demoUser.email,
+            skills: ['React', 'JavaScript', 'TypeScript'],
+            completionRate: 85,
+            profileViews: 234,
+            appliedJobs: 5,
+            interviews: 2,
+            upschool_batch: demoUser.program,
+            graduation_date: "2024",
+            firstName: "Demo",
+            lastName: "Kullanıcı",
+            experienceLevel: "entry"
+          });
           return;
         }
 
@@ -91,26 +116,52 @@ const JobListScreen: React.FC = () => {
         }
 
         const data = await response.json();
-        
-        if (response.ok && data.success) {
-          const userProfile = data.user;
-          
-          setCurrentUser({
-            name: `${userProfile.firstName} ${userProfile.lastName}`,
-            email: userProfile.email,
-            skills: userProfile.skills || [],
-            completionRate: 85,
-            profileViews: 234,
-            appliedJobs: 0,
-            interviews: 0,
-            upschool_batch: userProfile.upschoolProgram || "",
-            graduation_date: userProfile.graduationDate || "",
-            firstName: userProfile.firstName || "",
-            lastName: userProfile.lastName || "",
-            experienceLevel: userProfile.experienceLevel || "entry"
-          });
-          
-          console.log('✅ Kullanıcı profili yüklendi:', userProfile);
+
+        if (response.ok) {
+          let firstName = ''
+          let lastName = ''
+          let email = ''
+          let skills: string[] = []
+          let bootcamp = ''
+          let gradYear = ''
+          let experienceLevel = 'entry'
+
+          // Yeni /api/me yapısı
+          if (data?.user && (data.user.first_name || data.user.last_name)) {
+            firstName = data.user.first_name || ''
+            lastName = data.user.last_name || ''
+            email = data.user.email || ''
+            skills = data?.profile?.skills || []
+            bootcamp = data?.profile?.bootcamp_name || ''
+            gradYear = data?.profile?.graduation_year ? String(data.profile.graduation_year) : ''
+            experienceLevel = data?.profile?.experience_level || 'entry'
+          }
+
+          // Eski /api/auth/profile yapısı
+          if (data?.success && data?.user && (data.user.firstName || data.user.lastName)) {
+            firstName = data.user.firstName || firstName
+            lastName = data.user.lastName || lastName
+            email = data.user.email || email
+            skills = data.user.skills || skills
+            bootcamp = data.user.upschoolProgram || bootcamp
+            gradYear = data.user.graduationDate || gradYear
+            experienceLevel = data.user.experienceLevel || experienceLevel
+          }
+
+          const fullName = `${firstName} ${lastName}`.trim()
+          setCurrentUser(prev => ({
+            ...prev,
+            name: fullName || prev.name,
+            email: email || prev.email,
+            skills,
+            upschool_batch: bootcamp,
+            graduation_date: gradYear,
+            firstName: firstName,
+            lastName: lastName,
+            experienceLevel,
+          }))
+
+          console.log('✅ Kullanıcı profili yüklendi:', data);
         } else {
           toast.error(data.detail || 'Profil yüklenirken hata oluştu');
         }
@@ -453,28 +504,120 @@ const JobListScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
-      {/* Header */}
+      {/* Modern Header */}
       <div className="up-page-header">
         <div className="up-container">
           <div className="flex items-center justify-between">
+            {/* Logo */}
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-4">
-                <BrandLogo size={150} />
-                <div>
-                  <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    Teknolojide Öncü Kadınlar Topluluğu
-                  </h1>
-                </div>
-              </div>
+              <button onClick={() => navigate('/dashboard')} className="flex items-center">
+                <BrandLogo size={175} />
+              </button>
             </div>
+
+            {/* Navigation Menu */}
+            <div className="hidden md:flex items-center space-x-8">
+              <button 
+                onClick={() => navigate('/network')}
+                className="text-sm font-medium transition-colors hover:text-blue-600"
+                style={{ color: 'var(--up-dark-gray)' }}
+              >
+                Topluluk
+              </button>
+              <button 
+                onClick={() => navigate('/events')}
+                className="text-sm font-medium transition-colors hover:text-blue-600"
+                style={{ color: 'var(--up-dark-gray)' }}
+              >
+                Etkinlikler
+              </button>
+              <button 
+                onClick={() => navigate('/mentorship')}
+                className="text-sm font-medium transition-colors hover:text-blue-600"
+                style={{ color: 'var(--up-dark-gray)' }}
+              >
+                Mentorluk
+              </button>
+              <button 
+                onClick={() => navigate('/interview-prep')}
+                className="text-sm font-medium transition-colors hover:text-blue-600"
+                style={{ color: 'var(--up-dark-gray)' }}
+              >
+                Ada AI
+              </button>
+            </div>
+
+            {/* Right Side */}
             <div className="flex items-center space-x-4">
-              <NotificationBell />
-              <UserMenu 
-                userName={currentUser.name}
-                userEmail={currentUser.email}
-                currentPage="dashboard"
-                onAIAssistantClick={() => setShowAIChat(true)}
-              />
+              <div className="hidden md:block text-right">
+                <h1 className="text-xs font-medium" style={{ color: 'var(--up-dark-gray)' }}>
+                  {currentUser.firstName || 'Misafir'} Hoş Geldin! 👋
+                </h1>
+              </div>
+              
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <details className="relative">
+                  <summary className="px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer list-none"
+                    style={{ 
+                      backgroundColor: 'var(--up-primary)', 
+                      color: 'white'
+                    }}
+                  >
+                    Profil ▼
+                  </summary>
+                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
+                    <button 
+                      onClick={() => navigate('/profile')}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm border-b flex items-center"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Profil Düzenle
+                    </button>
+                    <button 
+                      onClick={() => navigate('/settings')}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm border-b flex items-center"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Ayarlar
+                    </button>
+                    <button 
+                      onClick={() => navigate('/notifications')}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm border-b flex items-center"
+                    >
+                      <Bell className="w-4 h-4 mr-2" />
+                      Bildirimler
+                    </button>
+                    <button 
+                      onClick={() => {
+                        localStorage.removeItem('uphera_user');
+                        navigate('/login');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600 flex items-center"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Çıkış Yap
+                    </button>
+                  </div>
+                </details>
+              </div>
+
+              {/* Mobile Menu */}
+              <div className="md:hidden">
+                <details className="relative">
+                  <summary className="px-3 py-2 border rounded text-sm cursor-pointer list-none"
+                    style={{ color: 'var(--up-dark-gray)' }}
+                  >
+                    Menü ▼
+                  </summary>
+                  <div className="absolute right-0 mt-2 w-44 bg-white border rounded shadow-lg z-50">
+                    <button onClick={() => navigate('/network')} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm">Topluluk</button>
+                    <button onClick={() => navigate('/events')} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm">Etkinlikler</button>
+                    <button onClick={() => navigate('/mentorship')} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm">Mentorluk</button>
+                    <button onClick={() => navigate('/interview-prep')} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm">Ada AI</button>
+                  </div>
+                </details>
+              </div>
             </div>
           </div>
         </div>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import Header from '../components/Header';
 import BrandLogo from '../components/BrandLogo';
-import NotificationBell from '../components/NotificationBell';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import { FiCheckCircle, FiUserCheck, FiUsers, FiFileText, FiMessageCircle, FiMail, FiSettings, FiTarget, FiAward } from 'react-icons/fi';
+import { apiService } from '../services/api';
 
 interface Notification {
   id: string;
@@ -21,14 +22,34 @@ interface Notification {
 const NotificationListScreen: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread' | 'match' | 'application' | 'interview'>('all');
+  const [loading, setLoading] = useState(true);
   const [currentUser] = useState({
     name: "Ayşe Yılmaz",
     email: "ayse.yilmaz@email.com"
   });
 
-  // Comprehensive mock notification data
+  // API'den bildirimleri yükle
   useEffect(() => {
-    const mockNotifications: Notification[] = [
+    const fetchNotifications = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.getNotifications();
+        if (response.success) {
+          // API'den gelen timestamp'leri Date objesine çevir
+          const processedNotifications = response.notifications.map((notification: any) => ({
+            ...notification,
+            timestamp: new Date(notification.timestamp)
+          }));
+          setNotifications(processedNotifications);
+        } else {
+          toast.error('Bildirimler yüklenirken hata oluştu');
+        }
+      } catch (error) {
+        console.error('Bildirim yükleme hatası:', error);
+        toast.error('Bildirimler yüklenirken hata oluştu');
+        
+        // Fallback: Mock data kullan
+        const mockNotifications: Notification[] = [
       {
         id: '1',
         type: 'match',
@@ -104,7 +125,13 @@ const NotificationListScreen: React.FC = () => {
       }
     ];
 
-    setNotifications(mockNotifications);
+        setNotifications(mockNotifications);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNotifications();
   }, []);
 
   const getTypeIcon = (type: string) => {
@@ -162,17 +189,45 @@ const NotificationListScreen: React.FC = () => {
     return notification.type === filter;
   });
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+  const markAsRead = async (id: string) => {
+    try {
+      const response = await apiService.markNotificationRead(id);
+      if (response.success) {
+        setNotifications(prev =>
+          prev.map(n => n.id === id ? { ...n, read: true } : n)
+        );
+      } else {
+        toast.error('Bildirim işaretlenirken hata oluştu');
+      }
+    } catch (error) {
+      console.error('Bildirim işaretleme hatası:', error);
+      // Fallback: Sadece local state'i güncelle
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, read: true } : n)
+      );
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(n => ({ ...n, read: true }))
-    );
-    toast.success('Tüm bildirimler okundu olarak işaretlendi');
+  const markAllAsRead = async () => {
+    try {
+      // Her bildirimi tek tek işaretle
+      const unreadNotifications = notifications.filter(n => !n.read);
+      for (const notification of unreadNotifications) {
+        await apiService.markNotificationRead(notification.id);
+      }
+      
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, read: true }))
+      );
+      toast.success('Tüm bildirimler okundu olarak işaretlendi');
+    } catch (error) {
+      console.error('Toplu işaretleme hatası:', error);
+      // Fallback: Sadece local state'i güncelle
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, read: true }))
+      );
+      toast.success('Tüm bildirimler okundu olarak işaretlendi');
+    }
   };
 
   const handleAction = (notification: Notification) => {
@@ -184,66 +239,45 @@ const NotificationListScreen: React.FC = () => {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  return (
-    <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
-      {/* Header */}
-      <div className="up-page-header">
-        <div className="up-container">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-4">
-                <BrandLogo size={120} />
-                <div>
-            <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-              Teknolojide Öncü Kadınlar Topluluğu
-            </h1>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <NotificationBell />
-              <div className="text-sm text-right">
-                <div className="font-medium" style={{ color: 'var(--up-primary-dark)' }}>
-                  {currentUser.name}
-                </div>
-                <div style={{ color: 'var(--up-dark-gray)' }}>
-                  UpSchool Mezunu
-                </div>
-              </div>
-            </div>
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
+        <Header />
+        <div className="up-container py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Bildirimler yükleniyor...</p>
           </div>
         </div>
       </div>
+    );
+  }
 
+  return (
+    <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
+      <Header />
+      
       {/* Main Content */}
       <div className="up-container py-8">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-3xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-              Bildirimler {unreadCount > 0 && <span className="text-lg">({unreadCount} okunmamış)</span>}
-            </h2>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
+              Bildirimler 🔔
+            </h1>
             <p className="text-lg" style={{ color: 'var(--up-dark-gray)' }}>
-              Tüm bildirimlerinizi buradan takip edebilirsiniz
+              {unreadCount > 0 ? `${unreadCount} okunmamış bildiriminiz var` : 'Tüm bildirimler okundu'}
             </p>
           </div>
-          <div className="flex space-x-4">
-            <ModernButton
-              variant="secondary"
-              onClick={() => window.history.back()}
-            >
-              ← Geri Dön
-            </ModernButton>
-            {unreadCount > 0 && (
-              <ModernButton
-                variant="primary"
-                onClick={markAllAsRead}
-              >
-                Tümünü Okundu İşaretle
-              </ModernButton>
-            )}
-          </div>
+          <ModernButton
+            onClick={markAllAsRead}
+            variant="secondary"
+          >
+            Tümünü Okundu İşaretle
+          </ModernButton>
         </div>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}

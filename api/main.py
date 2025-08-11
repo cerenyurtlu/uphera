@@ -621,6 +621,375 @@ async def get_mentorship_messages(current_user: Dict = Depends(get_current_user)
         print(f"❌ Mentor mesajları getirme hatası: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Mentor mesajları getirilirken hata: {str(e)}")
 
+# Events endpoints
+@app.get("/api/events")
+async def get_events(current_user: Dict = Depends(get_current_user)):
+    """Etkinlikleri getir"""
+    try:
+        # Mock data - gerçek uygulamada veritabanından gelir
+        events = [
+            {
+                "id": "1",
+                "title": "Frontend Developer Network Meetup",
+                "category": "networking",
+                "date": "2025-02-15",
+                "time": "19:00",
+                "duration": "3 saat",
+                "location": "TechHub İstanbul, Maslak",
+                "type": "Yüz Yüze",
+                "organizer": "UpSchool Alumni Network",
+                "description": "Frontend teknolojileri ve kariyer fırsatları üzerine networking etkinliği. React, TypeScript ve modern web teknolojileri konuşulacak.",
+                "maxParticipants": 50,
+                "currentParticipants": 23,
+                "tags": ["React", "TypeScript", "Networking", "Career"],
+                "level": "Tüm Seviyeler",
+                "featured": True,
+                "agenda": [
+                    {"time": "19:00", "title": "Karşılama ve Networking"},
+                    {"time": "19:30", "title": "Frontend Trends 2025 - Panel"},
+                    {"time": "20:30", "title": "Serbest Networking & Kahve"},
+                    {"time": "21:30", "title": "Grup Fotoğrafı"}
+                ],
+                "speakers": [
+                    {"name": "Ayşe Demir", "role": "Senior Frontend Dev @ Trendyol"},
+                    {"name": "Mehmet Kaya", "role": "Tech Lead @ Getir"}
+                ],
+                "requirements": ["Laptop (isteğe bağlı)", "Networking Card"],
+                "benefits": ["Sertifika", "Networking", "Goodies"]
+            },
+            {
+                "id": "2",
+                "title": "UI/UX Workshop: Figma'dan Prototype'a",
+                "category": "workshop",
+                "date": "2025-02-20",
+                "time": "14:00",
+                "duration": "4 saat",
+                "location": "Online",
+                "type": "Online",
+                "organizer": "UpSchool Design Team",
+                "description": "Figma kullanarak interaktif prototipler oluşturmayı öğrenin. Beginner-friendly workshop.",
+                "maxParticipants": 100,
+                "currentParticipants": 67,
+                "tags": ["Figma", "UI/UX", "Design", "Prototype"],
+                "level": "Başlangıç",
+                "featured": False,
+                "agenda": [
+                    {"time": "14:00", "title": "Figma Temelleri"},
+                    {"time": "15:00", "title": "Component & Design System"},
+                    {"time": "16:00", "title": "Prototyping Workshop"},
+                    {"time": "17:30", "title": "Q&A & Feedback"}
+                ],
+                "speakers": [
+                    {"name": "Zeynep Öztürk", "role": "Lead UX Designer @ Trendyol"}
+                ],
+                "requirements": ["Figma hesabı", "Laptop"],
+                "benefits": ["Sertifika", "Workshop Materyalleri"]
+            }
+        ]
+        
+        return {
+            "success": True,
+            "events": events
+        }
+    except Exception as e:
+        print(f"❌ Etkinlikler getirme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Etkinlikler getirilirken hata: {str(e)}")
+
+class EventRegistration(BaseModel):
+    event_id: str
+    user_name: str
+    user_email: str
+    
+@app.post("/api/events/register")
+async def register_event(
+    registration: EventRegistration,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Etkinlik kaydı oluştur"""
+    try:
+        print(f"📅 Etkinlik Kaydı:")
+        print(f"   Katılımcı: {registration.user_name} ({registration.user_email})")
+        print(f"   Event ID: {registration.event_id}")
+        
+        return {
+            "success": True,
+            "message": "Etkinlik kaydınız başarıyla alındı",
+            "registration_id": f"reg_{uuid.uuid4().hex[:8]}",
+            "event_id": registration.event_id
+        }
+    except Exception as e:
+        print(f"❌ Etkinlik kaydı hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Etkinlik kaydı oluşturulurken hata: {str(e)}")
+
+# Notifications endpoints
+@app.get("/api/notifications")
+async def get_notifications(current_user: Dict = Depends(get_current_user)):
+    """Kullanıcının bildirimlerini getir"""
+    try:
+        # Mock data - gerçek uygulamada veritabanından gelir
+        notifications = [
+            {
+                "id": "1",
+                "type": "match",
+                "title": "Yeni Eşleşme! 🎯",
+                "message": "TechCorp İstanbul'dan Frontend Developer pozisyonu ile %94 eşleşme! Bu fırsat tam senin profiline uygun.",
+                "timestamp": datetime.datetime.now() - datetime.timedelta(hours=3),
+                "read": False,
+                "priority": "high",
+                "actionUrl": "/jobs/1",
+                "actionText": "Detayları Gör"
+            },
+            {
+                "id": "2",
+                "type": "application",
+                "title": "Başvuru Durumu Güncellendi 📄",
+                "message": "StartupX'e yaptığınız başvuru 'İnceleme' aşamasından 'Mülakat' aşamasına geçti.",
+                "timestamp": datetime.datetime.now() - datetime.timedelta(hours=6),
+                "read": False,
+                "priority": "high",
+                "actionUrl": "/dashboard",
+                "actionText": "Başvuruları Gör"
+            },
+            {
+                "id": "3",
+                "type": "interview",
+                "title": "Mülakat Daveti 🎉",
+                "message": "DataFlow'dan Python Developer pozisyonu için mülakat daveti aldınız. Mülakat tarihi: 25 Ocak 2025, 14:00.",
+                "timestamp": datetime.datetime.now() - datetime.timedelta(days=1),
+                "read": True,
+                "priority": "high",
+                "actionUrl": "/interview-prep",
+                "actionText": "Hazırlığa Başla"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "notifications": notifications
+        }
+    except Exception as e:
+        print(f"❌ Bildirimler getirme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Bildirimler getirilirken hata: {str(e)}")
+
+@app.put("/api/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Bildirimi okundu olarak işaretle"""
+    try:
+        print(f"✅ Bildirim okundu: {notification_id}")
+        
+        return {
+            "success": True,
+            "message": "Bildirim okundu olarak işaretlendi"
+        }
+    except Exception as e:
+        print(f"❌ Bildirim işaretleme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Bildirim işaretlenirken hata: {str(e)}")
+
+# Network endpoints
+@app.get("/api/network/members")
+async def get_network_members(current_user: Dict = Depends(get_current_user)):
+    """UpSchool network üyelerini getir"""
+    try:
+        # Mock data - gerçek uygulamada veritabanından gelir
+        members = [
+            {
+                "id": "1",
+                "name": "Ayşe Kaya",
+                "bootcamp": "Frontend Development",
+                "currentRole": "Frontend Developer",
+                "company": "Trendyol",
+                "location": "İstanbul",
+                "skills": ["React", "TypeScript", "Node.js"],
+                "experience": "2 yıl",
+                "isOnline": True,
+                "profileImage": "/api/placeholder/40/40",
+                "bio": "Frontend Developer olarak kariyer yapmaktayım.",
+                "commonSkills": 3,
+                "connectionStatus": "connected"
+            },
+            {
+                "id": "2", 
+                "name": "Mehmet Öztürk",
+                "bootcamp": "Backend Development",
+                "currentRole": "Backend Developer", 
+                "company": "Getir",
+                "location": "İstanbul",
+                "skills": ["Python", "Django", "PostgreSQL"],
+                "experience": "1.5 yıl",
+                "isOnline": False,
+                "profileImage": "/api/placeholder/40/40",
+                "bio": "Backend sistemlerde uzmanlaşıyorum.",
+                "commonSkills": 2,
+                "connectionStatus": "pending"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "members": members
+        }
+    except Exception as e:
+        print(f"❌ Network üyeleri getirme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Network üyeleri getirilirken hata: {str(e)}")
+
+# Settings endpoints
+@app.get("/api/settings")
+async def get_settings(current_user: Dict = Depends(get_current_user)):
+    """Kullanıcı ayarlarını getir"""
+    try:
+        # Mock data - gerçek uygulamada veritabanından gelir
+        settings = {
+            "emailNotifications": True,
+            "pushNotifications": True,
+            "jobAlerts": True,
+            "mentorshipUpdates": True,
+            "communityNews": False,
+            "profileVisibility": "public",
+            "showEmail": False,
+            "showPhone": False,
+            "searchableProfile": True,
+            "language": "tr",
+            "theme": "light",
+            "jobEmailFrequency": "daily",
+            "remoteWork": True,
+            "locationPreferences": ["İstanbul", "Ankara"]
+        }
+        
+        return {
+            "success": True,
+            "settings": settings
+        }
+    except Exception as e:
+        print(f"❌ Ayarlar getirme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ayarlar getirilirken hata: {str(e)}")
+
+class SettingsUpdate(BaseModel):
+    settings: Dict[str, Any]
+
+@app.put("/api/settings")
+async def update_settings(
+    settings_data: SettingsUpdate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Kullanıcı ayarlarını güncelle"""
+    try:
+        print(f"⚙️ Ayarlar güncelleniyor: {current_user['firstName']} {current_user['lastName']}")
+        
+        # Gerçek uygulamada ayarlar veritabanına kaydedilir
+        print(f"   Yeni ayarlar: {settings_data.settings}")
+        
+        return {
+            "success": True,
+            "message": "Ayarlar başarıyla güncellendi",
+            "settings": settings_data.settings
+        }
+    except Exception as e:
+        print(f"❌ Ayarlar güncelleme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ayarlar güncellenirken hata: {str(e)}")
+
+# Mentor endpoints
+@app.get("/api/mentors")
+async def get_available_mentors(current_user: Dict = Depends(get_current_user)):
+    """Mevcut mentorları getir"""
+    try:
+        # Mock data - gerçek uygulamada veritabanından gelir
+        # Gerçekte kullanıcılar mentor olmak istediğinde bu listede görünürler
+        mentors = [
+            {
+                "id": "m1",
+                "name": "Gizem Aktaş",
+                "title": "Senior Engineering Manager",
+                "company": "Meta",
+                "experience": "8 yıl",
+                "specialties": ["Career Growth", "Leadership", "System Design", "Team Management"],
+                "location": "London (Remote)",
+                "isAvailable": True,
+                "profileImage": "/api/placeholder/50/50",
+                "bio": "Meta'da Engineering Manager olarak çalışıyorum. Kariyer geçişi yapan kadınlara özel odaklanıyorum.",
+                "menteeCount": 15,
+                "rating": 4.9,
+                "availability": "Hafta içi 20:00-22:00, Cumartesi 15:00-18:00"
+            },
+            {
+                "id": "m2",
+                "name": "Ayşe Demir",
+                "title": "Senior Frontend Developer",
+                "company": "Spotify",
+                "experience": "6 yıl",
+                "specialties": ["Frontend Development", "React", "TypeScript", "Teknik Mülakat Hazırlığı"],
+                "location": "Stockholm (Remote)",
+                "isAvailable": True,
+                "profileImage": "/api/placeholder/50/50",
+                "bio": "Spotify'da frontend geliştirici olarak çalışıyorum. React ve modern frontend teknolojileri konularında yardımcı olabilirim.",
+                "menteeCount": 8,
+                "rating": 4.8,
+                "availability": "Hafta içi 19:00-21:00, Pazar 14:00-17:00"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "mentors": mentors
+        }
+    except Exception as e:
+        print(f"❌ Mentorlar getirme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Mentorlar getirilirken hata: {str(e)}")
+
+class MentorProfile(BaseModel):
+    isAvailable: bool
+    specialties: List[str]
+    experience: str
+    availability: str
+    bio: str
+
+@app.put("/api/profile/mentorship")
+async def update_mentor_profile(
+    mentor_data: MentorProfile,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Kullanıcının mentor profilini güncelle"""
+    try:
+        print(f"🎯 Mentor profili güncelleniyor: {current_user['firstName']} {current_user['lastName']}")
+        print(f"   Mentor olmak istiyor: {mentor_data.isAvailable}")
+        print(f"   Uzmanlık alanları: {mentor_data.specialties}")
+        
+        # Gerçek uygulamada mentor bilgileri kullanıcı profiline kaydedilir
+        # Ve mentor_data.isAvailable=True ise kullanıcı mentor listesine eklenir
+        
+        return {
+            "success": True,
+            "message": "Mentor profili başarıyla güncellendi",
+            "mentorship": mentor_data.dict()
+        }
+    except Exception as e:
+        print(f"❌ Mentor profili güncelleme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Mentor profili güncellenirken hata: {str(e)}")
+
+@app.get("/api/profile/mentorship")
+async def get_mentor_profile(current_user: Dict = Depends(get_current_user)):
+    """Kullanıcının mentor profilini getir"""
+    try:
+        # Mock data - gerçek uygulamada veritabanından gelir
+        mentorship = {
+            "isAvailable": False,
+            "specialties": [],
+            "experience": "",
+            "menteeCount": 0,
+            "availability": "",
+            "bio": ""
+        }
+        
+        return {
+            "success": True,
+            "mentorship": mentorship
+        }
+    except Exception as e:
+        print(f"❌ Mentor profili getirme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Mentor profili getirilirken hata: {str(e)}")
+
 @app.websocket("/ws/coach")
 async def websocket_coach(websocket: WebSocket):
     await websocket.accept()

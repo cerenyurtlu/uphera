@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { ChevronLeft, MessageCircle, Star, MapPin, Calendar, Clock, Award, Send, UserPlus, CheckCircle } from 'lucide-react';
-import BrandLogo from '../components/BrandLogo';
-import NotificationBell from '../components/NotificationBell';
+import Header from '../components/Header';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import { useNavigate } from 'react-router-dom';
+import { apiService } from '../services/api';
 
 interface Mentor {
   id: string;
@@ -30,6 +30,10 @@ const MentorshipScreen: React.FC = () => {
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [requestMessage, setRequestMessage] = useState('');
   const [messageText, setMessageText] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState({
     name: "Yükleniyor...",
     email: "",
@@ -38,23 +42,45 @@ const MentorshipScreen: React.FC = () => {
     experienceLevel: "entry"
   });
 
-  // Kullanıcı bilgilerini localStorage'dan yükle
+  // Kullanıcı bilgilerini ve mentorship verilerini yükle
   useEffect(() => {
-    const userData = localStorage.getItem('uphera_user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      setCurrentUser({
-        name: user.name,
-        email: user.email,
-        skills: user.skills || [],
-        upschool_batch: user.program || "Data Science",
-        experienceLevel: "entry"
-      });
-    }
-  }, []);
+    const fetchMentorshipData = async () => {
+      try {
+        setLoading(true);
+        
+        // Kullanıcı bilgilerini localStorage'dan yükle
+        const userData = localStorage.getItem('uphera_user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          setCurrentUser({
+            name: user.name || `${user.firstName} ${user.lastName}` || 'Kullanıcı',
+            email: user.email,
+            skills: user.skills || [],
+            upschool_batch: user.program || user.upschoolProgram || "Data Science",
+            experienceLevel: user.experienceLevel || "entry"
+          });
+        }
 
-  // Senior Mentors Data - Gerçek mentorlar
-  const [mentors] = useState<Mentor[]>([
+        // API'den mentorship verilerini paralel olarak yükle
+        const [requestsResponse, messagesResponse, mentorsResponse] = await Promise.all([
+          apiService.getMentorshipRequests(),
+          apiService.getMentorshipMessages(),
+          apiService.getAvailableMentors()
+        ]);
+
+        if (requestsResponse.success) {
+          setRequests(requestsResponse.requests);
+        }
+
+        if (messagesResponse.success) {
+          setMessages(messagesResponse.messages);
+        }
+
+        if (mentorsResponse.success) {
+          setMentors(mentorsResponse.mentors);
+        } else {
+          // Fallback: Mock mentor data
+          const mockMentors: Mentor[] = [
     {
       id: "m1",
       name: "Gizem Aktaş",
@@ -130,7 +156,20 @@ const MentorshipScreen: React.FC = () => {
       rating: 4.9,
       availability: "Hafta içi 18:00-21:00, Cumartesi 10:00-16:00"
     }
-  ]);
+          ];
+          
+          setMentors(mockMentors);
+        }
+      } catch (error) {
+        console.error('Mentorship verisi yükleme hatası:', error);
+        toast.error('Mentorship verisi yüklenirken hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMentorshipData();
+  }, []);
 
   const handleMentorshipRequest = async () => {
     if (!selectedMentor || !requestMessage.trim()) {
@@ -149,27 +188,21 @@ const MentorshipScreen: React.FC = () => {
       const user = JSON.parse(userData);
       const token = user.token;
 
-      const response = await fetch('http://localhost:8000/api/mentorship/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          mentor_id: selectedMentor.id,
-          message: requestMessage,
-          mentee_name: currentUser.name,
-          mentee_email: currentUser.email,
-          mentee_program: currentUser.upschool_batch
-        })
+      const response = await apiService.sendMentorshipRequest({
+        mentor_id: selectedMentor.id,
+        message: requestMessage,
+        mentee_name: currentUser.name,
+        mentee_email: currentUser.email,
+        mentee_program: currentUser.upschool_batch
       });
 
-      if (response.ok) {
+      if (response.success) {
         toast.success(`${selectedMentor.name} mentoruna mentorluk isteği gönderildi!`);
         setShowRequestModal(false);
         setRequestMessage('');
+        setSelectedMentor(null);
       } else {
-        throw new Error('Mentorluk isteği gönderilemedi');
+        toast.error(response.message || 'Mentorluk isteği gönderilirken hata oluştu');
       }
     } catch (error) {
       console.error('Mentorluk isteği hatası:', error);
@@ -194,26 +227,20 @@ const MentorshipScreen: React.FC = () => {
       const user = JSON.parse(userData);
       const token = user.token;
 
-      const response = await fetch('http://localhost:8000/api/mentorship/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          mentor_id: selectedMentor.id,
-          message: messageText,
-          sender_name: currentUser.name,
-          sender_email: currentUser.email
-        })
+      const response = await apiService.sendMentorshipMessage({
+        mentor_id: selectedMentor.id,
+        message: messageText,
+        sender_name: currentUser.name,
+        sender_email: currentUser.email
       });
 
-      if (response.ok) {
+      if (response.success) {
         toast.success(`${selectedMentor.name} mentoruna mesaj gönderildi!`);
         setShowMessageModal(false);
         setMessageText('');
+        setSelectedMentor(null);
       } else {
-        throw new Error('Mesaj gönderilemedi');
+        toast.error(response.message || 'Mesaj gönderilirken hata oluştu');
       }
     } catch (error) {
       console.error('Mesaj gönderme hatası:', error);
@@ -221,50 +248,110 @@ const MentorshipScreen: React.FC = () => {
     }
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
+        <Header />
+        <div className="up-container py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Mentorluk verisi yükleniyor...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
-      {/* Header */}
-      <div className="up-page-header">
-        <div className="up-container">
+      <Header />
+      
+      {/* Main Content */}
+      <div className="up-container py-8">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
+              Mentorluk 🎯
+            </h1>
+            <p className="text-lg" style={{ color: 'var(--up-dark-gray)' }}>
+              Deneyimli teknoloji profesyonellerinden ücretsiz kariyer rehberliği al
+            </p>
+          </div>
+        </div>
+
+        {/* Kullanıcının Mentor Durumu */}
+        <ModernCard className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/jobs')}
-                className="flex items-center space-x-2 text-sm font-medium transition-colors"
-                style={{ color: 'var(--up-primary)' }}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>Geri Dön</span>
-              </button>
-              <div className="flex items-center space-x-3">
-                <BrandLogo size={64} />
-                <div>
-                  <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    Mentor Bul
-                  </h1>
-                  <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                    Ücretsiz kariyer rehberliği al
-                  </p>
+            <div>
+              <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--up-primary-dark)' }}>
+                Sen de Mentor ol! 🌟
+              </h3>
+              <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
+                Deneyimini diğer UpSchool mezunları ile paylaş ve onların kariyer yolculuklarında rehberlik et.
+              </p>
+            </div>
+            <ModernButton
+              onClick={() => navigate('/profile/edit')}
+              variant="primary"
+              className="ml-4"
+            >
+              Mentor Profilini Düzenle
+            </ModernButton>
+          </div>
+          
+          <div className="mt-4 p-4 bg-white rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div>
+                <div className="text-2xl font-bold" style={{ color: 'var(--up-primary)' }}>
+                  15+
+                </div>
+                <div className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
+                  Farklı Uzmanlık Alanı
                 </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <NotificationBell />
-              <div className="text-sm text-right">
-                <div className="font-medium" style={{ color: 'var(--up-primary-dark)' }}>
-                  {currentUser.name}
+              <div>
+                <div className="text-2xl font-bold" style={{ color: 'var(--up-primary)' }}>
+                  Ücretsiz
                 </div>
-                <div style={{ color: 'var(--up-dark-gray)' }}>
-                  {currentUser.upschool_batch} Mezunu
+                <div className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
+                  Gönüllü Mentorluk
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold" style={{ color: 'var(--up-primary)' }}>
+                  Esnek
+                </div>
+                <div className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
+                  Zaman Düzenlemesi
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </ModernCard>
 
-      {/* Main Content */}
-      <div className="up-container py-8">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <ModernCard className="p-6 text-center bg-gradient-to-br from-purple-50 to-purple-100">
+            <Award className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+            <h3 className="text-2xl font-bold text-purple-900">{mentors.length}</h3>
+            <p className="text-purple-700">Aktif Mentor</p>
+          </ModernCard>
+          
+          <ModernCard className="p-6 text-center bg-gradient-to-br from-green-50 to-green-100">
+            <UserPlus className="h-8 w-8 text-green-600 mx-auto mb-2" />
+            <h3 className="text-2xl font-bold text-green-900">156</h3>
+            <p className="text-green-700">Başarılı Eşleşme</p>
+          </ModernCard>
+
+          <ModernCard className="p-6 text-center bg-gradient-to-br from-blue-50 to-blue-100">
+            <MessageCircle className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+            <h3 className="text-2xl font-bold text-blue-900">4.8</h3>
+            <p className="text-blue-700">Ortalama Puan</p>
+          </ModernCard>
+        </div>
+
         {/* Mentors Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {mentors.map((mentor) => (

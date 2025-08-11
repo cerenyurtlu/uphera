@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 import toast from 'react-hot-toast';
+import { apiService } from '../services/api';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -38,132 +40,71 @@ const EventsScreen: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Expanded events data with more realistic information
-  const events = [
-    {
-      id: "1",
-      title: "Frontend Developer Network Meetup",
-      category: "networking",
-      date: "2025-02-15",
-      time: "19:00",
-      duration: "3 saat",
-      location: "TechHub İstanbul, Maslak",
-      type: "Yüz Yüze",
-      organizer: "UpSchool Alumni Network",
-      description: "Frontend teknolojileri ve kariyer fırsatları üzerine networking etkinliği. React, TypeScript ve modern web teknolojileri konuşulacak.",
-      maxParticipants: 50,
-      currentParticipants: 23,
-      tags: ["React", "TypeScript", "Networking", "Career"],
-      level: "Tüm Seviyeler",
-      featured: true,
-      image: "/api/placeholder/400/200",
-      agenda: [
-        { time: "19:00", title: "Karşılama ve Networking" },
-        { time: "19:30", title: "Frontend Trends 2025 - Panel" },
-        { time: "20:30", title: "Serbest Networking & Kahve" },
-        { time: "21:30", title: "Grup Fotoğrafı" }
-      ],
-      speakers: [
-        { name: "Ayşe Demir", role: "Senior Frontend Dev @ Trendyol", avatar: "/api/placeholder/40/40" },
-        { name: "Mehmet Kaya", role: "Tech Lead @ Getir", avatar: "/api/placeholder/40/40" }
-      ],
-      requirements: ["Laptop (isteğe bağlı)", "Networking Card"],
-      benefits: ["Sertifika", "Networking", "Goodies"]
-    },
-    {
-      id: "2",
-      title: "UI/UX Workshop: Figma'dan Prototype'a",
-      category: "workshop",
-      date: "2025-02-20",
-      time: "14:00",
-      duration: "4 saat",
-      location: "Online (Zoom)",
-      type: "Online",
-      organizer: "UpSchool Design Team",
-      description: "Figma ile profesyonel tasarım süreçleri ve interaktif prototip oluşturma workshop'u. Hands-on proje ile öğrenin.",
-      maxParticipants: 30,
-      currentParticipants: 18,
-      tags: ["Figma", "UI/UX", "Prototyping", "Design"],
-      level: "Başlangıç-Orta",
-      featured: false,
-      image: "/api/placeholder/400/200",
-      agenda: [
-        { time: "14:00", title: "Figma Temelleri" },
-        { time: "15:00", title: "Design System Oluşturma" },
-        { time: "16:00", title: "Mola" },
-        { time: "16:15", title: "Interactive Prototyping" },
-        { time: "17:30", title: "Proje Sunumları" }
-      ],
-      speakers: [
-        { name: "Zeynep Özkan", role: "Senior UX Designer @ Hepsiburada", avatar: "/api/placeholder/40/40" }
-      ],
-      requirements: ["Figma Account (Free)", "Stable Internet"],
-      benefits: ["Certificate", "Workshop Materials", "1-1 Feedback"]
-    },
-    {
-      id: "3",
-      title: "Tech Career Panel: Startup vs Corporate",
-      category: "panel",
-      date: "2025-02-25",
-      time: "18:30",
-      duration: "2 saat",
-      location: "Impact Hub Ankara",
-      type: "Hibrit",
-      organizer: "UpSchool Career Center",
-      description: "Startup ve corporate dünyasında kariyer fırsatları, avantajlar ve zorluklar üzerine deneyimli profesyonellerle panel.",
-      maxParticipants: 80,
-      currentParticipants: 45,
-      tags: ["Career", "Startup", "Corporate", "Panel"],
-      level: "Tüm Seviyeler",
-      featured: true,
-      image: "/api/placeholder/400/200",
-      agenda: [
-        { time: "18:30", title: "Açılış ve Tanışma" },
-        { time: "18:45", title: "Startup Deneyimleri" },
-        { time: "19:15", title: "Corporate Dünya" },
-        { time: "19:45", title: "Q&A Oturumu" },
-        { time: "20:15", title: "Networking" }
-      ],
-      speakers: [
-        { name: "Emre Acar", role: "CTO @ Peak Games", avatar: "/api/placeholder/40/40" },
-        { name: "Selin Yıldız", role: "Engineering Manager @ Microsoft", avatar: "/api/placeholder/40/40" },
-        { name: "Can Mutlu", role: "Founder @ StartupX", avatar: "/api/placeholder/40/40" }
-      ],
-      requirements: ["Kalem & Kağıt"],
-      benefits: ["Career Guide", "Networking", "Q&A"]
-    },
-    {
-      id: "4",
-      title: "Casual Friday: Alumni Coffee Chat",
-      category: "casual",
-      date: "2025-02-28",
-      time: "17:00",
-      duration: "2 saat",
-      location: "Starbucks Nişantaşı",
-      type: "Yüz Yüze",
-      organizer: "UpSchool Community",
-      description: "Rahat ortamda mezunlarla buluşma, deneyim paylaşımı ve sohbet. Her cumartesi düzenlenen geleneksel buluşma.",
-      maxParticipants: 25,
-      currentParticipants: 12,
-      tags: ["Coffee", "Casual", "Alumni", "Networking"],
-      level: "Tüm Seviyeler",
-      featured: false,
-      image: "/api/placeholder/400/200",
-      agenda: [
-        { time: "17:00", title: "Karşılama & Kahve" },
-        { time: "17:30", title: "Serbest Sohbet" },
-        { time: "18:30", title: "Grup Aktivitesi" }
-      ],
-      speakers: [],
-      requirements: ["Sadece güler yüz 😊"],
-      benefits: ["New Friends", "Relax", "Fun"]
-    },
-    {
-      id: "5",
-      title: "Backend Mastery: Node.js & MongoDB",
-      category: "workshop",
-      date: "2025-03-05",
+  // API'den etkinlikleri yükle
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.getEvents();
+        if (response.success) {
+          setEvents(response.events);
+        } else {
+          toast.error('Etkinlikler yüklenirken hata oluştu');
+        }
+      } catch (error) {
+        console.error('Etkinlik yükleme hatası:', error);
+        toast.error('Etkinlikler yüklenirken hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  const categories = [
+    { id: 'all', label: 'Tümü', icon: Calendar, count: events.length, color: 'bg-gray-100 text-gray-700' },
+    { id: 'networking', label: 'Networking', icon: Users, count: events.filter(e => e.category === 'networking').length, color: 'bg-blue-100 text-blue-700' },
+    { id: 'workshop', label: 'Workshop', icon: Building, count: events.filter(e => e.category === 'workshop').length, color: 'bg-green-100 text-green-700' },
+    { id: 'panel', label: 'Panel', icon: Award, count: events.filter(e => e.category === 'panel').length, color: 'bg-purple-100 text-purple-700' },
+    { id: 'casual', label: 'Casual', icon: Star, count: events.filter(e => e.category === 'casual').length, color: 'bg-yellow-100 text-yellow-700' }
+  ];
+
+  const filteredEvents = events.filter(event => {
+    const matchesCategory = selectedFilter === 'all' || event.category === selectedFilter;
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesCategory && matchesSearch;
+  });
+
+  const handleEventRegistration = async (eventId: string, eventTitle: string) => {
+    const event = events.find(e => e.id === eventId);
+    if (!event) return;
+
+    if (registeredEvents.includes(eventId)) {
+      // İptal etme işlemi (şimdilik sadece local state)
+      setRegisteredEvents(registeredEvents.filter(id => id !== eventId));
+      toast.success(`${eventTitle} etkinliğinden kaydınız iptal edildi`);
+    } else {
+      if (event.currentParticipants >= event.maxParticipants) {
+        toast.error('Bu etkinlik için kontenjan dolmuş');
+        return;
+      }
+      
+      // Show registration modal for important events
+      if (event.featured || event.maxParticipants <= 30) {
+        setSelectedEvent(event);
+        setShowRegistrationModal(true);
+      } else {
+        // Quick registration for larger events
+        await handleQuickRegistration(eventId, eventTitle);
+      }
+    }
+  };
       time: "10:00",
       duration: "6 saat",
       location: "UpSchool Campus İzmir",
@@ -239,11 +180,12 @@ const EventsScreen: React.FC = () => {
     return matchesCategory && matchesSearch;
   });
 
-  const handleEventRegistration = (eventId: string, eventTitle: string) => {
+  const handleEventRegistration = async (eventId: string, eventTitle: string) => {
     const event = events.find(e => e.id === eventId);
     if (!event) return;
 
     if (registeredEvents.includes(eventId)) {
+      // İptal etme işlemi (şimdilik sadece local state)
       setRegisteredEvents(registeredEvents.filter(id => id !== eventId));
       toast.success(`${eventTitle} etkinliğinden kaydınız iptal edildi`);
     } else {
@@ -258,13 +200,86 @@ const EventsScreen: React.FC = () => {
         setShowRegistrationModal(true);
       } else {
         // Quick registration for larger events
-        setRegisteredEvents([...registeredEvents, eventId]);
-        toast.success(`${eventTitle} etkinliğine başarıyla kaydoldunuz! 🎉`);
+        await handleQuickRegistration(eventId, eventTitle);
       }
     }
   };
 
-  const confirmRegistration = () => {
+  const handleQuickRegistration = async (eventId: string, eventTitle: string) => {
+    try {
+      const userData = localStorage.getItem('uphera_user');
+      if (!userData) {
+        toast.error('Kullanıcı bilgileri bulunamadı');
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      const response = await apiService.registerEvent({
+        event_id: eventId,
+        user_name: user.name || `${user.firstName} ${user.lastName}` || 'Kullanıcı',
+        user_email: user.email || 'user@example.com'
+      });
+
+      if (response.success) {
+        setRegisteredEvents([...registeredEvents, eventId]);
+        toast.success(`${eventTitle} etkinliğine başarıyla kaydoldunuz! 🎉`);
+      } else {
+        toast.error(response.message || 'Kayıt sırasında hata oluştu');
+      }
+    } catch (error) {
+      console.error('Etkinlik kaydı hatası:', error);
+      toast.error('Kayıt sırasında hata oluştu');
+    }
+  };
+
+  const confirmRegistration = async () => {
+    if (selectedEvent) {
+      await handleQuickRegistration(selectedEvent.id, selectedEvent.title);
+      setShowRegistrationModal(false);
+      setSelectedEvent(null);
+    }
+  };
+
+  // useEffect sonrası eksik kısım
+  useEffect(() => {
+    if (events.length === 0) {
+      fetchEvents();
+    }
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getEvents();
+      if (response.success) {
+        setEvents(response.events);
+      } else {
+        toast.error('Etkinlikler yüklenirken hata oluştu');
+      }
+    } catch (error) {
+      console.error('Etkinlik yükleme hatası:', error);
+      toast.error('Etkinlikler yüklenirken hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Loading state'i handle et
+  if (loading) {
+    return (
+      <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Etkinlikler yükleniyor...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const oldConfirmRegistration = () => {
     if (selectedEvent) {
       setRegisteredEvents([...registeredEvents, selectedEvent.id]);
       toast.success(`${selectedEvent.title} etkinliğine başarıyla kaydoldunuz! 🎉`, {
@@ -321,44 +336,29 @@ const EventsScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
-      {/* Header */}
-      <div className="up-page-header">
-        <div className="up-container">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5" style={{ color: 'var(--up-primary)' }} />
-              </button>
-              
-              <div className="flex items-center space-x-4">
-                <BrandLogo size={120} />
-                <div>
-            <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-              Teknolojide Öncü Kadınlar Topluluğu
-            </h1>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <ModernButton
-                onClick={handleCreateEvent}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Etkinlik Oluştur
-              </ModernButton>
-              <NotificationBell />
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <Header />
+      
       {/* Main Content */}
       <div className="up-container py-8">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
+              Etkinlikler 📅
+            </h1>
+            <p className="text-lg" style={{ color: 'var(--up-dark-gray)' }}>
+              UpSchool topluluğunun düzenlediği teknik ve sosyal etkinlikler
+            </p>
+          </div>
+          <ModernButton
+            onClick={handleCreateEvent}
+            variant="primary"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Etkinlik Oluştur
+          </ModernButton>
+        </div>
+
         {/* Hero Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <ModernCard className="p-6 text-center bg-gradient-to-br from-blue-50 to-blue-100">

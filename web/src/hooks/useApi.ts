@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { apiService, Candidate, Job, Match } from '../services/api'
+import { apiService, Candidate, Job, Match, DashboardSummary, MeResponse } from '../services/api'
 import toast from 'react-hot-toast'
 
 // Query keys
@@ -10,6 +10,8 @@ export const queryKeys = {
   job: (id: string) => ['job', id] as const,
   matches: (jobId: string) => ['matches', jobId] as const,
   dashboard: ['dashboard'] as const,
+  me: ['me'] as const,
+  dashboardSummary: ['dashboard-summary'] as const,
 }
 
 // Candidate hooks
@@ -107,3 +109,25 @@ export const useDashboardStats = () => {
     queryFn: apiService.getDashboardStats,
   })
 } 
+
+export const useMe = () => {
+  let enabled = false
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem('uphera_user') : null
+    const parsed = raw ? JSON.parse(raw) : null
+    enabled = Boolean(parsed?.token)
+  } catch {}
+  return useQuery<MeResponse>({
+    queryKey: queryKeys.me,
+    queryFn: apiService.getMe,
+    enabled,
+    retry: 1,
+  })
+}
+
+export const useDashboardSummary = () => {
+  return useQuery<DashboardSummary>({
+    queryKey: queryKeys.dashboardSummary,
+    queryFn: apiService.getDashboardSummary,
+  })
+}

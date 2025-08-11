@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import BrandLogo from '../components/BrandLogo';
-import NotificationBell from '../components/NotificationBell';
+import Header from '../components/Header';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import AIChatbot from '../components/AIChatbot';
+import BrandLogo from '../components/BrandLogo';
+import { apiService } from '../services/api';
 
 const ProfileScreen: React.FC = () => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(true);
   const [showAIChat, setShowAIChat] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -37,7 +38,16 @@ const ProfileScreen: React.FC = () => {
       technologies: string[];
       github_url: string;
       live_url: string;
-    }>
+    }>,
+    // Mentor bilgileri
+    mentorship: {
+      isAvailable: false,
+      specialties: [] as string[],
+      experience: "",
+      menteeCount: 0,
+      availability: "",
+      bio: ""
+    }
   });
 
   // Load user profile from API
@@ -131,9 +141,31 @@ const ProfileScreen: React.FC = () => {
   }, []);
 
   const handleInputChange = (field: string, value: any) => {
+    // Nested object handling için (örn: mentorship.isAvailable)
+    if (field.includes('.')) {
+      const [parentField, childField] = field.split('.');
+      setProfileData(prev => ({
+        ...prev,
+        [parentField]: {
+          ...prev[parentField as keyof typeof prev],
+          [childField]: value
+        }
+      }));
+    } else {
+      setProfileData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  const handleEducationChange = (field: string, value: string) => {
     setProfileData(prev => ({
       ...prev,
-      [field]: value
+      education: {
+        ...prev.education,
+        [field]: value
+      }
     }));
   };
 
@@ -155,16 +187,25 @@ const ProfileScreen: React.FC = () => {
 
   const handleSave = async () => {
     try {
+      setIsLoading(true); // Loading başlat
+      
       const userData = localStorage.getItem('uphera_user');
       if (!userData) {
         toast.error('Kullanıcı bilgileri bulunamadı');
+        setIsLoading(false);
         return;
       }
 
       const user = JSON.parse(userData);
       const token = user.token;
 
-      // API'ye gönderilecek veriyi hazırla
+      if (!token) {
+        toast.error('Oturum bilgisi bulunamadı, lütfen tekrar giriş yapın');
+        setIsLoading(false);
+        return;
+      }
+
+      // API'ye gönderilecek veriyi hazırla (backend'in beklediği format)
       const updateData = {
         firstName: profileData.name.split(' ')[0] || "",
         lastName: profileData.name.split(' ').slice(1).join(' ') || "",
@@ -172,7 +213,7 @@ const ProfileScreen: React.FC = () => {
         upschoolProgram: profileData.education.degree,
         graduationDate: profileData.education.year,
         skills: profileData.skills,
-        experienceLevel: profileData.experience_level,
+        experience: profileData.experience_level, // Backend 'experience' bekliyor
         location: profileData.location,
         portfolioUrl: profileData.portfolio_url,
         githubUrl: profileData.github_url,
@@ -192,6 +233,8 @@ const ProfileScreen: React.FC = () => {
       for (const apiUrl of apiUrls) {
         try {
           console.log(`🔄 Profil güncelleniyor: ${apiUrl}`);
+          console.log('📤 Gönderilen veri:', updateData);
+          
           response = await fetch(apiUrl, {
             method: 'PUT',
             headers: {
@@ -204,6 +247,10 @@ const ProfileScreen: React.FC = () => {
           
           if (response.ok) {
             break;
+          } else {
+            console.error(`❌ HTTP ${response.status}: ${response.statusText}`);
+            const errorData = await response.text();
+            console.error('❌ API cevabı:', errorData);
           }
         } catch (error) {
           console.error(`❌ API hatası (${apiUrl}):`, error);
@@ -218,8 +265,30 @@ const ProfileScreen: React.FC = () => {
       const data = await response.json();
       
       if (response.ok && data.success) {
+        // Mentor bilgilerini de kaydet
+        if (profileData.mentorship.isAvailable || profileData.mentorship.specialties.length > 0) {
+          try {
+            await apiService.updateMentorProfile(profileData.mentorship);
+          } catch (mentorError) {
+            console.error('Mentor profili kaydedilirken hata:', mentorError);
+            // Mentor kaydı başarısız olsa da ana profil güncellemesi başarılı
+          }
+        }
+        
         toast.success('Profil bilgilerin güncellendi!');
-        setIsEditing(false);
+        
+        // Güncellenmiş profil bilgilerini localStorage'a kaydet
+        if (data.user) {
+          const currentUser = JSON.parse(localStorage.getItem('uphera_user') || '{}');
+          const updatedUser = { ...currentUser, ...data.user };
+          localStorage.setItem('uphera_user', JSON.stringify(updatedUser));
+        }
+        
+        // Profil görüntüleme sayfasına yönlendir
+        setTimeout(() => {
+          window.location.href = '/profile/view';
+        }, 1000);
+        
         console.log('✅ Profil güncellendi:', data);
       } else {
         toast.error(data.detail || 'Profil güncellenirken hata oluştu');
@@ -227,6 +296,8 @@ const ProfileScreen: React.FC = () => {
     } catch (error: any) {
       console.error('Profil güncelleme hatası:', error);
       toast.error('Profil güncellenirken hata oluştu');
+    } finally {
+      setIsLoading(false); // Loading'i kapat
     }
   };
 
@@ -243,123 +314,7 @@ const ProfileScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
-      {/* Header */}
-      <div className="up-page-header">
-        <div className="up-container">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-4">
-                <BrandLogo size={120} />
-                <div>
-                  <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    Teknolojide rol model kadınlar yetiştiriyoruz
-                  </h1>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <NotificationBell />
-              <div className="relative">
-                <div 
-                  className="text-sm text-right cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                >
-                  <div className="font-medium" style={{ color: 'var(--up-primary-dark)' }}>
-                    {profileData.name} ▼
-                  </div>
-                  <div style={{ color: 'var(--up-dark-gray)' }}>
-                    UpSchool Mezunu
-                  </div>
-                </div>
-
-                {/* User Dropdown Menu */}
-                {showUserMenu && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                    <div className="p-4 border-b border-gray-200">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
-                          {profileData.name.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div>
-                          <div className="font-semibold" style={{ color: 'var(--up-primary-dark)' }}>
-                            {profileData.name}
-                          </div>
-                          <div className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                            {profileData.email}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-2">
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          window.location.href = '/dashboard';
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center space-x-3"
-                      >
-                        <span className="text-lg">🏠</span>
-                        <span>Ana Sayfa</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          window.location.href = '/notifications';
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center space-x-3"
-                      >
-                        <span className="text-lg">🔔</span>
-                        <span>Bildirimler</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          window.location.href = '/network';
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center space-x-3"
-                      >
-                        <span className="text-lg">👥</span>
-                        <span>UpSchool Network</span>
-                      </button>
-
-                      <div className="border-t border-gray-200 my-2"></div>
-
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          setShowAIChat(true);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center space-x-3"
-                      >
-                        <span className="text-lg">🤖</span>
-                        <span>AI Asistan</span>
-                      </button>
-
-                      <div className="border-t border-gray-200 my-2"></div>
-
-                      <button
-                        onClick={() => {
-                          setShowUserMenu(false);
-                          if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
-                            window.location.href = '/login';
-                          }
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors flex items-center space-x-3"
-                      >
-                        <span className="text-lg">🚪</span>
-                        <span>Çıkış Yap</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Main Content */}
       <div className="up-container py-8">
@@ -367,10 +322,10 @@ const ProfileScreen: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-              Profil Yönetimi
+              Profil Düzenle
             </h2>
             <p className="text-lg" style={{ color: 'var(--up-dark-gray)' }}>
-              Profilini güncel tutarak daha fazla fırsat yakala
+              Profil bilgilerinizi güncelleyin
             </p>
           </div>
           <div className="flex space-x-4">
@@ -378,25 +333,19 @@ const ProfileScreen: React.FC = () => {
               <>
                 <ModernButton
                   variant="secondary"
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => window.history.back()}
                 >
                   İptal
                 </ModernButton>
                 <ModernButton
                   variant="primary"
                   onClick={handleSave}
+                  disabled={isLoading}
                 >
-                  Kaydet
+                  {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
                 </ModernButton>
               </>
-            ) : (
-              <ModernButton
-                variant="primary"
-                onClick={() => setIsEditing(true)}
-              >
-                Düzenle
-              </ModernButton>
-            )}
+            ) : null}
           </div>
         </div>
 
@@ -670,6 +619,51 @@ const ProfileScreen: React.FC = () => {
               </div>
             </ModernCard>
 
+            {/* Education */}
+            <ModernCard>
+              <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--up-primary-dark)' }}>
+                Eğitim Bilgileri
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="up-form-label">Program</label>
+                  <input
+                    type="text"
+                    value={profileData.education.degree}
+                    onChange={(e) => handleEducationChange('degree', e.target.value)}
+                    disabled={!isEditing}
+                    className="up-input"
+                    placeholder="UpSchool programınız"
+                  />
+                </div>
+                
+                <div>
+                  <label className="up-form-label">Mezuniyet Tarihi</label>
+                  <input
+                    type="text"
+                    value={profileData.education.year}
+                    onChange={(e) => handleEducationChange('year', e.target.value)}
+                    disabled={!isEditing}
+                    className="up-input"
+                    placeholder="2025"
+                  />
+                </div>
+                
+                <div>
+                  <label className="up-form-label">Kurum</label>
+                  <input
+                    type="text"
+                    value={profileData.education.institution}
+                    onChange={(e) => handleEducationChange('institution', e.target.value)}
+                    disabled={!isEditing}
+                    className="up-input"
+                    placeholder="UpSchool"
+                  />
+                </div>
+              </div>
+            </ModernCard>
+
             {/* Links */}
             <ModernCard>
               <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--up-primary-dark)' }}>
@@ -712,6 +706,114 @@ const ProfileScreen: React.FC = () => {
                     placeholder="https://portföysite.com"
                   />
                 </div>
+              </div>
+            </ModernCard>
+
+            {/* Mentorship */}
+            <ModernCard>
+              <h3 className="text-xl font-bold mb-6" style={{ color: 'var(--up-primary-dark)' }}>
+                Mentorluk 🎯
+              </h3>
+              
+              <div className="space-y-6">
+                {/* Mentor olmak isteme */}
+                <div className="p-4 rounded-lg" style={{ backgroundColor: 'var(--up-light-gray)' }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="font-semibold" style={{ color: 'var(--up-primary-dark)' }}>
+                        Mentor olmak ister misin?
+                      </h4>
+                      <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
+                        Deneyimini diğer UpSchool mezunları ile paylaş
+                      </p>
+                    </div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={profileData.mentorship.isAvailable}
+                        onChange={(e) => handleInputChange('mentorship.isAvailable', e.target.checked)}
+                        disabled={!isEditing}
+                        className="mr-2"
+                      />
+                      <span className="text-sm font-medium">
+                        {profileData.mentorship.isAvailable ? 'Evet, mentor olmak istiyorum' : 'Şimdi değil'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Mentor detayları - sadece mentor olmak isteyenler için */}
+                {profileData.mentorship.isAvailable && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="up-form-label">Hangi konularda mentorluk verebilirsin?</label>
+                      <div className="space-y-2">
+                        {[
+                          'Frontend Development', 'Backend Development', 'Full Stack Development',
+                          'Mobile Development', 'UI/UX Design', 'Data Science', 'DevOps',
+                          'Kariyer Rehberliği', 'Teknik Mülakat Hazırlığı', 'Startup Deneyimi',
+                          'Freelance İş Bulma', 'Remote Çalışma', 'Team Leadership'
+                        ].map(specialty => (
+                          <label key={specialty} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={profileData.mentorship.specialties.includes(specialty)}
+                              onChange={(e) => {
+                                const specialties = e.target.checked
+                                  ? [...profileData.mentorship.specialties, specialty]
+                                  : profileData.mentorship.specialties.filter(s => s !== specialty);
+                                handleInputChange('mentorship.specialties', specialties);
+                              }}
+                              disabled={!isEditing}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">{specialty}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="up-form-label">Deneyim seviyeni açıkla</label>
+                      <select
+                        value={profileData.mentorship.experience}
+                        onChange={(e) => handleInputChange('mentorship.experience', e.target.value)}
+                        disabled={!isEditing}
+                        className="up-input"
+                      >
+                        <option value="">Seçiniz</option>
+                        <option value="1-2 yıl">1-2 yıl deneyim</option>
+                        <option value="3-5 yıl">3-5 yıl deneyim</option>
+                        <option value="5+ yıl">5+ yıl deneyim</option>
+                        <option value="Senior">Senior seviye (7+ yıl)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="up-form-label">Mentee'ler için uygunluk saatlerin</label>
+                      <input
+                        type="text"
+                        value={profileData.mentorship.availability}
+                        onChange={(e) => handleInputChange('mentorship.availability', e.target.value)}
+                        disabled={!isEditing}
+                        className="up-input"
+                        placeholder="Örn: Hafta içi 19:00-21:00, Hafta sonu 14:00-17:00"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="up-form-label">Mentor bio (Mentee'lere kendini tanıt)</label>
+                      <textarea
+                        value={profileData.mentorship.bio}
+                        onChange={(e) => handleInputChange('mentorship.bio', e.target.value)}
+                        disabled={!isEditing}
+                        className="up-input"
+                        rows={4}
+                        placeholder="Deneyimin, çalıştığın şirketler, hangi konularda yardımcı olabileceğin hakkında bilgi ver..."
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </ModernCard>
 

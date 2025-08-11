@@ -6,11 +6,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    hmr: {
+      overlay: false  // Hata overlay'ini kapat
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        // Backend rotaları `/api` önekiyle tanımlı, bu yüzden rewrite kaldırıldı
       }
     }
   }

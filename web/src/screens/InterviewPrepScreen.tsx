@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronLeft, Target, MessageCircle, BookOpen, Clock, Award, CheckCircle, Star, Zap, Brain, Heart } from 'lucide-react';
+import ModernButton from '../components/ModernButton';
 import { useNavigate } from 'react-router-dom';
-import BrandLogo from '../components/BrandLogo';
+import Header from '../components/Header';
 import AIChatbot from '../components/AIChatbot';
 
 const InterviewPrepScreen: React.FC = () => {
@@ -98,36 +99,28 @@ const InterviewPrepScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b" style={{ borderColor: 'var(--up-light-gray)' }}>
-        <div className="up-container">
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ChevronLeft className="h-5 w-5" style={{ color: 'var(--up-primary)' }} />
-              </button>
-              <BrandLogo size={72} />
-            </div>
-            
-            <button
-              onClick={() => setShowAICoach(true)}
-              className="flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors"
-              style={{ 
-                background: 'var(--up-primary)', 
-                color: 'white' 
-              }}
-            >
-              <Brain className="h-4 w-4" />
-              <span>AI Koç</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
+      <Header />
+      
       <div className="up-container py-8">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
+              Ada AI - Mülakat Hazırlığı 🤖
+            </h1>
+            <p className="text-lg" style={{ color: 'var(--up-dark-gray)' }}>
+              AI ile birlikte teknik mülakatlarına hazırlan
+            </p>
+          </div>
+          <ModernButton
+            onClick={() => setShowAICoach(true)}
+            variant="primary"
+          >
+            <Brain className="h-4 w-4 mr-2" />
+            AI Koç ile Konuş
+          </ModernButton>
+        </div>
+
         {/* Progress Overview */}
         <div className="bg-white rounded-xl p-6 mb-8 shadow-sm">
           <div className="flex items-center justify-between mb-4">

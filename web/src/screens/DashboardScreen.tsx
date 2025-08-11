@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
+import Header from '../components/Header';
 import { apiService } from '../services/api';
 
 interface Job {
@@ -33,9 +34,77 @@ const DashboardScreen: React.FC = () => {
   const [recentJobs, setRecentJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Kullanıcı bilgilerini al
+  const [userData, setUserData] = useState(() => {
+    const userData = localStorage.getItem('uphera_user');
+    return userData ? JSON.parse(userData) : { 
+      name: 'Demo Kullanıcı', 
+      program: 'Frontend Development',
+      upschoolProgram: 'Frontend Development'
+    };
+  });
+
+  const firstName = userData.name?.split(' ')[0] || userData.firstName || 'Misafir';
+  const bootcampName = userData.upschoolProgram || userData.program || 'UpSchool';
+
+  // Bootcamp adını daha güzel formatla
+  const getBootcampDisplayName = (program: string) => {
+    const programLower = program.toLowerCase();
+    if (programLower.includes('frontend')) return 'Frontend Development';
+    if (programLower.includes('backend')) return 'Backend Development';
+    if (programLower.includes('fullstack') || programLower.includes('full-stack')) return 'Full Stack Development';
+    if (programLower.includes('data')) return 'Data Science';
+    if (programLower.includes('mobile')) return 'Mobile Development';
+    if (programLower.includes('ui') || programLower.includes('ux')) return 'UI/UX Design';
+    if (programLower.includes('devops')) return 'DevOps';
+    if (programLower.includes('cyber')) return 'Cybersecurity';
+    return program || 'UpSchool';
+  };
+
+  // API'den güncel kullanıcı bilgilerini al
+  const fetchUserProfile = async () => {
+    try {
+      const userData = localStorage.getItem('uphera_user');
+      if (!userData) return;
+
+      const user = JSON.parse(userData);
+      const token = user.token;
+
+      const response = await fetch('http://127.0.0.1:8000/api/auth/profile', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          // Kullanıcı verilerini güncelle
+          const updatedUserData = {
+            ...user,
+            ...data.user,
+            name: `${data.user.firstName || ''} ${data.user.lastName || ''}`.trim(),
+            program: data.user.upschoolProgram || user.program,
+            upschoolProgram: data.user.upschoolProgram || user.upschoolProgram
+          };
+          
+          setUserData(updatedUserData);
+          localStorage.setItem('uphera_user', JSON.stringify(updatedUserData));
+        }
+      }
+    } catch (error) {
+      console.error('Kullanıcı profili güncellenirken hata:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // İlk olarak kullanıcı profilini güncelle
+        await fetchUserProfile();
+
         // Kullanıcının iş eşleşmelerini getir
         const jobs = await apiService.getJobs();
         if (jobs) {
@@ -83,38 +152,62 @@ const DashboardScreen: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                Dashboard
-              </h1>
-              <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                Kariyer yolculuğunun özeti
+    <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
+      <Header />
+      
+      {/* Dynamic Welcome Section */}
+      <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <h1 className="text-3xl md:text-4xl font-bold mb-3" style={{ color: 'var(--up-primary-dark)' }}>
+              Hoş Geldin, {firstName}! 👋
+            </h1>
+            <div className="space-y-3">
+              <p className="text-lg md:text-xl" style={{ color: 'var(--up-dark-gray)' }}>
+                <span className="font-semibold" style={{ color: 'var(--up-primary)' }}>
+                  {getBootcampDisplayName(bootcampName)}
+                </span> bootcamp'ini başarıyla tamamladın ama UpSchool'daki yolculuğumuz daha yeni başlıyor! 🎓
               </p>
-            </div>
-            <div className="flex space-x-3">
-              <ModernButton
-                onClick={() => navigate('/jobs')}
-                variant="primary"
-                size="sm"
-              >
-                İş Ara
-              </ModernButton>
-              <ModernButton
-                onClick={() => navigate('/profile')}
-                variant="secondary"
-                size="sm"
-              >
-                Profil
-              </ModernButton>
+              
+              {/* Motivasyon mesajı - bootcamp'e göre özelleştirilmiş */}
+              <p className="text-base md:text-lg font-medium" style={{ color: 'var(--up-primary)' }}>
+                {(() => {
+                  const program = getBootcampDisplayName(bootcampName);
+                  switch (program) {
+                    case 'Frontend Development':
+                      return '🚀 Artık harika kullanıcı deneyimleri yaratmaya hazırsın!';
+                    case 'Backend Development':
+                      return '⚡ Güçlü ve ölçeklenebilir sistemler kurma zamanı!';
+                    case 'Full Stack Development':
+                      return '🌟 Hem frontend hem backend ile sınırları aşmaya hazır!';
+                    case 'Data Science':
+                      return '📊 Veriyi değerli içgörülere dönüştürme yolculuğun başlıyor!';
+                    case 'Mobile Development':
+                      return '📱 Milyonlarca kullanıcının cebine ulaşacak uygulamalar yarat!';
+                    case 'UI/UX Design':
+                      return '🎨 Kullanıcıları büyüleyecek tasarımlar oluşturma zamanı!';
+                    case 'DevOps':
+                      return '🔧 Geliştirme süreçlerini optimize etme ve otomatikleştirme yolculuğu!';
+                    case 'Cybersecurity':
+                      return '🛡️ Dijital dünyayı güvenli kılma misyonun başlıyor!';
+                    default:
+                      return '💪 Teknoloji dünyasında iz bırakma zamanı!';
+                  }
+                })()}
+              </p>
+
+              {/* Günün motivasyon mesajı */}
+              <div className="mt-4 p-4 rounded-lg" style={{ backgroundColor: 'rgba(79, 70, 229, 0.1)' }}>
+                <p className="text-sm md:text-base italic" style={{ color: 'var(--up-primary-dark)' }}>
+                  💡 <strong>Bugünün İlhamı:</strong> "Başarı, küçük çabaların günlük tekrarının sonucudur. Her yeni gün, kariyerinde bir adım daha ilerlemek için yeni bir fırsat!"
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <div className="min-h-screen bg-gray-50">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* İstatistikler */}
@@ -310,6 +403,7 @@ const DashboardScreen: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

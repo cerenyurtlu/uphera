@@ -128,7 +128,7 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
         user_id = str(uuid.uuid4())
         password_hash = hash_password(user_data['password'])
         
-            cursor.execute('''
+        cursor.execute('''
                 INSERT INTO users (
                     id, email, password_hash, first_name, last_name, phone,
                     upschool_program, graduation_date, experience_level, location,

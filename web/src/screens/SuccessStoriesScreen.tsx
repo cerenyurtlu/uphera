@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { ChevronLeft, Star, MapPin, Calendar, TrendingUp, Award, Heart, Quote, Sparkles, Target, Trophy } from 'lucide-react';
-import BrandLogo from '../components/BrandLogo';
-import NotificationBell from '../components/NotificationBell';
+import Header from '../components/Header';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +23,44 @@ interface SuccessStory {
   rating: number;
   is_featured?: boolean;
 }
+
+// SuccessStoryCard Component
+const SuccessStoryCard: React.FC<{
+  story: SuccessStory;
+  onClick: () => void;
+}> = ({ story, onClick }) => {
+  return (
+    <ModernCard className="cursor-pointer hover:scale-[1.02] transition-transform duration-200">
+      <div className="p-6" onClick={onClick}>
+        <div className="flex items-center mb-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            {story.name.charAt(0)}
+          </div>
+          <div className="ml-3">
+            <h3 className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
+              {story.name}
+            </h3>
+            <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
+              {story.role} @ {story.company}
+            </p>
+          </div>
+        </div>
+        
+        <p className="text-sm mb-3 line-clamp-3" style={{ color: 'var(--up-dark-gray)' }}>
+          {story.story}
+        </p>
+        
+        <div className="flex items-center justify-between text-xs" style={{ color: 'var(--up-dark-gray)' }}>
+          <span>{story.upschool_batch} Mezunu</span>
+          <div className="flex items-center">
+            <Star className="h-3 w-3 text-yellow-500 mr-1" />
+            <span>{story.rating}</span>
+          </div>
+        </div>
+      </div>
+    </ModernCard>
+  );
+};
 
 const SuccessStoriesScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -191,43 +228,52 @@ const SuccessStoriesScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
-      {/* Header */}
-      <div className="up-page-header">
-        <div className="up-container">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/jobs')}
-                className="flex items-center space-x-2 text-sm font-medium transition-colors"
-                style={{ color: 'var(--up-primary)' }}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>Geri Dön</span>
-              </button>
-              <div className="flex items-center space-x-3">
-                <BrandLogo size={64} />
-                <div>
-                  <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    UpSchool Başarı Hikayeleri 🌟
-                  </h1>
-                  <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                    İlham veren kariyer yolculukları
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <NotificationBell />
-              <div className="text-sm text-right">
-                <div className="font-medium" style={{ color: 'var(--up-primary-dark)' }}>
-                  {currentUser.name}
-                </div>
-                <div style={{ color: 'var(--up-dark-gray)' }}>
-                  {currentUser.upschool_batch} Mezunu
-                </div>
-              </div>
-            </div>
+      <Header />
+      
+      {/* Main Content */}
+      <div className="up-container py-8">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
+              Başarı Hikayeleri 🌟
+            </h1>
+            <p className="text-lg" style={{ color: 'var(--up-dark-gray)' }}>
+              UpSchool mezunlarının ilham veren kariyer yolculukları
+            </p>
           </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <ModernCard className="p-6 text-center bg-gradient-to-br from-yellow-50 to-yellow-100">
+            <Trophy className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+            <h3 className="text-2xl font-bold text-yellow-900">{successStories.length}</h3>
+            <p className="text-yellow-700">Başarı Hikayesi</p>
+          </ModernCard>
+          
+          <ModernCard className="p-6 text-center bg-gradient-to-br from-blue-50 to-blue-100">
+            <Target className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+            <h3 className="text-2xl font-bold text-blue-900">92%</h3>
+            <p className="text-blue-700">İş Bulma Oranı</p>
+          </ModernCard>
+
+          <ModernCard className="p-6 text-center bg-gradient-to-br from-green-50 to-green-100">
+            <Star className="h-8 w-8 text-green-600 mx-auto mb-2" />
+            <h3 className="text-2xl font-bold text-green-900">4.9</h3>
+            <p className="text-green-700">Ortalama Memnuniyet</p>
+          </ModernCard>
+        </div>
+
+        {/* Success Stories Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {successStories.map((story) => (
+            <SuccessStoryCard
+              key={story.id}
+              story={story}
+              onClick={() => handleStoryClick(story)}
+            />
+          ))}
         </div>
       </div>
 

@@ -303,7 +303,7 @@ const LoginScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
-      {/* Header */}
+      {/* Modern Header with Profile */}
       <div className="up-page-header">
         <div className="up-container">
             <div className="flex items-center justify-between">
