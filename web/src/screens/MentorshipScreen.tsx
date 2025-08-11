@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { ChevronLeft, MessageCircle, Star, MapPin, Calendar, Clock, Award, Send, UserPlus, CheckCircle } from 'lucide-react';
+import { MessageCircle, Star, MapPin, Award, Send, UserPlus } from 'lucide-react';
 import Header from '../components/Header';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
@@ -30,8 +30,6 @@ const MentorshipScreen: React.FC = () => {
   const [requestMessage, setRequestMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [mentors, setMentors] = useState<Mentor[]>([]);
-  const [requests, setRequests] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState({
     name: "Yükleniyor...",
     email: "",
@@ -59,20 +57,8 @@ const MentorshipScreen: React.FC = () => {
           });
         }
 
-        // API'den mentorship verilerini paralel olarak yükle
-        const [requestsResponse, messagesResponse, mentorsResponse] = await Promise.all([
-          apiService.getMentorshipRequests(),
-          apiService.getMentorshipMessages(),
-          apiService.getAvailableMentors()
-        ]);
-
-        if (requestsResponse.success) {
-          setRequests(requestsResponse.requests);
-        }
-
-        if (messagesResponse.success) {
-          setMessages(messagesResponse.messages);
-        }
+        // API'den mentor verilerini yükle
+        const mentorsResponse = await apiService.getAvailableMentors();
 
         if (mentorsResponse.success) {
           setMentors(mentorsResponse.mentors);
@@ -183,9 +169,6 @@ const MentorshipScreen: React.FC = () => {
         return;
       }
 
-      const user = JSON.parse(userData);
-      const token = user.token;
-
       const response = await apiService.sendMentorshipRequest({
         mentor_id: selectedMentor.id,
         message: requestMessage,
@@ -208,43 +191,7 @@ const MentorshipScreen: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!selectedMentor || !messageText.trim()) {
-      toast.error('Lütfen bir mesaj yazın');
-      return;
-    }
 
-    try {
-      // API'ye mesaj gönder
-      const userData = localStorage.getItem('uphera_user');
-      if (!userData) {
-        toast.error('Kullanıcı bilgileri bulunamadı');
-        return;
-      }
-
-      const user = JSON.parse(userData);
-      const token = user.token;
-
-      const response = await apiService.sendMentorshipMessage({
-        mentor_id: selectedMentor.id,
-        message: messageText,
-        sender_name: currentUser.name,
-        sender_email: currentUser.email
-      });
-
-      if (response.success) {
-        toast.success(`${selectedMentor.name} mentoruna mesaj gönderildi!`);
-        setShowMessageModal(false);
-        setMessageText('');
-        setSelectedMentor(null);
-      } else {
-        toast.error(response.message || 'Mesaj gönderilirken hata oluştu');
-      }
-    } catch (error) {
-      console.error('Mesaj gönderme hatası:', error);
-      toast.error('Mesaj gönderilirken hata oluştu');
-    }
-  };
 
   // Loading state
   if (loading) {
