@@ -390,7 +390,7 @@ def get_level_emoji(level):
 
 async def create_expanded_demo_data():
     """Genişletilmiş UpSchool demo verisi oluştur"""
-    print("🚀 HireHer AI - UpSchool Partner Şirketleri Demo Verisi")
+    print("🚀 Up Hera - UpSchool Partner Şirketleri Demo Verisi")
     print("📊 Gerçek UpSchool istatistikleri: 30.000+ başvuru, %70 tamamlama, %70 işe girme oranı")
     
     # Veritabanını başlat
@@ -510,7 +510,7 @@ async def create_expanded_demo_data():
             await session.commit()
             
             # Başarı istatistikleri
-            print("\n🎉 UpSchool HireHer AI Demo Verisi Başarıyla Oluşturuldu!")
+            print("\n🎉 UpSchool Up Hera Demo Verisi Başarıyla Oluşturuldu!")
             print("=" * 60)
             print(f"👩‍💻 {len(UPSCHOOL_GRADUATES)} UpSchool mezunu kadın developer")
             print(f"🏢 {len([pos for partner in UPSCHOOL_PARTNERS for pos in partner['positions']])} partner şirket pozisyonu")
@@ -529,7 +529,7 @@ async def create_expanded_demo_data():
                 print(f"  • {partner['company']}")
             print(f"  ... ve {len(UPSCHOOL_PARTNERS)-5} partner daha!")
             
-            print("\n💫 HireHer AI ile UpSchool mezunlarının geleceği parlak!")
+            print("\n💫 Up Hera ile UpSchool mezunlarının geleceği parlak!")
             
         except Exception as e:
             await session.rollback()

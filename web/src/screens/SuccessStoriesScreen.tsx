@@ -39,7 +39,7 @@ const SuccessStoriesScreen: React.FC = () => {
 
   // Kullanıcı bilgilerini localStorage'dan yükle
   useEffect(() => {
-    const userData = localStorage.getItem('hireher_user');
+    const userData = localStorage.getItem('uphera_user');
     if (userData) {
       const user = JSON.parse(userData);
       setCurrentUser({
@@ -59,7 +59,7 @@ const SuccessStoriesScreen: React.FC = () => {
       name: "Elif Demir",
       role: "Senior Frontend Developer",
       company: "Google",
-      story: "UpSchool'dan mezun olduktan 6 ay sonra Google'da senior pozisyona başladım. HireHer AI'ın eşleştirme algoritması sayesinde mükemmel bir fırsat yakaladım! Frontend development konusunda tutkuluydum ve UpSchool'da öğrendiklerimle kendimi geliştirdim. Şimdi Google'da 200+ kişilik ekibin frontend mimarisini yönetiyorum.",
+      story: "UpSchool'dan mezun olduktan 6 ay sonra Google'da senior pozisyona başladım. Up Hera'nın eşleştirme algoritması sayesinde mükemmel bir fırsat yakaladım! Frontend development konusunda tutkuluydum ve UpSchool'da öğrendiklerimle kendimi geliştirdim. Şimdi Google'da 200+ kişilik ekibin frontend mimarisini yönetiyorum.",
       image: "/api/placeholder/100/100",
       upschool_batch: "Frontend Development #42",
       timeline: "6 ay sonra",
@@ -81,7 +81,7 @@ const SuccessStoriesScreen: React.FC = () => {
       name: "Zeynep Akar",
       role: "ML Engineer",
       company: "Microsoft",
-      story: "Data Science bootcamp'inin ardından HireHer AI ile Microsoft'ta hayallerimin işini buldum. Kadın developer ağının gücü inanılmaz! Önceden finans sektöründe çalışıyordum ama teknolojiye olan tutkum beni UpSchool'a yönlendirdi. Şimdi Microsoft'ta AI projeleri geliştiriyorum.",
+      story: "Data Science bootcamp'inin ardından Up Hera ile Microsoft'ta hayallerimin işini buldum. Kadın developer ağının gücü inanılmaz! Önceden finans sektöründe çalışıyordum ama teknolojiye olan tutkum beni UpSchool'a yönlendirdi. Şimdi Microsoft'ta AI projeleri geliştiriyorum.",
       image: "/api/placeholder/100/100",
       upschool_batch: "Data Science #28",
       timeline: "3 ay sonra",

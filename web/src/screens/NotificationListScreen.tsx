@@ -4,6 +4,7 @@ import HireHerLogo from '../components/HireHerLogo';
 import NotificationBell from '../components/NotificationBell';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
+import { FiCheckCircle, FiUserCheck, FiUsers, FiFileText, FiMessageCircle, FiMail, FiSettings, FiTarget, FiAward } from 'react-icons/fi';
 
 interface Notification {
   id: string;
@@ -108,13 +109,13 @@ const NotificationListScreen: React.FC = () => {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'match': return '🎯';
-      case 'application': return '📄';
-      case 'interview': return '🎉';
-      case 'success': return '✅';
-      case 'system': return '⚙️';
-      case 'message': return '💬';
-      default: return '📩';
+      case 'match': return <FiTarget />;
+      case 'application': return <FiFileText />;
+      case 'interview': return <FiAward />;
+      case 'success': return <FiCheckCircle />;
+      case 'system': return <FiSettings />;
+      case 'message': return <FiMessageCircle />;
+      default: return <FiMail />;
     }
   };
 
@@ -194,7 +195,7 @@ const NotificationListScreen: React.FC = () => {
                 <HireHerLogo size={64} clickable={true} variant="default" />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    HireHer AI
+                    Up Hera
                   </h1>
                   <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
                     Bildirimler
@@ -379,7 +380,7 @@ const NotificationListScreen: React.FC = () => {
             <div className="flex items-center justify-center space-x-2 mb-4">
               <HireHerLogo size={40} clickable={true} variant="compact" />
               <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                HireHer AI
+                Up Hera
               </span>
             </div>
             
@@ -388,7 +389,7 @@ const NotificationListScreen: React.FC = () => {
             </p>
             
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 HireHer AI</span>
+              <span>© 2025 Up Hera</span>
               <span>•</span>
               <span>UpSchool Partnership</span>
               <span>•</span>

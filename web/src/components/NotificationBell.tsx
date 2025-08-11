@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FiBell, FiCheckCircle, FiTarget, FiEye, FiAward } from 'react-icons/fi';
 
 interface Notification {
   id: string;
@@ -49,11 +50,11 @@ const NotificationBell: React.FC = () => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'match': return '🎯';
-      case 'application': return '👀';
-      case 'interview': return '🎉';
-      case 'success': return '✅';
-      default: return '🔔';
+      case 'match': return <FiTarget className="text-purple-600" />;
+      case 'application': return <FiEye className="text-blue-600" />;
+      case 'interview': return <FiAward className="text-green-600" />;
+      case 'success': return <FiCheckCircle className="text-emerald-600" />;
+      default: return <FiBell className="text-gray-600" />;
     }
   };
 
@@ -101,7 +102,7 @@ const NotificationBell: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 bg-white/50 rounded-xl hover:bg-white/70 transition-colors"
       >
-        <span className="text-xl">🔔</span>
+        <FiBell className="text-xl" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
@@ -131,7 +132,7 @@ const NotificationBell: React.FC = () => {
           <div className="max-h-64 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="p-6 text-center text-gray-500">
-                <div className="text-4xl mb-2">📭</div>
+                <div className="text-4xl mb-2"><FiBell /></div>
                 <p>Henüz bildirim yok</p>
               </div>
             ) : (

@@ -1,5 +1,5 @@
 """
-Database setup for HireHer AI
+Database setup for Up Hera
 SQLite database with proper user management
 """
 

@@ -47,7 +47,7 @@ const LoginScreen: React.FC = () => {
       // Demo hesap kontrolü - hızlı giriş için
       if (email === 'cerennyurtlu@gmail.com' && password === '123456') {
         // Demo kullanıcı bilgilerini localStorage'a kaydet
-        localStorage.setItem('hireher_user', JSON.stringify({
+        localStorage.setItem('uphera_user', JSON.stringify({
           id: 'demo-user-123',
           name: 'Ceren Yurtlu',
           email: email,
@@ -108,7 +108,7 @@ const LoginScreen: React.FC = () => {
       
       if (response.ok && data.success) {
         // User bilgilerini localStorage'a kaydet
-        localStorage.setItem('hireher_user', JSON.stringify({
+        localStorage.setItem('uphera_user', JSON.stringify({
           id: data.user.id,
           name: data.user.name,
           email: data.user.email,
@@ -241,7 +241,7 @@ const LoginScreen: React.FC = () => {
         
         // API'den dönen user data'yı localStorage'a kaydet
         if (data.user) {
-          localStorage.setItem('hireher_user', JSON.stringify({
+          localStorage.setItem('uphera_user', JSON.stringify({
             id: data.user.id,
             name: data.user.name,
             email: data.user.email,
@@ -252,7 +252,7 @@ const LoginScreen: React.FC = () => {
           }));
         }
 
-        toast.success('🎉 Kayıt başarılı! HireHer AI\'ya hoş geldin!');
+        toast.success('🎉 Kayıt başarılı! Up Hera\'ya hoş geldin!');
         toast.success('İş ilanlarına yönlendiriliyorsun...');
         
         console.log('✅ Registration Success:', data);
@@ -307,12 +307,12 @@ const LoginScreen: React.FC = () => {
         <div className="up-container">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              {/* HireHer AI Logo */}
+              {/* Up Hera Logo */}
               <div className="flex items-center space-x-3">
                 <HireHerLogo size={100} clickable={true} variant="default" />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    HireHer AI
+                    Up Hera
                   </h1>
                   <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
                     UpSchool mezunları için AI destekli platform
@@ -333,12 +333,12 @@ const LoginScreen: React.FC = () => {
           {/* Login Card */}
           <div className="up-card p-8 up-fade-in">
             <div className="text-center mb-8">
-              {/* HireHer AI Logo */}
+              {/* Up Hera Logo */}
               <div className="flex justify-center mb-6">
                 <HireHerLogo size={200} clickable={true} variant="large" />
               </div>
               <h2 className="up-page-title text-2xl">
-                {isRegistering ? 'Hesap Oluştur' : 'HireHer AI\'ya Giriş Yap'}
+                {isRegistering ? 'Hesap Oluştur' : 'Up Hera\'ya Giriş Yap'}
               </h2>
               <p className="up-page-subtitle">
                 {isRegistering 
@@ -941,7 +941,7 @@ const LoginScreen: React.FC = () => {
             <div className="flex items-center justify-center space-x-2 mb-4">
               <HireHerLogo size={60} clickable={true} variant="compact" />
               <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                HireHer AI
+                Up Hera
               </span>
             </div>
             
@@ -950,7 +950,7 @@ const LoginScreen: React.FC = () => {
             </p>
             
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 HireHer AI</span>
+              <span>© 2025 Up Hera</span>
               <span>•</span>
               <span>UpSchool Partnership</span>
               <span>•</span>

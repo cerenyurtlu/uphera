@@ -40,7 +40,7 @@ const MentorshipScreen: React.FC = () => {
 
   // Kullanıcı bilgilerini localStorage'dan yükle
   useEffect(() => {
-    const userData = localStorage.getItem('hireher_user');
+    const userData = localStorage.getItem('uphera_user');
     if (userData) {
       const user = JSON.parse(userData);
       setCurrentUser({
@@ -140,7 +140,7 @@ const MentorshipScreen: React.FC = () => {
 
     try {
       // API'ye mentorluk isteği gönder
-      const userData = localStorage.getItem('hireher_user');
+      const userData = localStorage.getItem('uphera_user');
       if (!userData) {
         toast.error('Kullanıcı bilgileri bulunamadı');
         return;
@@ -185,7 +185,7 @@ const MentorshipScreen: React.FC = () => {
 
     try {
       // API'ye mesaj gönder
-      const userData = localStorage.getItem('hireher_user');
+      const userData = localStorage.getItem('uphera_user');
       if (!userData) {
         toast.error('Kullanıcı bilgileri bulunamadı');
         return;

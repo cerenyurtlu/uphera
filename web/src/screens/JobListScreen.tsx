@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { ChevronLeft, ChevronRight, Heart, Users, Sparkles, Target, Trophy, BookOpen, MessageCircle, ArrowRight, Star, MapPin, Calendar, TrendingUp, Award, Zap, X, UserCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, Users, Sparkles, Target, Trophy, BookOpen, MessageCircle, ArrowRight, Star, MapPin, Calendar, TrendingUp, Award, Zap, X, UserCheck, Briefcase } from 'lucide-react';
 import HireHerLogo from '../components/HireHerLogo';
 import NotificationBell from '../components/NotificationBell';
 import ModernCard from '../components/ModernCard';
@@ -45,7 +45,7 @@ const JobListScreen: React.FC = () => {
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
-        const userData = localStorage.getItem('hireher_user');
+        const userData = localStorage.getItem('uphera_user');
         if (!userData) {
           navigate('/login');
           return;
@@ -169,7 +169,7 @@ const JobListScreen: React.FC = () => {
   useEffect(() => {
     const loadJobs = async () => {
       try {
-        const userData = localStorage.getItem('hireher_user');
+        const userData = localStorage.getItem('uphera_user');
         if (!userData) {
           navigate('/login');
           return;
@@ -238,7 +238,7 @@ const JobListScreen: React.FC = () => {
       name: "Elif Demir",
       role: "Senior Frontend Developer",
       company: "Google",
-      story: "UpSchool'dan mezun olduktan 6 ay sonra Google'da senior pozisyona başladım. HireHer AI'ın eşleştirme algoritması sayesinde mükemmel bir fırsat yakaladım!",
+      story: "UpSchool'dan mezun olduktan 6 ay sonra Google'da senior pozisyona başladım. Up Hera'nın eşleştirme algoritması sayesinde mükemmel bir fırsat yakaladım!",
       image: "/api/placeholder/100/100",
       upschool_batch: "Frontend Development #42",
       timeline: "6 ay sonra",
@@ -249,7 +249,7 @@ const JobListScreen: React.FC = () => {
       name: "Zeynep Akar",
       role: "ML Engineer",
       company: "Microsoft",
-      story: "Data Science bootcamp'inin ardından HireHer AI ile Microsoft'ta hayallerimin işini buldum. Kadın developer ağının gücü inanılmaz!",
+      story: "Data Science bootcamp'inin ardından Up Hera ile Microsoft'ta hayallerimin işini buldum. Kadın developer ağının gücü inanılmaz!",
       image: "/api/placeholder/100/100",
       upschool_batch: "Data Science #28",
       timeline: "3 ay sonra",
@@ -260,7 +260,7 @@ const JobListScreen: React.FC = () => {
       name: "Selin Koç",
       role: "Product Manager",
       company: "Amazon",
-      story: "UI/UX bootcamp'i tamamladıktan sonra teknik bilgilerimi Product Management'a evirmek için HireHer AI'ın mentorluk programından yararlandım.",
+      story: "UI/UX bootcamp'i tamamladıktan sonra teknik bilgilerimi Product Management'a evirmek için Up Hera'nın mentorluk programından yararlandım.",
       image: "/api/placeholder/100/100",
       upschool_batch: "UI/UX Design #35",
       timeline: "4 ay sonra",
@@ -271,7 +271,7 @@ const JobListScreen: React.FC = () => {
       name: "Ayşen Gürel",
       role: "DevOps Engineer",
       company: "Netflix",
-      story: "Backend Development bootcamp'inin ardından bulut teknolojilerine odaklandım. HireHer AI'ın AI koçu ile interview hazırlığımı yaptım.",
+      story: "Backend Development bootcamp'inin ardından bulut teknolojilerine odaklandım. Up Hera'nın AI koçu ile interview hazırlığımı yaptım.",
       image: "/api/placeholder/100/100",
       upschool_batch: "Backend Development #31",
       timeline: "8 ay sonra",
@@ -294,16 +294,16 @@ const JobListScreen: React.FC = () => {
     {
       id: "1",
       type: "achievement",
-      title: "Bu Ay 47 UpSchool Mezunu İşe Yerleşti! 🎉",
+      title: "Bu Ay 47 UpSchool Mezunu İşe Yerleşti!",
       description: "Topluluk olarak birbirimizi desteklemeye devam ediyoruz",
-      icon: <Trophy className="h-6 w-6" />,
+      icon: <Award className="h-6 w-6" />,
       color: "bg-yellow-500",
       action: "Başarı hikayelerni gör"
     },
     {
       id: "2",
       type: "mentorship",
-      title: "Mentorship Programımıza Katıl 👥",
+      title: "Mentorship Programımıza Katıl",
       description: "Deneyimli kadın geliştiricilerden 1:1 mentorluk al",
       icon: <Users className="h-6 w-6" />,
       color: "bg-purple-500",
@@ -312,7 +312,7 @@ const JobListScreen: React.FC = () => {
     {
       id: "3",
       type: "event",
-      title: "Tech Talk: Women in AI 🚀",
+      title: "Tech Talk: Women in AI",
       description: "15 Ocak | Online | Konuşmacı: Google'dan Dr. Ayşe Kara",
       icon: <Calendar className="h-6 w-6" />,
       color: "bg-blue-500",
@@ -321,7 +321,7 @@ const JobListScreen: React.FC = () => {
     {
       id: "4",
       type: "networking",
-      title: "İstanbul Developer Meetup 🌆",
+      title: "İstanbul Developer Meetup",
       description: "20 UpSchool mezunu kahve buluşması - 18 Ocak",
       icon: <MapPin className="h-6 w-6" />,
       color: "bg-green-500",
@@ -330,7 +330,7 @@ const JobListScreen: React.FC = () => {
     {
       id: "5",
       type: "opportunity",
-      title: "Freelance Proje Fırsatları 💼",
+      title: "Freelance Proje Fırsatları",
       description: "Partner şirketlerden özel projeler - deneyim kazan",
       icon: <Zap className="h-6 w-6" />,
       color: "bg-orange-500",
@@ -372,7 +372,7 @@ const JobListScreen: React.FC = () => {
         navigate('/freelance-projects');
         break;
       default:
-        toast('Bu özellik yakında geliyor! ⭐', { icon: '✨' });
+        toast('Bu özellik yakında geliyor!', { icon: <Sparkles className="inline h-4 w-4" /> });
     }
   };
 
@@ -819,7 +819,7 @@ const JobListScreen: React.FC = () => {
                   </div>
                   
                   <div className="flex flex-wrap gap-1">
-                    {job.required_skills.slice(0, 3).map((skill, index) => (
+                    {job.required_skills.slice(0, 3).map((skill: string, index: number) => (
                       <span 
                         key={index}
                         className="px-2 py-1 rounded text-xs"
@@ -1540,7 +1540,7 @@ const JobListScreen: React.FC = () => {
            isOpen={showInterviewPrep}
            onClose={() => setShowInterviewPrep(false)}
            jobTitle="Frontend Developer"
-           company="HireHer AI"
+           company="Up Hera"
          />
        )}
 
@@ -1765,7 +1765,7 @@ const JobListScreen: React.FC = () => {
             <div className="flex items-center justify-center space-x-2 mb-4">
               <HireHerLogo size={40} clickable={true} variant="compact" />
               <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                HireHer AI
+                Up Hera
               </span>
             </div>
             
@@ -1774,7 +1774,7 @@ const JobListScreen: React.FC = () => {
             </p>
             
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 HireHer AI</span>
+              <span>© 2025 Up Hera</span>
               <span>•</span>
               <span>UpSchool Partnership</span>
               <span>•</span>

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 HireHer AI - Ollama Setup Script"
+echo "🚀 Up Hera - Ollama Setup Script"
 echo "===================================="
 echo ""
 
@@ -69,7 +69,7 @@ echo "🧪 Testing Ada AI..."
 echo "   Sending test message..."
 
 # Test mesajı gönder
-response=$(ollama run llama3.2:3b "Merhaba! Ben UpSchool mezunu bir Frontend Developer'ım. Kısa bir motivasyon mesajı verebilir misin?" --timeout 30s)
+response=$(ollama run llama3.2:3b "Merhaba! Ben UpSchool mezunu bir Frontend Developer'ım. Up Hera için kısa bir motivasyon mesajı verebilir misin?" --timeout 30s)
 
 if [ $? -eq 0 ]; then
     echo "✅ Ada AI is working!"

@@ -44,7 +44,7 @@ const ProfileScreen: React.FC = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const userData = localStorage.getItem('hireher_user');
+        const userData = localStorage.getItem('uphera_user');
         if (!userData) {
           toast.error('Kullanıcı bilgileri bulunamadı');
           return;
@@ -155,7 +155,7 @@ const ProfileScreen: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      const userData = localStorage.getItem('hireher_user');
+      const userData = localStorage.getItem('uphera_user');
       if (!userData) {
         toast.error('Kullanıcı bilgileri bulunamadı');
         return;
@@ -252,7 +252,7 @@ const ProfileScreen: React.FC = () => {
                 <HireHerLogo size={64} clickable={true} variant="default" />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    HireHer AI
+                    Up Hera
                   </h1>
                   <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
                     Profil Yönetimi
@@ -767,7 +767,7 @@ const ProfileScreen: React.FC = () => {
             <div className="flex items-center justify-center space-x-2 mb-4">
               <HireHerLogo size={40} clickable={true} variant="compact" />
               <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                HireHer AI
+                Up Hera
               </span>
             </div>
             
@@ -776,7 +776,7 @@ const ProfileScreen: React.FC = () => {
             </p>
             
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 HireHer AI</span>
+              <span>© 2025 Up Hera</span>
               <span>•</span>
               <span>UpSchool Partnership</span>
               <span>•</span>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Clock, DollarSign, Users, Star, Calendar, MapPin, Bookmark, Share2, Filter, Search, Briefcase, Code, Palette, BarChart, Smartphone, Globe, Award, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Clock, DollarSign, Users, Star, Calendar, MapPin, Bookmark, Share2, Filter, Search, Briefcase, Code, Palette, BarChart, Smartphone, Globe, Award, MessageCircle, Zap, Flame } from 'lucide-react';
 import HireHerLogo from '../components/HireHerLogo';
 import NotificationBell from '../components/NotificationBell';
 import ModernButton from '../components/ModernButton';
@@ -172,7 +172,7 @@ const FreelanceProjectsScreen: React.FC = () => {
   };
 
   const handleApplyProject = (projectId: string, projectTitle: string) => {
-    toast.success(`${projectTitle} projesine başvurun hazırlanıyor! 🚀`);
+    toast.success(<span>{projectTitle} projesine başvurun hazırlanıyor! <Zap className="inline h-4 w-4" /></span>);
     // Burada başvuru modalı açılabilir
   };
 
@@ -324,13 +324,13 @@ const FreelanceProjectsScreen: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
                         {project.featured && (
-                          <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                            ⭐ Öne Çıkan
+                          <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Star className="inline h-4 w-4" /> Öne Çıkan
                           </span>
                         )}
                         {project.isUrgent && (
-                          <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                            🔥 Acil
+                          <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                            <Flame className="inline h-4 w-4" /> Acil
                           </span>
                         )}
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${levelInfo.color}`}>

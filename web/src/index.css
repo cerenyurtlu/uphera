@@ -14,7 +14,7 @@
 }
 
 /* Logo optimizations */
-.hireher-logo {
+.uphera-logo {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
   image-rendering: pixelated;
@@ -24,20 +24,20 @@
   outline: none !important;
 }
 
-.hireher-logo img {
+.uphera-logo img {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
   outline: none !important;
 }
 
-.hireher-logo:hover {
+.uphera-logo:hover {
   transform: scale(1.05);
   transition: transform 0.2s ease-in-out;
 }
 
 /* Logo container fixes */
-[title="HireHer AI"] {
+[title="Up Hera"] {
   background: transparent !important;
   background-color: transparent !important;
 }

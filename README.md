@@ -1,10 +1,10 @@
-# 🚀 HireHer AI - Teknoloji Kadınları İçin AI Destekli İş Platformu
+# 🚀 Up Hera - Teknoloji Kadınları İçin AI Destekli İş Platformu
 
 > **UpSchool Mezunu Teknoloji Kadınlarının Kariyer Yolculuğunda AI Mentoru** 👩‍💻✨
 
 ## 📋 Proje Özeti
 
-HireHer AI, teknoloji sektöründe çalışmak isteyen kadınlar için geliştirilmiş kapsamlı bir AI destekli iş platformudur. UpSchool bootcamp mezunlarının kariyer yolculuğunu desteklemek için tasarlanmış modern web uygulaması.
+Up Hera, teknoloji sektöründe çalışmak isteyen kadınlar için geliştirilmiş kapsamlı bir AI destekli iş platformudur. UpSchool bootcamp mezunlarının kariyer yolculuğunu desteklemek için tasarlanmış modern web uygulaması.
 
 ## 🎯 Temel Özellikler
 
@@ -90,8 +90,8 @@ HireHer AI, teknoloji sektöründe çalışmak isteyen kadınlar için geliştir
 
 ### 1. Repository'yi Klonlayın
 ```bash
-git clone https://github.com/your-username/hireher-ai.git
-cd hireher-ai
+git clone https://github.com/your-username/up-hera.git
+cd up-hera
 ```
 
 ### 2. Backend Kurulumu
@@ -240,7 +240,7 @@ async def cv_upload_example():
 
 ### Proje Yapısı
 ```
-hireher-ai/
+up-hera/
 ├── api/                    # Backend (FastAPI)
 │   ├── services/
 │   │   ├── enhanced_ai_coach.py    # Enhanced AI servis
@@ -274,8 +274,8 @@ hireher-ai/
 gunicorn api.main:app -w 4 -k uvicorn.workers.UvicornWorker
 
 # Docker
-docker build -t hireher-api .
-docker run -p 8000:8000 hireher-api
+docker build -t uphera-api .
+docker run -p 8000:8000 uphera-api
 ```
 
 ### Frontend

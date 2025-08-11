@@ -1,6 +1,6 @@
-# 🚀 HireHer AI - Hızlı Başlatma Rehberi
+# 🚀 Up Hera - Hızlı Başlatma Rehberi
 
-**HireHer AI**: UpSchool mezunu kadın developer'lar için AI destekli iş eşleştirme platformu! 💪
+**Up Hera**: UpSchool mezunu kadın developer'lar için AI destekli iş eşleştirme platformu! 💪
 
 ## ⚡ Hızlı Başlangıç (3 Adım)
 
@@ -33,7 +33,7 @@ npm run dev
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 
-## 🎯 HireHer AI - Öne Çıkan Yeni Özellikler
+## 🎯 Up Hera - Öne Çıkan Yeni Özellikler
 
 ### ✨ Modern UI/UX
 - **Glassmorphism Design**: Modern cam efektli tasarım
@@ -226,7 +226,7 @@ npm run dev
 
 ## 🏆 Başarı Hikayeleri (Mock)
 
-> **"HireHer AI ile 2 hafta içinde TechCorp'ta Senior React Developer olarak işe başladım! AI eşleştirme %96 doğruydu."**
+> **"Up Hera ile 2 hafta içinde TechCorp'ta Senior React Developer olarak işe başladım! AI eşleştirme %96 doğruydu."**
 > — *Ayşe Y., Frontend Bootcamp 2023*
 
 > **"UpSchool profilim sayesinde 3 farklı şirketten teklif aldım. Platform gerçekten kadın developer'lara odaklanmış!"**
@@ -237,11 +237,11 @@ npm run dev
 
 ## 📞 İletişim & Destek
 
-- **GitHub Repository**: [HireHer AI](https://github.com/your-org/hireher-ai)
+- **GitHub Repository**: [Up Hera](https://github.com/your-org/up-hera)
 - **Bug Reports**: GitHub Issues
 - **Feature Requests**: GitHub Discussions
-- **Email**: support@hireher.ai
-- **Twitter**: @HireHerAI
+- **Email**: support@uphera.ai
+- **Twitter**: @UpHera
 
 ## 🎯 Misyonumuz
 
@@ -249,9 +249,9 @@ npm run dev
 
 ---
 
-### 🚀 **HireHer AI ile kadın developer'ların geleceği parlak!**
+### 🚀 **Up Hera ile kadın developer'ların geleceği parlak!**
 
-*#WomenInTech #UpSchool #HireHer #DiversityInTech #AI #WomenEmpowerment*
+*#WomenInTech #UpSchool #UpHera #DiversityInTech #AI #WomenEmpowerment*
 
 ---
 

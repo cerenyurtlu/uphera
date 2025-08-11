@@ -1,5 +1,5 @@
 """
-Email Service for HireHer AI
+Email Service for Up Hera
 Güvenli Giriş ve Notification emails
 """
 
@@ -19,7 +19,7 @@ class EmailService:
         # In production, you'd use SendGrid, AWS SES, etc.
         self.smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
         self.smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        self.email_user = os.getenv("EMAIL_USER", "hireher@example.com")
+        self.email_user = os.getenv("EMAIL_USER", "uphera@example.com")
         self.email_password = os.getenv("EMAIL_PASSWORD", "")
         self.base_url = os.getenv("BASE_URL", "http://localhost:5173")
         
@@ -31,7 +31,7 @@ class EmailService:
             login_link = f"{self.base_url}/auth/verify?token={secure_token}&email={email}&type={user_type}"
             
             # Email içeriği oluştur
-            subject = "HireHer AI - Güvenli Giriş Linkiniz"
+            subject = "Up Hera - Güvenli Giriş Linkiniz"
             
             html_content = f"""
             <!DOCTYPE html>
@@ -50,12 +50,12 @@ class EmailService:
             <body>
                 <div class="container">
                     <div class="header">
-                        <h1>HireHer AI</h1>
+                        <h1>Up Hera</h1>
                         <p>UpSchool mezunu teknoloji kadınları için AI destekli platform</p>
                     </div>
                     <div class="content">
                         <h2>Hoş Geldin!</h2>
-                        <p>HireHer AI'ya giriş yapmak için aşağıdaki güvenli linke tıkla:</p>
+                         <p>Up Hera'ya giriş yapmak için aşağıdaki güvenli linke tıkla:</p>
                         
                         <div style="text-align: center;">
                             <a href="{login_link}" class="button">
@@ -67,7 +67,7 @@ class EmailService:
                         
                         <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
                         
-                        <h3>HireHer AI ile Neler Yapabilirsin?</h3>
+                         <h3>Up Hera ile Neler Yapabilirsin?</h3>
                         <ul>
                             <li><strong>AI Eşleştirme:</strong> 87-96% doğrulukla iş fırsatları</li>
                             <li><strong>UpSchool Network:</strong> Mezun topluluğuna erişim</li>
@@ -80,7 +80,7 @@ class EmailService:
                         </p>
                     </div>
                     <div class="footer">
-                        <p>HireHer AI - Teknoloji kadınlarının gücüyle iş dünyasını değiştiriyoruz</p>
+                         <p>Up Hera - Teknoloji kadınlarının gücüyle iş dünyasını değiştiriyoruz</p>
                         <p>#WomenInTech #UpSchool #DiversityInTech</p>
                     </div>
                 </div>

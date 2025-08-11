@@ -1,4 +1,4 @@
-HireHer AI – Kullanıcı Akışı
+Up Hera – Kullanıcı Akışı
 
 1 · İşveren
 

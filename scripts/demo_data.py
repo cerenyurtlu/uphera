@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Demo veri oluşturma script'i - Mock Database
-HireHer: Kadınlara yönelik AI destekli iş eşleştirme platformu
+Up Hera: Kadınlara yönelik AI destekli iş eşleştirme platformu
 """
 
 import json
@@ -692,7 +692,7 @@ def create_mock_embedding():
 
 async def create_demo_data():
     """Demo verilerini oluştur ve JSON dosyalarına kaydet"""
-    print("🚀 HireHer AI Demo Veri Oluşturucu")
+    print("🚀 Up Hera Demo Veri Oluşturucu")
     print("=" * 50)
     
     # JSON dosyalarına kaydet

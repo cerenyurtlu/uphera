@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Header
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends, Header, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field
@@ -15,8 +15,10 @@ from database import (
     create_session, validate_session
 )
 from services.ai_matching_service import ai_matcher
+from services.enhanced_ai_coach import enhanced_ada_ai
+import asyncio
 
-app = FastAPI(title="HireHer AI API", version="3.0.0")
+app = FastAPI(title="Up Hera API", version="3.0.0")
 
 # CORS middleware
 app.add_middleware(
@@ -95,7 +97,7 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
 # API endpoints
 @app.get("/")
 async def root():
-    return {"message": "HireHer AI API v3.0", "status": "running", "database": "SQLite"}
+    return {"message": "Up Hera API v3.0", "status": "running", "database": "SQLite"}
 
 @app.post("/api/auth/graduate/register")
 async def register_graduate(graduate: GraduateRegistration):
@@ -131,7 +133,7 @@ async def register_graduate(graduate: GraduateRegistration):
         
         print(f"✅ Yeni kullanıcı kaydedildi: {created_user['firstName']} {created_user['lastName']}")
         print(f"📊 Program: {created_user['upschoolProgram']}")
-        print(f"🆔 User ID: {created_user['id']}")
+        print(f"�� User ID: {created_user['id']}")
         print(f"🔑 Token: {token}")
         
         return {
@@ -604,6 +606,35 @@ async def get_mentorship_messages(current_user: Dict = Depends(get_current_user)
     except Exception as e:
         print(f"❌ Mentor mesajları getirme hatası: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Mentor mesajları getirilirken hata: {str(e)}")
+
+@app.websocket("/ws/coach")
+async def websocket_coach(websocket: WebSocket):
+    await websocket.accept()
+    user_id = websocket.query_params.get("user_id")
+    if not user_id:
+        await websocket.send_text("Kullanıcı kimliği (user_id) gerekli.")
+        await websocket.close()
+        return
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # AI'dan streaming yanıt al
+            async for chunk in enhanced_ada_ai.get_enhanced_response(user_id, data):
+                await websocket.send_text(chunk)
+    except WebSocketDisconnect:
+        await websocket.close()
+    except Exception as e:
+        await websocket.send_text(f"Hata: {str(e)}")
+        await websocket.close()
+
+@app.post("/upload/cv")
+async def upload_cv(user_id: str, file: UploadFile = File(...)):
+    try:
+        content = await file.read()
+        result = await enhanced_ada_ai.upload_cv(user_id, content, file.filename)
+        return result
+    except Exception as e:
+        return {"success": False, "error": str(e), "message": "CV yüklenemedi."}
 
 if __name__ == "__main__":
     import uvicorn

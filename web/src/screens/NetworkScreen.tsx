@@ -5,6 +5,7 @@ import NotificationBell from '../components/NotificationBell';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import AIChatbot from '../components/AIChatbot';
+import { FiUser } from 'react-icons/fi';
 
 interface NetworkMember {
   id: string;
@@ -16,7 +17,7 @@ interface NetworkMember {
   experience: string;
   bootcamp: string;
   graduationYear: string;
-  profileImage: string;
+  profileImage: React.ReactNode;
   linkedinUrl?: string;
   isOnline: boolean;
   mentorAvailable: boolean;
@@ -40,7 +41,7 @@ const NetworkScreen: React.FC = () => {
 
   // Kullanıcı bilgilerini localStorage'dan yükle
   React.useEffect(() => {
-    const userData = localStorage.getItem('hireher_user');
+    const userData = localStorage.getItem('uphera_user');
     if (userData) {
       const user = JSON.parse(userData);
       setCurrentUser({
@@ -66,7 +67,7 @@ const NetworkScreen: React.FC = () => {
       experience: 'Yeni mezun',
       bootcamp: currentUser.upschool_batch,
       graduationYear: currentUser.graduation_date || '2024',
-      profileImage: '👩‍💻',
+      profileImage: <FiUser className="text-3xl text-purple-600" />,
       isOnline: true,
       mentorAvailable: false,
       commonSkills: currentUser.skills.length

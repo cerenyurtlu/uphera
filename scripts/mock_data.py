@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Mock data generator for HireHer AI
+Mock data generator for Up Hera
 Usage: python scripts/mock_data.py --candidates 20 --jobs 10
 """
 
@@ -159,7 +159,7 @@ def save_mock_data_to_json(num_candidates: int, num_jobs: int):
     print(f"Saved {len(candidates)} candidates and {len(jobs)} jobs to data/mock/")
 
 async def main():
-    parser = argparse.ArgumentParser(description="Generate mock data for HireHer AI")
+    parser = argparse.ArgumentParser(description="Generate mock data for Up Hera")
     parser.add_argument("--candidates", type=int, default=20, help="Number of candidates to create")
     parser.add_argument("--jobs", type=int, default=10, help="Number of jobs to create")
     parser.add_argument("--json-only", action="store_true", help="Only generate JSON files, not database entries")

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FiBarChart2, FiBriefcase, FiUser, FiBell, FiUsers, FiLogOut, FiCpu } from 'react-icons/fi';
 
 interface UserMenuProps {
   userName: string;
@@ -45,31 +46,31 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
   const menuItems = [
     { 
-      icon: '📊', 
+      icon: <FiBarChart2 />, 
       label: 'Dashboard', 
       href: '/dashboard',
       active: currentPage === 'dashboard'
     },
     { 
-      icon: '💼', 
+      icon: <FiBriefcase />, 
       label: 'İş İlanları', 
       href: '/jobs',
       active: currentPage === 'jobs'
     },
     { 
-      icon: '👤', 
+      icon: <FiUser />, 
       label: 'Profil Düzenle', 
       href: '/profile',
       active: currentPage === 'profile'
     },
     { 
-      icon: '🔔', 
+      icon: <FiBell />, 
       label: 'Bildirimler', 
       href: '/notifications',
       active: currentPage === 'notifications'
     },
     { 
-      icon: '👥', 
+      icon: <FiUsers />, 
       label: 'UpSchool Network', 
       href: '/network',
       active: currentPage === 'network'
@@ -138,7 +139,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
               onClick={handleAIAssistant}
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center space-x-3"
             >
-              <span className="text-lg">🤖</span>
+              <span className="text-lg"><FiCpu /></span>
               <span>AI Asistan</span>
             </button>
 
@@ -149,7 +150,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
               onClick={handleLogout}
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors flex items-center space-x-3"
             >
-              <span className="text-lg">🚪</span>
+              <span className="text-lg"><FiLogOut /></span>
               <span>Çıkış Yap</span>
             </button>
           </div>

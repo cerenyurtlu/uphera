@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { Send, X, Minimize2, Maximize2, Sparkles, Brain, MessageCircle, Upload, FileText, Zap } from 'lucide-react';
 import ModernCard from './ModernCard';
 import ModernButton from './ModernButton';
+import { FiSmile, FiZap, FiBriefcase, FiBarChart2, FiTarget, FiGlobe, FiUserCheck, FiFileText, FiMessageCircle } from 'react-icons/fi';
 
 interface ChatMessage {
   id: string;
@@ -44,22 +45,8 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
 
   // Context-specific welcome messages
   const getWelcomeMessage = () => {
-    const baseMessage = {
-      content: `Merhaba! 👋 Ben Ada AI - UpSchool mezunu teknoloji kadınlarının yapay zeka mentoru!
-
-Ada Lovelace'den ilham alarak, senin teknoloji yolculuğunda yanındayım. UpSchool'da başlayan hikayeni şimdi kariyer seviyesine taşıyalım! 🚀
-
-${useEnhanced ? '🧠 **Enhanced Mode Aktif!** - ChromaDB + LangChain ile güçlendirilmiş yanıtlar' : '⚡ **Basic Mode** - Hızlı yanıtlar'}
-
-**Sana nasıl yardım edebilirim:**
-• 💼 Kariyer planlama ve iş arama stratejileri
-• 📈 Beceri geliştirme ve öğrenme yol haritaları  
-• 🎯 Mülakat hazırlığı ve özgüven artırma
-• 🌐 Network kurma ve topluluk içinde yer alma
-• 💪 Teknoloji sektöründe kadın olarak güçlenme
-• 📄 CV yükleme ve analiz (Enhanced Mode)
-
-Bugün hangi konuda sohbet edelim? 💭`,
+    let baseMessage: { content: string | JSX.Element; suggestions: string[] } = {
+      content: '',
       suggestions: [
         "Kariyerimde nasıl ilerleyebilirim?",
         "Hangi teknolojileri öğrenmeliyim?",
@@ -67,34 +54,38 @@ Bugün hangi konuda sohbet edelim? 💭`,
         "CV'mi yükleyip analiz et"
       ]
     };
-
-    // Context specific modifications
-    switch (context) {
-      case 'profile':
-        baseMessage.content = `Merhaba! 👋 Ben Ada AI - senin UpSchool AI mentor'un! 
-
-UpSchool'da aldığın eğitim sadece bir başlangıçtı - şimdi asıl yolculuk başlıyor! 🚀
-
-${useEnhanced ? '🧠 **Enhanced Mode**: CV yükle, kişiselleştirilmiş analiz al!' : ''}
-
-**Birlikte yapabileceğimiz:**
-• 📝 Deneyimlerini güçlü bir hikayeye dönüştürmek
-• 🎯 Eksik olan yetenekleri belirleyip öğrenme planı yapmak
-• 📊 Profilini işverenlerin aradığı şekilde optimize etmek
-• 💼 Portfolio projelerini geliştirecek fikirler üretmek
-• 🌟 Özgüvenini artıracak başarı stratejileri
-
-CV'ni yükleyerek kişiselleştirilmiş analiz alabilirsin! 📄`;
-        baseMessage.suggestions = [
-          "CV'mi yükleyip analiz et",
-          "GitHub profilimi nasıl güçlendirebilirim?",
-          "Hangi projeleri portföyüme eklemeliyim?",
-          "Profilimi hangi alanlarda güçlendirebilirim?"
-        ];
-        break;
-      
-      case 'interview':
-        baseMessage.content = `Selam! Ben Ada AI 💪 Mülakat hazırlığı zamanı geldi!
+    if (context === 'general') {
+      baseMessage.content = (
+        <span>
+          Merhaba! <FiSmile style={{ display: 'inline', verticalAlign: 'middle' }} /> Ben Ada AI - UpSchool mezunu teknoloji kadınlarının yapay zeka mentoru!
+          <br /><br />
+          Ada Lovelace'den ilham alarak, senin teknoloji yolculuğunda yanındayım. UpSchool'da başlayan hikayeni şimdi kariyer seviyesine taşıyalım! <FiZap style={{ display: 'inline', verticalAlign: 'middle' }} />
+          <br /><br />
+          {useEnhanced ? <><FiBarChart2 style={{ display: 'inline', verticalAlign: 'middle' }} /> <b>Enhanced Mode Aktif!</b> - ChromaDB + LangChain ile güçlendirilmiş yanıtlar</> : <><FiZap style={{ display: 'inline', verticalAlign: 'middle' }} /> <b>Basic Mode</b> - Hızlı yanıtlar</>}
+          <br /><br />
+          <b>Sana nasıl yardım edebilirim:</b>
+          <ul style={{ marginLeft: 16 }}>
+            <li><FiBriefcase style={{ display: 'inline', verticalAlign: 'middle' }} /> Kariyer planlama ve iş arama stratejileri</li>
+            <li><FiBarChart2 style={{ display: 'inline', verticalAlign: 'middle' }} /> Beceri geliştirme ve öğrenme yol haritaları</li>
+            <li><FiTarget style={{ display: 'inline', verticalAlign: 'middle' }} /> Mülakat hazırlığı ve özgüven artırma</li>
+            <li><FiGlobe style={{ display: 'inline', verticalAlign: 'middle' }} /> Network kurma ve topluluk içinde yer alma</li>
+            <li><FiUserCheck style={{ display: 'inline', verticalAlign: 'middle' }} /> Teknoloji sektöründe kadın olarak güçlenme</li>
+            <li><FiFileText style={{ display: 'inline', verticalAlign: 'middle' }} /> CV yükleme ve analiz (Enhanced Mode)</li>
+          </ul>
+          <br />
+          Bugün hangi konuda sohbet edelim? <FiMessageCircle style={{ display: 'inline', verticalAlign: 'middle' }} />
+        </span>
+      );
+    } else if (context === 'profile') {
+      baseMessage.content = `Merhaba! Ben Ada AI - senin UpSchool AI mentor'un!\n\nUpSchool'da aldığın eğitim sadece bir başlangıçtı - şimdi asıl yolculuk başlıyor!\n\n${useEnhanced ? 'Enhanced Mode: CV yükle, kişiselleştirilmiş analiz al!' : ''}\n\nBirlikte yapabileceklerimiz:\n• Deneyimlerini güçlü bir hikayeye dönüştürmek\n• Eksik olan yetenekleri belirleyip öğrenme planı yapmak\n• Profilini işverenlerin aradığı şekilde optimize etmek\n• Portfolio projelerini geliştirecek fikirler üretmek\n• Özgüvenini artıracak başarı stratejileri\n\nCV'ni yükleyerek kişiselleştirilmiş analiz alabilirsin!`;
+      baseMessage.suggestions = [
+        "CV'mi yükleyip analiz et",
+        "GitHub profilimi nasıl güçlendirebilirim?",
+        "Hangi projeleri portföyüme eklemeliyim?",
+        "Profilimi hangi alanlarda güçlendirebilirim?"
+      ];
+    } else if (context === 'interview') {
+      baseMessage.content = `Selam! Ben Ada AI 💪 Mülakat hazırlığı zamanı geldi!
 
 UpSchool'da aldığın eğitim seni buraya kadar getirdi, şimdi o güçlü kadın enerjinle mülakatı da başarıyla geçeceksin! 
 
@@ -106,25 +97,49 @@ ${useEnhanced ? '🧠 **CV bazlı mülakat hazırlığı**: CV\'ni yükle, kişi
 • 🏢 Şirket araştırması ve kültür uyumu
 • 💪 Özgüven artırma teknikleri
 • 💰 Maaş müzakeresi stratejileri`;
-        break;
-    }
+      baseMessage.suggestions = [
+        "Bu önerileri nasıl uygularım?",
+        "Hangi projeleri eklemeliyim?",
+        "CV formatımı değiştirmeliyim?",
+        "LinkedIn profilimi güncelle"
+      ];
+    } else if (context === 'network') {
+      baseMessage.content = `Merhaba! Ben Ada AI - senin UpSchool Network mentor'un!
 
+UpSchool'da aldığın eğitim sadece bir başlangıçtı - şimdi asıl yolculuk başlıyor!
+
+${useEnhanced ? 'Enhanced Mode: Network kurma ve kişiselleştirilmiş öneriler al!' : ''}
+
+Birlikte yapabileceklerimiz:
+• Network kurma ve topluluk içinde yer alma
+• LinkedIn profilimini güçlendirme
+• İşverenlerle iletişim kurma
+• Teknoloji sektöründe kadın olarak güçlenme
+• Özgüvenini artıracak başarı stratejileri`;
+      baseMessage.suggestions = [
+        "LinkedIn profilimi nasıl güçlendirebilirim?",
+        "Hangi topluluklarla etkileşime girebilirim?",
+        "İşverenlerle nasıl iletişim kurabilirim?",
+        "Profilimi hangi alanlarda güçlendirebilirim?"
+      ];
+    }
     return baseMessage;
   };
 
   useEffect(() => {
     if (isOpen && messages.length === 0) {
-      const welcomeMessage = getWelcomeMessage();
-      setMessages([{
-        id: 'welcome',
-        type: 'assistant',
-        content: welcomeMessage.content,
-        timestamp: new Date(),
-        suggestions: welcomeMessage.suggestions,
-        enhanced: useEnhanced
-      }]);
+      const welcome = getWelcomeMessage();
+      setMessages([
+        {
+          id: 'welcome',
+          type: 'assistant',
+          content: typeof welcome.content === 'string' ? welcome.content : '', // JSX ise boş string koy
+          timestamp: new Date(),
+          suggestions: welcome.suggestions
+        }
+      ]);
     }
-  }, [isOpen, context, useEnhanced]);
+  }, [isOpen]);
 
   useEffect(() => {
     scrollToBottom();
@@ -544,7 +559,7 @@ ${insights.has_cv ? `📈 **Analiz Tarihi:** ${new Date(insights.analyzed_at).to
                       
                       {message.suggestions && message.suggestions.length > 0 && (
                         <div className="mt-3 space-y-2">
-                          <div className="text-xs text-gray-600 font-medium">💡 Öneriler:</div>
+                          <div className="text-xs text-gray-600 font-medium flex items-center gap-1"><FiZap /> Öneriler:</div>
                           {message.suggestions.map((suggestion, index) => (
                             <button
                               key={index}

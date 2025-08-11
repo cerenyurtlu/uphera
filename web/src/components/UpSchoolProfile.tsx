@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ModernCard from './ModernCard';
 import ModernButton from './ModernButton';
+import { FiCpu, FiTool, FiSmartphone, FiBarChart2 } from 'react-icons/fi';
 
 interface UpSchoolProfile {
   id: string;
@@ -69,11 +70,11 @@ const UpSchoolProfile: React.FC<UpSchoolProfileProps> = ({
   };
 
   const bootcampIcons = {
-    'Frontend': '⚛️',
-    'Backend': '🔧',
-    'FullStack': '🚀',
-    'Data Science': '📊',
-    'Mobile': '📱'
+    'Frontend': <FiCpu className="text-blue-600" />,
+    'Backend': <FiTool className="text-green-600" />,
+    'FullStack': <FiBarChart2 className="text-purple-600" />,
+    'Data Science': <FiBarChart2 className="text-orange-600" />,
+    'Mobile': <FiSmartphone className="text-pink-600" />
   };
 
   const handleSave = () => {

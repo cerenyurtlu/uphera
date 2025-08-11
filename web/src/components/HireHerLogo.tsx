@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 // Alternative: src/assets'den import
 // import logoImage from '../assets/logo.png';
 
-interface HireHerLogoProps {
+interface UpHeraLogoProps {
   size?: number;
   className?: string;
   clickable?: boolean;
@@ -11,7 +11,7 @@ interface HireHerLogoProps {
   variant?: 'default' | 'compact' | 'large';
 }
 
-const HireHerLogo: React.FC<HireHerLogoProps> = ({ 
+const HireHerLogo: React.FC<UpHeraLogoProps> = ({ 
   size = 48, 
   className = '', 
   clickable = false, 
@@ -23,7 +23,7 @@ const HireHerLogo: React.FC<HireHerLogoProps> = ({
   const location = useLocation();
 
   // Logo path - eğer public çalışmazsa src/assets kullan
-  const logoPath = '/assets/logo.png';
+  const logoPath = '/assets/brand/uphera-logo.svg';
   // Alternative: logoImage (import edilmiş)
   
   console.log('🖼️ Logo path:', logoPath);
@@ -77,7 +77,7 @@ const HireHerLogo: React.FC<HireHerLogoProps> = ({
     }
   };
 
-  const containerClass = `inline-flex items-center justify-center hireher-logo ${getVariantStyles()} ${className} ${
+  const containerClass = `inline-flex items-center justify-center uphera-logo ${getVariantStyles()} ${className} ${
     clickable ? 'cursor-pointer hover:opacity-90 hover:scale-105 transition-all duration-200 ease-in-out' : ''
   }`.trim();
 
@@ -86,13 +86,13 @@ const HireHerLogo: React.FC<HireHerLogoProps> = ({
     return (
       <div 
         className={containerClass} 
-        onClick={handleClick} 
-        title="HireHer AI"
+        onClick={handleClick}
+        title="Up Hera"
         style={{ backgroundColor: 'transparent', background: 'none' }}
       >
         <img
           src={logoPath}
-          alt="HireHer AI Logo"
+          alt="Up Hera Logo"
           width={size}
           height={size}
           className="object-contain select-none"
@@ -113,12 +113,12 @@ const HireHerLogo: React.FC<HireHerLogoProps> = ({
     );
   }
 
-  // Modern HireHer AI SVG Logo - UpSchool renklerinde (Fallback)
+  // Modern Up Hera SVG Logo - UpSchool renklerinde (Fallback)
   return (
     <div 
       className={containerClass} 
-      onClick={handleClick} 
-      title="HireHer AI"
+      onClick={handleClick}
+      title="Up Hera"
       style={{ backgroundColor: 'transparent', background: 'none' }}
     >
       <svg

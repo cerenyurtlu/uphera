@@ -87,14 +87,14 @@ class AIService:
         return [random.uniform(-0.1, 0.1) for _ in range(3072)]
     
     def _create_mock_pitch(self, job: Job, candidate: Candidate) -> str:
-        """Mock personalized pitch oluştur - HireHer kadınlara yönelik platform"""
+        """Mock personalized pitch oluştur - Up Hera kadınlara yönelik platform"""
         skills_match = []
         if job.required_skills and candidate.skills:
             skills_match = list(set(job.required_skills) & set(candidate.skills))
         
         pitch = f"""Merhaba {job.company} ekibi,
 
-HireHer AI ile size mükemmel bir kadın developer adayı öneriyoruz: {candidate.name}! 💪
+Up Hera ile size mükemmel bir kadın developer adayı öneriyoruz: {candidate.name}! 💪
 
 🌟 Neden {candidate.name} {job.title} pozisyonu için ideal:
 
@@ -105,14 +105,14 @@ HireHer AI ile size mükemmel bir kadın developer adayı öneriyoruz: {candidat
 
 📊 AI Eşleşme Puanı: %{random.randint(85, 95)}
 
-HireHer AI olarak, kadın developer'ların potansiyelini keşfetmek ve onlara hak ettikleri fırsatları sunmak için çalışıyoruz. {candidate.name} gibi yetenekli kadın profesyoneller teknoloji dünyasını daha da güçlendiriyor.
+Up Hera olarak, kadın developer'ların potansiyelini keşfetmek ve onlara hak ettikleri fırsatları sunmak için çalışıyoruz. {candidate.name} gibi yetenekli kadın profesyoneller teknoloji dünyasını daha da güçlendiriyor.
 
 {candidate.name} ile hemen iletişime geçmenizi ve bu fırsatı değerlendirmenizi öneriyoruz.
 
 Kadınların gücüyle,
-HireHer AI Ekibi 🚀
+Up Hera Ekibi 🚀
 
-#WomenInTech #HireHer #DiversityInTech"""
+#WomenInTech #UpHera #DiversityInTech"""
         
         return pitch
     

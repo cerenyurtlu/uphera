@@ -1,4 +1,4 @@
-HireHer AI – Problem Tanımı ve Fikir Geliştirme
+Up Hera – Problem Tanımı ve Fikir Geliştirme
 
 Hangi problemi çözüyorsunuz?
 
@@ -38,4 +38,4 @@ Başarı Ölçütleri
 
 Manual e-posta < 5 dk, Auto‑Pitch ile < 15 sn.
 
-İlk 3 ayda en az 5 "HireHer AI üzerinden işe alım" vakası.
+İlk 3 ayda en az 5 "Up Hera üzerinden işe alım" vakası.

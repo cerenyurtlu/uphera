@@ -1,6 +1,6 @@
-# 🚀 HireHer AI - Local Kurulum Rehberi
+# 🚀 Up Hera - Local Kurulum Rehberi
 
-Bu rehber, HireHer AI projesini local geliştirme ortamınızda nasıl çalıştıracağınızı adım adım açıklar.
+Bu rehber, Up Hera projesini local geliştirme ortamınızda nasıl çalıştıracağınızı adım adım açıklar.
 
 ## 📋 Önkoşullar
 
@@ -64,8 +64,8 @@ sudo systemctl enable redis-server
 
 ### 1. Repository'yi Klonlayın
 ```bash
-git clone https://github.com/cerenyurtlu/hireher-ai.git
-cd hireher-ai
+git clone https://github.com/cerenyurtlu/up-hera.git
+cd up-hera
 ```
 
 ### 2. Environment Değişkenlerini Ayarlayın
@@ -83,7 +83,7 @@ OPENAI_API_KEY=sk-your-openai-api-key-here
 
 # SendGrid (https://sendgrid.com/ adresinden alın)
 SENDGRID_API_KEY=your-sendgrid-api-key-here
-FROM_EMAIL=noreply@hireher.ai
+FROM_EMAIL=noreply@uphera.ai
 SENDGRID_SANDBOX_MODE=true
 
 # Redis
@@ -99,7 +99,8 @@ FRONTEND_URL=http://localhost:5173
 sudo -u postgres psql
 
 # Veritabanı oluşturun
-CREATE DATABASE hireher;
+CREATE DATABASE hireher;  
+# Not: Veritabanı adı değişmedi (marka dışı), isterseniz ayrıca güncelleyebiliriz.
 
 # pgvector extension'ını etkinleştirin
 \c hireher

@@ -21,7 +21,8 @@ import {
   Bell,
   CalendarCheck,
   Building,
-  Award
+  Award,
+  FileText
 } from 'lucide-react';
 import HireHerLogo from '../components/HireHerLogo';
 import NotificationBell from '../components/NotificationBell';
@@ -314,6 +315,10 @@ const EventsScreen: React.FC = () => {
     setCurrentDate(newDate);
   };
 
+  const handleCreateEvent = () => {
+    toast.success(<span>Etkinlik oluşturma formu yakında! <FileText className="inline h-4 w-4" /></span>);
+  };
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
       {/* Header */}
@@ -343,7 +348,7 @@ const EventsScreen: React.FC = () => {
             
             <div className="flex items-center space-x-4">
               <ModernButton
-                onClick={() => toast.success('Etkinlik oluşturma formu yakında! 📝')}
+                onClick={handleCreateEvent}
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -463,8 +468,8 @@ const EventsScreen: React.FC = () => {
                     <div className="absolute inset-0 bg-black bg-opacity-20"></div>
                     <div className="absolute top-4 left-4 flex space-x-2">
                       {event.featured && (
-                        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                          ⭐ Öne Çıkan
+                        <span className="bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                          <Star className="inline h-4 w-4" /> Öne Çıkan
                         </span>
                       )}
                       <span className={`px-2 py-1 rounded-full text-xs font-bold text-white ${

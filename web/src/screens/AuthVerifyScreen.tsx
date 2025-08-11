@@ -29,7 +29,7 @@ const AuthVerifyScreen: React.FC = () => {
           toast.success(`Hoş geldin! ${data.user_type_label} olarak giriş yaptın`);
           
           // User bilgilerini localStorage'a kaydet (demo için)
-          localStorage.setItem('user', JSON.stringify({
+          localStorage.setItem('uphera_user', JSON.stringify({
             email: email,
             userType: userType,
             userTypeLabel: data.user_type_label
@@ -78,7 +78,7 @@ const AuthVerifyScreen: React.FC = () => {
               Yönlendiriliyor
             </h2>
             <p style={{ color: 'var(--up-dark-gray)' }}>
-              HireHer AI anasayfasına yönlendiriliyorsunuz...
+              Up Hera anasayfasına yönlendiriliyorsunuz...
             </p>
           </>
         )}

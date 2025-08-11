@@ -309,7 +309,7 @@ const InterviewPrepScreen: React.FC = () => {
             <div className="flex items-center justify-center space-x-2 mb-4">
               <HireHerLogo size={40} clickable={true} variant="compact" />
               <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                HireHer AI
+                Up Hera
               </span>
             </div>
             
@@ -318,7 +318,7 @@ const InterviewPrepScreen: React.FC = () => {
             </p>
             
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 HireHer AI</span>
+              <span>© 2025 Up Hera</span>
               <span>•</span>
               <span>UpSchool Partnership</span>
               <span>•</span>

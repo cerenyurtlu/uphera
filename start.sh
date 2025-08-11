@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# HireHer AI - Hızlı Başlangıç Script'i
+# Up Hera - Hızlı Başlangıç Script'i
 
-echo "🚀 HireHer AI başlatılıyor..."
+echo "🚀 Up Hera başlatılıyor..."
 
 # Renk kodları
 RED='\033[0;31m'
