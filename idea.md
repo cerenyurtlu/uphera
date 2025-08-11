@@ -1,41 +1,62 @@
-Up Hera – Problem Tanımı ve Fikir Geliştirme
+# UpHera – Problem Tanımı ve Fikir Geliştirme
 
-Hangi problemi çözüyorsunuz?
+## 📌 Hangi Problemi Çözüyoruz?
+UpSchool mezunları her ne kadar %70 oranında işe yerleşse de süreç hâlâ **Slack duyuruları**, **LinkedIn ilan taraması** ve **manuel e-posta trafiği** ile yürütülüyor.  
+Mezun havuzu büyüdükçe, yerleştirme operasyonu UpSchool ekibinin **ölçeklenme darboğazına** dönüşüyor.
 
-UpSchool mezunları %70 oranında işe yerleşse de bu süreç hâlâ Slack duyuruları, LinkedIn ilan taraması ve e‑posta trafiğiyle yarı‑manuel yürütülüyor. Mezun havuzu büyüdükçe yerleştirme operasyonu UpSchool ekibinin en dar boğazı hâline geliyor; işveren tarafı ise "junior ama proje görmüş kadın mühendis" bulmakta zorlanıyor. Zaman kaybı, fırsat kaçırma ve operasyonel yorgunluk hem öğrencilerin motivasyonunu hem de UpSchool’un etki metriğini düşürüyor.
+**İşverenlerle doğrudan etkileşim yerine**, tüm ilan girişleri, aday eşleşmeleri ve sürecin takibi **Placement Admin** (UpSchool ekibi) tarafından yürütülüyor.  
+Bu durum, ilan yönetimi, aday takibi ve topluluk etkileşiminde **zaman kaybı** ve **veri dağınıklığı** yaratıyor.
 
-Bu problemi yaşayan kullanıcı kim?
+---
 
-Aday (Mezun / Son sınıf katılımcı): Teknik projeleri ve GitHub bağlantıları hazır; ilan kalabalığı arasında kendine uygun pozisyonu bulmakta zorlanıyor.
+## 👥 Bu Problemi Yaşayan Kullanıcılar
 
-İşveren (HR & Hiring Manager): Çeşitliliği artırmak isteyen teknoloji şirketi; hızla filtrelenmiş, nitelikli aday listesi görmek istiyor.
+### 🎓 Mezun (Alumni)
+- Teknik projeleri, GitHub bağlantıları, sertifikaları hazır.
+- Kendisine uygun fırsatlara erişmek için tek bir merkezi platform arıyor.
+- Mentorluk, network ve freelance proje fırsatlarını da aynı panelden görmek istiyor.
 
-UpSchool Placement Ekibi: Eşleşmeleri manuel yönetmekten kaynaklı zaman kısıtlaması ve ölçeklenme problemi yaşıyor.
+### 🛠 Placement Admin (UpSchool Ekibi)
+- İlan girişlerini, eşleşmeleri, aday takibini manuel yürütmek zorunda.
+- Community moderasyonu + işe yerleştirme süreçleri ayrı araçlarda olduğu için veri bütünlüğü bozuluyor.
+- Aynı anda hem **topluluk yönetimi** hem **kariyer yerleştirme** süreçlerini idare ediyor.
 
-AI bu çözümde nasıl bir rol üstleniyor?
+---
 
-Profil & JD Anlamlandırma — Embeddings:
+## 🤖 AI Bu Çözümde Nasıl Rol Alıyor?
 
-Mezun profilleri (GitHub, proje özetleri) ve iş tanımları "text‑embedding‑3‑large" modeliyle çok‑dilli vektörlere dönüştürülür.
+### **1. Profil & İlan Anlamlandırma — Embeddings**
+- Mezun profilleri (GitHub, proje özetleri, sertifikalar) ve iş tanımları **`text-embedding-3-large`** ile çok dilli vektörlere dönüştürülür.
+- Projeler, tech stack, uzmanlık alanları otomatik etiketlenir.
 
-Eşleştirme Motoru:
+### **2. Eşleştirme Motoru**
+- **Cosine Similarity** + **kural temelli filtreleme** (zorunlu beceri, lokasyon vb.) ile ilk sıralama.
+- **RL fine-tuning (trlX)** ile “İletildi → Görüşme → Teklif” gibi geri bildirimlerden öğrenerek sürekli gelişen **re-ranker**.
 
-Cosine benzerliği + kural temelli filtre (must‑have skill, lokasyon) ile ilk sıralama.
+### **3. Auto-Pitch Agent**
+- **GPT-4o-mini** ile aday–ilan uyumuna göre kişiselleştirilmiş **120 kelimelik tanıtım e-postası** veya “iç aday” notu oluşturulur.
+- Placement admin tek tıkla bu metni işverene iletebilir.
 
-RL fine‑tune (trlX) ile "görüldü → görüşme → teklif" geri bildirimi kullanarak skoru sürekli iyileştiren re‑ranker.
+### **4. Dashboard İçgörüleri**
+- LLM destekli raporlama ile **haftalık yetenek trendleri**, **ilan dönüşüm hunisi**, **profil skorları** görüntülenir.
+- Placement admin için otomatik görev hatırlatıcılar.
 
-Auto‑Pitch Agent:
+---
 
-GPT‑4o‑mini, aday–ilan kesişim noktalarını vurgulayan 120 kelimelik tanıtım e‑postası üretir.
+## 📊 Başarı Ölçütleri
 
-Dashboard İçgörüleri:
+**İlk Beta:**
+- 10 iş ilanı için **≥ %80 eşleşme tatmini** (placement admin anketi).
+- Manuel e-posta hazırlama süresi < 5 dk → **Auto-Pitch** ile < 15 sn.
 
-LLM, eşleşme sonuçlarından haftalık "talep edilen yetenek trendi" raporu üretir.
+**İlk 3 Ay:**
+- En az **5 başarılı işe yerleşme** vakası UpHera üzerinden.
+- Placement ekibi operasyon süresinde **%50 azalma**.
 
-Başarı Ölçütleri
+---
 
-İlk beta – 10 iş ilanı için ≥ %80 "eşleşme tatmini" (HR anketi)
-
-Manual e-posta < 5 dk, Auto‑Pitch ile < 15 sn.
-
-İlk 3 ayda en az 5 "Up Hera üzerinden işe alım" vakası.
+## 🌟 Fark Yaratan Noktalar
+- **Tek panel**: Community + Kariyer yerleştirme + Mentorluk
+- **AI destekli** eşleştirme, öneri ve mülakat hazırlığı
+- **Gerçek zamanlı bildirimler** ve profil güçlendirme önerileri
+- **Tam UpSchool ekosistem entegrasyonu**
