@@ -128,20 +128,30 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
         user_id = str(uuid.uuid4())
         password_hash = hash_password(user_data['password'])
         
-        cursor.execute('''
-            INSERT INTO users (
-                id, email, password_hash, first_name, last_name, phone,
-                upschool_program, graduation_date, experience_level, location,
-                portfolio_url, github_url, linkedin_url, about_me, skills
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            user_id, user_data['email'], password_hash, user_data['firstName'],
-            user_data['lastName'], user_data.get('phone', ''), user_data['upschoolProgram'],
-            user_data.get('graduationDate', ''), user_data.get('experience', 'entry'),
-            user_data.get('location', ''), user_data.get('portfolio', ''),
-            user_data.get('github', ''), user_data.get('linkedin', ''),
-            user_data.get('aboutMe', ''), json.dumps(user_data.get('skills', []))
-        ))
+            cursor.execute('''
+                INSERT INTO users (
+                    id, email, password_hash, first_name, last_name, phone,
+                    upschool_program, graduation_date, experience_level, location,
+                    portfolio_url, github_url, linkedin_url, about_me, skills
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                user_id,
+                user_data['email'].lower().strip(),
+                password_hash,
+                user_data['firstName'],
+                user_data['lastName'],
+                user_data.get('phone', ''),
+                user_data['upschoolProgram'],
+                user_data.get('graduationDate', ''),
+                # experience level is string like 'entry' | 'junior' | 'mid' | 'senior'
+                user_data.get('experience', 'entry'),
+                user_data.get('location', ''),
+                user_data.get('portfolio', ''),
+                user_data.get('github', ''),
+                user_data.get('linkedin', ''),
+                user_data.get('aboutMe', ''),
+                json.dumps(user_data.get('skills', []))
+            ))
         
         conn.commit()
         conn.close()

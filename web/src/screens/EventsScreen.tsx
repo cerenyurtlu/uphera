@@ -333,15 +333,12 @@ const EventsScreen: React.FC = () => {
                 <ArrowLeft className="h-5 w-5" style={{ color: 'var(--up-primary)' }} />
               </button>
               
-              <div className="flex items-center space-x-3">
-                <BrandLogo size={60} />
+              <div className="flex items-center space-x-4">
+                <BrandLogo size={120} />
                 <div>
-                  <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    Etkinlikler
-                  </h1>
-                  <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                    UpSchool topluluğu etkinlikleri ve buluşmaları
-                  </p>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
+              Teknolojide Öncü Kadınlar Topluluğu
+            </h1>
                 </div>
               </div>
             </div>

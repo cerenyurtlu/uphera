@@ -57,9 +57,9 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
     if (context === 'general') {
       baseMessage.content = (
         <span>
-          Merhaba! <FiSmile style={{ display: 'inline', verticalAlign: 'middle' }} /> Ben Ada AI - UpSchool mezunu teknoloji kadınlarının yapay zeka mentoru!
+          Merhaba! <FiSmile style={{ display: 'inline', verticalAlign: 'middle' }} /> Ben Ada AI - Up Hera topluluğunun yapay zeka mentoru!
           <br /><br />
-          Ada Lovelace'den ilham alarak, senin teknoloji yolculuğunda yanındayım. UpSchool'da başlayan hikayeni şimdi kariyer seviyesine taşıyalım! <FiZap style={{ display: 'inline', verticalAlign: 'middle' }} />
+           Ada Lovelace'den ilham alarak, senin teknoloji yolculuğunda yanındayım. Up Hera'da başlayan hikayeni şimdi kariyer seviyesine taşıyalım! <FiZap style={{ display: 'inline', verticalAlign: 'middle' }} />
           <br /><br />
           {useEnhanced ? <><FiBarChart2 style={{ display: 'inline', verticalAlign: 'middle' }} /> <b>Enhanced Mode Aktif!</b> - ChromaDB + LangChain ile güçlendirilmiş yanıtlar</> : <><FiZap style={{ display: 'inline', verticalAlign: 'middle' }} /> <b>Basic Mode</b> - Hızlı yanıtlar</>}
           <br /><br />
@@ -77,7 +77,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
         </span>
       );
     } else if (context === 'profile') {
-      baseMessage.content = `Merhaba! Ben Ada AI - senin UpSchool AI mentor'un!\n\nUpSchool'da aldığın eğitim sadece bir başlangıçtı - şimdi asıl yolculuk başlıyor!\n\n${useEnhanced ? 'Enhanced Mode: CV yükle, kişiselleştirilmiş analiz al!' : ''}\n\nBirlikte yapabileceklerimiz:\n• Deneyimlerini güçlü bir hikayeye dönüştürmek\n• Eksik olan yetenekleri belirleyip öğrenme planı yapmak\n• Profilini işverenlerin aradığı şekilde optimize etmek\n• Portfolio projelerini geliştirecek fikirler üretmek\n• Özgüvenini artıracak başarı stratejileri\n\nCV'ni yükleyerek kişiselleştirilmiş analiz alabilirsin!`;
+      baseMessage.content = `Merhaba! Ben Ada AI - senin Up Hera AI mentor'un!\n\nUp Hera'daki topluluk desteğiyle, şimdi asıl yolculuk başlıyor!\n\n${useEnhanced ? 'Enhanced Mode: CV yükle, kişiselleştirilmiş analiz al!' : ''}\n\nBirlikte yapabileceklerimiz:\n• Deneyimlerini güçlü bir hikayeye dönüştürmek\n• Eksik olan yetenekleri belirleyip öğrenme planı yapmak\n• Profilini doğru şekilde optimize etmek\n• Portfolio projelerini geliştirecek fikirler üretmek\n• Özgüvenini artıracak başarı stratejileri\n\nCV'ni yükleyerek kişiselleştirilmiş analiz alabilirsin!`;
       baseMessage.suggestions = [
         "CV'mi yükleyip analiz et",
         "GitHub profilimi nasıl güçlendirebilirim?",
@@ -87,7 +87,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
     } else if (context === 'interview') {
       baseMessage.content = `Selam! Ben Ada AI 💪 Mülakat hazırlığı zamanı geldi!
 
-UpSchool'da aldığın eğitim seni buraya kadar getirdi, şimdi o güçlü kadın enerjinle mülakatı da başarıyla geçeceksin! 
+Up Hera topluluğunun desteğiyle şimdi o güçlü kadın enerjinle mülakatı başarıyla geçeceksin! 
 
 ${useEnhanced ? '🧠 **CV bazlı mülakat hazırlığı**: CV\'ni yükle, kişiselleştirilmiş sorular al!' : ''}
 
@@ -104,22 +104,21 @@ ${useEnhanced ? '🧠 **CV bazlı mülakat hazırlığı**: CV\'ni yükle, kişi
         "LinkedIn profilimi güncelle"
       ];
     } else if (context === 'network') {
-      baseMessage.content = `Merhaba! Ben Ada AI - senin UpSchool Network mentor'un!
+      baseMessage.content = `Merhaba! Ben Ada AI - senin Up Hera Network mentor'un!
 
-UpSchool'da aldığın eğitim sadece bir başlangıçtı - şimdi asıl yolculuk başlıyor!
+Topluluk desteğiyle network'ünü büyütme zamanı!
 
 ${useEnhanced ? 'Enhanced Mode: Network kurma ve kişiselleştirilmiş öneriler al!' : ''}
 
 Birlikte yapabileceklerimiz:
 • Network kurma ve topluluk içinde yer alma
-• LinkedIn profilimini güçlendirme
-• İşverenlerle iletişim kurma
+• LinkedIn profilini güçlendirme
 • Teknoloji sektöründe kadın olarak güçlenme
 • Özgüvenini artıracak başarı stratejileri`;
       baseMessage.suggestions = [
         "LinkedIn profilimi nasıl güçlendirebilirim?",
         "Hangi topluluklarla etkileşime girebilirim?",
-        "İşverenlerle nasıl iletişim kurabilirim?",
+        "Network'ümü nasıl büyütürüm?",
         "Profilimi hangi alanlarda güçlendirebilirim?"
       ];
     }

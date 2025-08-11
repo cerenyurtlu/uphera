@@ -110,15 +110,12 @@ const NetworkScreen: React.FC = () => {
         <div className="up-container">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <BrandLogo size={64} />
+              <div className="flex items-center space-x-4">
+                <BrandLogo size={120} />
                 <div>
-                  <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    UpSchool Network
-                  </h1>
-                  <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                    Teknoloji kadınları topluluğu
-                  </p>
+            <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
+              Teknolojide Öncü Kadınlar Topluluğu
+            </h1>
                 </div>
               </div>
             </div>
@@ -413,22 +410,13 @@ const NetworkScreen: React.FC = () => {
         <div className="up-container">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <BrandLogo size={40} />
-              <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                UpSchool Network
-              </span>
+              <BrandLogo size={56} />
             </div>
-            
-            <p className="text-sm mb-4" style={{ color: 'var(--up-dark-gray)' }}>
-              Teknolojideki kadınların güçlendiği, paylaştığı ve büyüdüğü topluluk
-            </p>
             
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
               <span>© 2025 UpSchool Network</span>
               <span>•</span>
               <span>Teknolojideki Kadınlar Topluluğu</span>
-              <span>•</span>
-              <span>Teknolojideki kadınların gücüyle</span>
             </div>
           </div>
         </div>

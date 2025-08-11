@@ -62,6 +62,7 @@ class GraduateRegistration(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+    user_type: Optional[str] = "mezun"  # 'mezun' | 'admin'
 
 class ProfileUpdateRequest(BaseModel):
     firstName: str
@@ -167,6 +168,7 @@ async def login(request: LoginRequest):
     try:
         email = request.email.lower().strip()
         password = request.password
+        requested_type = (request.user_type or "mezun").lower()
         
         print(f"🔐 Giriş denemesi: {email}")
         
@@ -174,6 +176,8 @@ async def login(request: LoginRequest):
         user = authenticate_user(email, password)
         
         if user:
+            # Determine role
+            role = requested_type if requested_type in ("mezun", "admin") else "mezun"
             # Create session
             token = create_session(user["id"])
             
@@ -189,10 +193,10 @@ async def login(request: LoginRequest):
                     "name": f"{user['firstName']} {user['lastName']}",
                     "email": user["email"],
                     "program": user["upschoolProgram"],
-                    "user_type": "mezun"
+                    "user_type": role
                 },
                 "token": token,
-                "redirect_url": "/jobs"
+                "redirect_url": "/dashboard" if role == "mezun" else "/dashboard"
             }
         else:
             print(f"❌ Giriş başarısız: {email} - Geçersiz kullanıcı veya şifre")
@@ -215,6 +219,18 @@ async def get_profile(current_user: Dict = Depends(get_current_user)):
         }
     except Exception as e:
         print(f"❌ Profil getirme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Profil getirme hatası: {str(e)}")
+
+@app.get("/api/me")
+async def get_me(current_user: Dict = Depends(get_current_user)):
+    """Login sonrası tüm profil bilgilerini döner"""
+    try:
+        return {
+            "success": True,
+            "user": current_user
+        }
+    except Exception as e:
+        print(f"❌ /api/me hatası: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Profil getirme hatası: {str(e)}")
 
 @app.put("/api/auth/profile")
@@ -561,19 +577,17 @@ async def get_mentorship_requests(current_user: Dict = Depends(get_current_user)
                 "message": "React performance konusunda yardım almak istiyorum..."
             }
         ]
-    def get_requests():
-        try:
-            # asıl kod
-            return {
-                "success": True,
-                "requests": requests
-            }
-        except Exception as e:
-            print(f"❌ Mentorluk istekleri getirme hatası: {str(e)}")
-            return {
-                "success": False,
-                "detail": f"Mentorluk istekleri getirilirken hata oluştu: {str(e)}"
-            }
+        
+        return {
+            "success": True,
+            "requests": requests
+        }
+    except Exception as e:
+        print(f"❌ Mentorluk istekleri getirme hatası: {str(e)}")
+        return {
+            "success": False,
+            "detail": f"Mentorluk istekleri getirilirken hata oluştu: {str(e)}"
+        }
 
 @app.get("/api/mentorship/messages")
 async def get_mentorship_messages(current_user: Dict = Depends(get_current_user)):

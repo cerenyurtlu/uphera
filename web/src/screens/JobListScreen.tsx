@@ -56,6 +56,8 @@ const JobListScreen: React.FC = () => {
 
         // API URL'lerini sırayla dene
         const apiUrls = [
+          'http://127.0.0.1:8000/api/me',
+          'http://localhost:8000/api/me',
           'http://127.0.0.1:8000/api/auth/profile',
           'http://localhost:8000/api/auth/profile'
         ];
@@ -456,15 +458,12 @@ const JobListScreen: React.FC = () => {
         <div className="up-container">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <BrandLogo size={64} />
+              <div className="flex items-center space-x-4">
+                <BrandLogo size={150} />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    Dashboard
+                    Teknolojide Öncü Kadınlar Topluluğu
                   </h1>
-                  <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                    Kariyer yolculuğunun özeti
-                  </p>
                 </div>
               </div>
             </div>
@@ -490,7 +489,7 @@ const JobListScreen: React.FC = () => {
             <div className="text-center max-w-4xl mx-auto">
               <div className="flex items-center justify-center space-x-2 mb-4">
                 <span className="text-lg font-medium" style={{ color: 'var(--up-primary-dark)' }}>
-                  UpSchool Teknoloji Kadınları Topluluğu
+                  Teknolojide Öncü Kadınlar Topluluğu
                 </span>
               </div>
               
@@ -1758,28 +1757,21 @@ const JobListScreen: React.FC = () => {
          </div>
        )}
 
-       {/* Footer */}
-      <footer className="mt-16 py-8 border-t" style={{ borderColor: 'var(--up-light-gray)', background: 'var(--up-light-gray)' }}>
+        {/* Footer */}
+        <footer className="mt-16 py-8 border-t" style={{ borderColor: 'var(--up-light-gray)', background: 'var(--up-light-gray)' }}>
         <div className="up-container">
           <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <BrandLogo size={40} />
-              <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                Up Hera
-              </span>
-            </div>
-            
-            <p className="text-sm mb-4" style={{ color: 'var(--up-dark-gray)' }}>
-              UpSchool mezunu teknolojideki kadınlar için AI destekli işe yerleştirme platformu
-            </p>
-            
-            <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 Up Hera</span>
-              <span>•</span>
-              <span>UpSchool Partnership</span>
-              <span>•</span>
-              <span>Teknolojideki kadınların gücüyle</span>
-            </div>
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                 <BrandLogo size={56} />
+              </div>
+              <div className="mb-3 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
+                Teknolojide Öncü Kadınlar Topluluğu
+              </div>
+              <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
+                <span>© 2025 Up Hera</span>
+                <span>•</span>
+                <span>UpSchool Partnership</span>
+              </div>
           </div>
         </div>
       </footer>

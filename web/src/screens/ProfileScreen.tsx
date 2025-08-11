@@ -248,15 +248,12 @@ const ProfileScreen: React.FC = () => {
         <div className="up-container">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <BrandLogo size={64} />
+              <div className="flex items-center space-x-4">
+                <BrandLogo size={120} />
                 <div>
                   <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    Up Hera
+                    Teknolojide rol model kadınlar yetiştiriyoruz
                   </h1>
-                  <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                    Profil Yönetimi
-                  </p>
                 </div>
               </div>
             </div>
@@ -765,22 +762,13 @@ const ProfileScreen: React.FC = () => {
         <div className="up-container">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <BrandLogo size={40} />
-              <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                Up Hera
-              </span>
+              <BrandLogo size={56} />
             </div>
-            
-            <p className="text-sm mb-4" style={{ color: 'var(--up-dark-gray)' }}>
-              UpSchool mezunu teknolojideki kadınlar için AI destekli işe yerleştirme platformu
-            </p>
             
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
               <span>© 2025 Up Hera</span>
               <span>•</span>
               <span>UpSchool Partnership</span>
-              <span>•</span>
-              <span>Teknolojideki kadınların gücüyle</span>
             </div>
           </div>
         </div>

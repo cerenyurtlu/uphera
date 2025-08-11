@@ -109,15 +109,7 @@ const InterviewPrepScreen: React.FC = () => {
               >
                 <ChevronLeft className="h-5 w-5" style={{ color: 'var(--up-primary)' }} />
               </button>
-              <BrandLogo size={32} />
-              <div>
-                <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                  Mülakat Hazırlık Merkezi
-                </h1>
-                <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                  AI ile desteklenen kişiselleştirilmiş mülakat hazırlığı
-                </p>
-              </div>
+              <BrandLogo size={72} />
             </div>
             
             <button
@@ -307,22 +299,13 @@ const InterviewPrepScreen: React.FC = () => {
         <div className="up-container">
           <div className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <BrandLogo size={40} />
-              <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                Up Hera
-              </span>
+              <BrandLogo size={56} />
             </div>
-            
-            <p className="text-sm mb-4" style={{ color: 'var(--up-dark-gray)' }}>
-              UpSchool mezunu teknolojideki kadınlar için AI destekli işe yerleştirme platformu
-            </p>
             
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
               <span>© 2025 Up Hera</span>
               <span>•</span>
               <span>UpSchool Partnership</span>
-              <span>•</span>
-              <span>Teknolojideki kadınların gücüyle</span>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import BrandLogo from '../components/BrandLogo';
+import { GraduationCap, Shield } from 'lucide-react';
 
 const LoginScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
-  const [userType, setUserType] = useState<'mezun' | 'placement' | 'employer'>('mezun');
+  const [userType, setUserType] = useState<'mezun' | 'admin'>('mezun');
   
   // Registration form states for UpSchool graduates
   const [registrationData, setRegistrationData] = useState({
@@ -184,7 +185,7 @@ const LoginScreen: React.FC = () => {
         upschoolProgram: registrationData.bootcampProgram,
         graduationDate: registrationData.graduationYear,
         skills: registrationData.primarySkills,
-        experience: registrationData.experienceLevel === 'entry' ? '0' : registrationData.experienceLevel === 'junior' ? '1' : registrationData.experienceLevel === 'mid' ? '3' : '5',
+        experience: registrationData.experienceLevel,
         location: '',
         portfolio: registrationData.portfolioUrl || '',
         github: registrationData.githubUrl || '',
@@ -305,25 +306,16 @@ const LoginScreen: React.FC = () => {
       {/* Header */}
       <div className="up-page-header">
         <div className="up-container">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {/* Up Hera Logo */}
-              <div className="flex items-center space-x-3">
-                <BrandLogo size={100} />
-                <div>
-                  <h1 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                    UpHera
-                  </h1>
-                  <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                    UpSchool mezunları için AI destekli platform
-                  </p>
-                </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <BrandLogo size={175} />
+              </div>
+              <div className="text-right flex-1">
+                <h1 className="text-xs md:text-sm font-medium" style={{ color: 'var(--up-dark-gray)' }}>
+                  Teknolojide Öncü Kadınlar Topluluğu
+                </h1>
               </div>
             </div>
-            <div className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-              Teknolojide rol model kadınlar yetiştiriyoruz
-            </div>
-          </div>
         </div>
       </div>
 
@@ -335,19 +327,17 @@ const LoginScreen: React.FC = () => {
             <div className="text-center mb-8">
               {/* Up Hera Logo */}
               <div className="flex justify-center mb-6">
-                <BrandLogo size={200} />
+                <BrandLogo size={350} />
               </div>
               <h2 className="up-page-title text-2xl">
                 {isRegistering ? 'Hesap Oluştur' : 'Up Hera\'ya Giriş Yap'}
               </h2>
               <p className="up-page-subtitle">
                 {isRegistering 
-                  ? 'UpSchool mezunu hesabınızı oluşturun ve teknoloji kariyerinize başlayın'
+                  ? 'Up Hera – Teknolojide Öncü Kadınlar Topluluğu'
                   : userType === 'mezun' 
-                    ? 'UpSchool mezunu teknolojideki kadınlar için AI destekli platform'
-                    : userType === 'placement'
-                      ? 'UpSchool Placement ekibi için yönetim paneli'
-                      : 'İşverenler için UpSchool mezunu aday arama platformu'
+                    ? 'Teknolojide Öncü Kadınlar Topluluğu'
+                    : 'Admin için yönetim paneli'
                 }
               </p>
             </div>
@@ -575,7 +565,7 @@ const LoginScreen: React.FC = () => {
                   <label className="up-form-label">
                     Hesap Türü
                   </label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setUserType('mezun')}
@@ -586,38 +576,27 @@ const LoginScreen: React.FC = () => {
                       }`}
                     >
                       <div className="text-center">
-                        <div className="text-lg mb-1">👩‍💻</div>
+                        <div className="flex items-center justify-center mb-1">
+                          <GraduationCap className="h-5 w-5" />
+                        </div>
                         <div className="text-sm font-medium">UpSchool Mezunu</div>
                       </div>
                     </button>
                     
                     <button
                       type="button"
-                      onClick={() => setUserType('placement')}
+                      onClick={() => setUserType('admin')}
                       className={`p-3 rounded-lg border-2 transition-all ${
-                        userType === 'placement'
+                        userType === 'admin'
                           ? 'border-blue-500 bg-blue-50 text-blue-700'
                           : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
                       }`}
                     >
                       <div className="text-center">
-                        <div className="text-lg mb-1">🎯</div>
-                        <div className="text-sm font-medium">Placement</div>
-                      </div>
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={() => setUserType('employer')}
-                      className={`p-3 rounded-lg border-2 transition-all ${
-                        userType === 'employer'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                      }`}
-                    >
-                      <div className="text-center">
-                        <div className="text-lg mb-1">🏢</div>
-                        <div className="text-sm font-medium">İşveren</div>
+                        <div className="flex items-center justify-center mb-1">
+                          <Shield className="h-5 w-5" />
+                        </div>
+                        <div className="text-sm font-medium">Admin</div>
                       </div>
                     </button>
                   </div>
@@ -700,22 +679,25 @@ const LoginScreen: React.FC = () => {
                   </div>
                 )}
                 
-                {/* Contact Info for Other User Types */}
-                {userType !== 'mezun' && (
+                 {/* Contact Info for Admin */}
+                {userType === 'admin' && (
                   <div className="text-center mt-6">
                     <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                      {userType === 'placement' 
-                        ? 'Placement hesabı için UpSchool ile iletişime geçin'
-                        : 'İşveren hesabı için UpSchool ile iletişime geçin'
-                      }
+                      Admin hesabı için UpSchool ile iletişime geçin
                     </p>
                     <p className="text-xs mt-2" style={{ color: 'var(--up-primary)' }}>
-                      📧 placement@upschool.com.tr
+                      📧 admin@uphera.com
                     </p>
                   </div>
                 )}
               </form>
             )}
+            {/* Card bottom note */}
+            <div className="text-center mt-6">
+              <p className="text-xs" style={{ color: 'var(--up-dark-gray)' }}>
+                Teknolojide Öncü Kadınlar Topluluğu
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -938,23 +920,16 @@ const LoginScreen: React.FC = () => {
       <footer className="py-12 border-t" style={{ borderColor: 'var(--up-light-gray)', background: 'white' }}>
         <div className="up-container">
           <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <BrandLogo size={60} />
-              <span className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                UpHera
-              </span>
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <BrandLogo size={100} />
             </div>
-            
-            <p className="text-sm mb-4" style={{ color: 'var(--up-dark-gray)' }}>
-              UpSchool mezunu teknolojideki kadınlar için AI destekli işe yerleştirme platformu
-            </p>
-            
+            <div className="mb-4 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
+              Teknolojide Öncü Kadınlar Topluluğu
+            </div>
             <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 UpHera</span>
+              <span>© 2025 Up Hera</span>
               <span>•</span>
               <span>UpSchool Partnership</span>
-              <span>•</span>
-              <span>Teknolojideki kadınların gücüyle</span>
             </div>
           </div>
         </div>
