@@ -245,6 +245,27 @@ export const apiService = {
     const response = await api.get('/api/mentors')
     return response.data
   },
+
+  // Messaging
+  getConversation: async (mentorId: string) => {
+    const response = await api.get(`/api/conversations/${mentorId}`)
+    return response.data
+  },
+
+  sendMessage: async (messageData: any) => {
+    const response = await api.post('/api/messages/send', messageData)
+    return response.data
+  },
+
+  getAllConversations: async () => {
+    const response = await api.get('/api/conversations')
+    return response.data
+  },
+
+  markConversationRead: async (conversationId: string) => {
+    const response = await api.put(`/api/conversations/${conversationId}/read`)
+    return response.data
+  },
 }
 
 export default apiService 

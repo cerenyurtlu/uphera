@@ -16,6 +16,7 @@ import FreelanceProjectsScreen from './screens/FreelanceProjectsScreen'
 import MentorshipScreen from './screens/MentorshipScreen'
 import SuccessStoriesScreen from './screens/SuccessStoriesScreen'
 import SettingsScreen from './screens/SettingsScreen'
+import MessagingScreen from './screens/MessagingScreen'
 
 function App() {
   // Uygulama başlarken ayarları yükle
@@ -45,6 +46,7 @@ function App() {
         <Route path="/notifications" element={<NotificationListScreen />} />
         <Route path="/network" element={<NetworkScreen />} />
         <Route path="/mentorship" element={<MentorshipScreen />} />
+        <Route path="/messages/:mentorId" element={<MessagingScreen />} />
         <Route path="/success-stories" element={<SuccessStoriesScreen />} />
         <Route path="/interview-prep" element={<InterviewPrepScreen />} />
         <Route path="/events" element={<EventsScreen />} />

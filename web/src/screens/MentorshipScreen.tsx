@@ -27,9 +27,7 @@ const MentorshipScreen: React.FC = () => {
   const navigate = useNavigate();
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(null);
   const [showRequestModal, setShowRequestModal] = useState(false);
-  const [showMessageModal, setShowMessageModal] = useState(false);
   const [requestMessage, setRequestMessage] = useState('');
-  const [messageText, setMessageText] = useState('');
   const [loading, setLoading] = useState(true);
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
@@ -431,10 +429,7 @@ const MentorshipScreen: React.FC = () => {
                 
                 <div className="flex space-x-2">
                   <ModernButton
-                    onClick={() => {
-                      setSelectedMentor(mentor);
-                      setShowMessageModal(true);
-                    }}
+                    onClick={() => navigate(`/messages/${mentor.id}`)}
                     size="sm"
                     variant="outline"
                     disabled={!mentor.isAvailable}
@@ -534,74 +529,7 @@ const MentorshipScreen: React.FC = () => {
         </div>
       )}
 
-      {/* Mesaj Gönderme Modal */}
-      {showMessageModal && selectedMentor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                  Mesaj Gönder
-                </h2>
-                <button
-                  onClick={() => setShowMessageModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <div className="mb-4">
-                <div className="flex items-center space-x-3 mb-3">
-                  <img 
-                    src={selectedMentor.profileImage} 
-                    alt={selectedMentor.name}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  <div>
-                    <h3 className="font-medium">{selectedMentor.name}</h3>
-                    <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                      {selectedMentor.title} @ {selectedMentor.company}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--up-primary-dark)' }}>
-                    Mesajınız
-                  </label>
-                  <textarea
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    placeholder="Mentorunuza sormak istediğiniz soruları yazın..."
-                    className="w-full p-3 border rounded-lg resize-none"
-                    rows={4}
-                    style={{ borderColor: 'var(--up-light-gray)' }}
-                  />
-                </div>
-              </div>
-              
-              <div className="flex space-x-3">
-                <ModernButton
-                  onClick={() => setShowMessageModal(false)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  İptal
-                </ModernButton>
-                <ModernButton
-                  onClick={handleSendMessage}
-                  className="flex-1"
-                  disabled={!messageText.trim()}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Mesaj Gönder
-                </ModernButton>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

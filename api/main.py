@@ -8,6 +8,7 @@ import json
 import datetime
 import random
 import re
+import time
 
 # Import database functions
 from database import (
@@ -989,6 +990,144 @@ async def get_mentor_profile(current_user: Dict = Depends(get_current_user)):
     except Exception as e:
         print(f"❌ Mentor profili getirme hatası: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Mentor profili getirilirken hata: {str(e)}")
+
+# Messaging endpoints
+@app.get("/api/conversations/{mentor_id}")
+async def get_conversation(mentor_id: str, current_user: Dict = Depends(get_current_user)):
+    """Belirli bir mentor ile olan konuşmayı getir"""
+    try:
+        print(f"💬 Konuşma getiriliyor: {current_user['firstName']} - Mentor: {mentor_id}")
+        
+        # Mock messages - gerçek uygulamada veritabanından gelir
+        messages = [
+            {
+                "id": "msg1",
+                "senderId": mentor_id,
+                "receiverId": current_user.get('id', 'current_user'),
+                "content": f"Merhaba {current_user['firstName']}! Size nasıl yardımcı olabilirim?",
+                "timestamp": "2024-01-15T10:00:00Z",
+                "read": True,
+                "type": "text"
+            },
+            {
+                "id": "msg2", 
+                "senderId": current_user.get('id', 'current_user'),
+                "receiverId": mentor_id,
+                "content": "Merhaba! Kariyer geçişi konusunda tavsiyelerinizi almak istiyorum.",
+                "timestamp": "2024-01-15T10:05:00Z",
+                "read": True,
+                "type": "text"
+            },
+            {
+                "id": "msg3",
+                "senderId": mentor_id,
+                "receiverId": current_user.get('id', 'current_user'),
+                "content": "Tabii ki! Hangi alandan hangi alana geçiş yapmayı planlıyorsunuz? Mevcut deneyiminizi de paylaşabilir misiniz?",
+                "timestamp": "2024-01-15T10:10:00Z",
+                "read": True,
+                "type": "text"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "messages": messages
+        }
+    except Exception as e:
+        print(f"❌ Konuşma getirme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Konuşma getirilirken hata: {str(e)}")
+
+class MessageSend(BaseModel):
+    receiverId: str
+    content: str
+    type: str = "text"
+
+@app.post("/api/messages/send")
+async def send_message(
+    message_data: MessageSend,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Mentor'a mesaj gönder"""
+    try:
+        print(f"📤 Mesaj gönderiliyor: {current_user['firstName']} -> {message_data.receiverId}")
+        print(f"   İçerik: {message_data.content[:50]}...")
+        
+        # Gerçek uygulamada mesaj veritabanına kaydedilir
+        new_message = {
+            "id": f"msg_{int(time.time() * 1000)}",
+            "senderId": current_user.get('id', 'current_user'),
+            "receiverId": message_data.receiverId,
+            "content": message_data.content,
+            "timestamp": datetime.now().isoformat() + "Z",
+            "read": False,
+            "type": message_data.type
+        }
+        
+        return {
+            "success": True,
+            "message": new_message
+        }
+    except Exception as e:
+        print(f"❌ Mesaj gönderme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Mesaj gönderilirken hata: {str(e)}")
+
+@app.get("/api/conversations")
+async def get_all_conversations(current_user: Dict = Depends(get_current_user)):
+    """Kullanıcının tüm konuşmalarını getir"""
+    try:
+        print(f"💬 Tüm konuşmalar getiriliyor: {current_user['firstName']}")
+        
+        # Mock conversation list - gerçek uygulamada veritabanından gelir
+        conversations = [
+            {
+                "id": "conv1",
+                "mentorId": "m1",
+                "mentorName": "Gizem Aktaş",
+                "mentorTitle": "Senior Engineering Manager",
+                "mentorCompany": "Meta",
+                "lastMessage": "Tabii ki! Hangi alandan hangi alana geçiş yapmayı planlıyorsunuz?",
+                "lastMessageTime": "2024-01-15T10:10:00Z",
+                "unreadCount": 0,
+                "mentorImage": "/api/placeholder/50/50"
+            },
+            {
+                "id": "conv2",
+                "mentorId": "m2", 
+                "mentorName": "Ayşe Demir",
+                "mentorTitle": "Senior Frontend Developer",
+                "mentorCompany": "Spotify",
+                "lastMessage": "React konusunda sorularınız olursa çekinmeyin",
+                "lastMessageTime": "2024-01-14T16:30:00Z",
+                "unreadCount": 2,
+                "mentorImage": "/api/placeholder/50/50"
+            }
+        ]
+        
+        return {
+            "success": True,
+            "conversations": conversations
+        }
+    except Exception as e:
+        print(f"❌ Konuşmalar getirme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Konuşmalar getirilirken hata: {str(e)}")
+
+@app.put("/api/conversations/{conversation_id}/read")
+async def mark_conversation_read(
+    conversation_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Konuşmayı okundu olarak işaretle"""
+    try:
+        print(f"✅ Konuşma okundu işaretleniyor: {conversation_id}")
+        
+        # Gerçek uygulamada veritabanında güncellenir
+        return {
+            "success": True,
+            "message": "Konuşma okundu olarak işaretlendi"
+        }
+    except Exception as e:
+        print(f"❌ Konuşma okundu işaretleme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Konuşma işaretlenirken hata: {str(e)}")
 
 @app.websocket("/ws/coach")
 async def websocket_coach(websocket: WebSocket):
