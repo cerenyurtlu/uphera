@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 
 # Database file path
-DB_PATH = "hireher.db"
+DB_PATH = "uphera.db"
 
 # Database lock for thread safety
 _db_lock = threading.Lock()

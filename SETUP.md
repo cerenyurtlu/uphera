@@ -76,7 +76,7 @@ cp env.example .env
 `.env` dosyasını düzenleyin:
 ```env
 # Database
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/hireher
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/uphera
 
 # OpenAI (https://platform.openai.com/api-keys adresinden alın)
 OPENAI_API_KEY=sk-your-openai-api-key-here
@@ -99,11 +99,11 @@ FRONTEND_URL=http://localhost:5173
 sudo -u postgres psql
 
 # Veritabanı oluşturun
-CREATE DATABASE hireher;  
+CREATE DATABASE uphera;  
 # Not: Veritabanı adı değişmedi (marka dışı), isterseniz ayrıca güncelleyebiliriz.
 
 # pgvector extension'ını etkinleştirin
-\c hireher
+\c uphera
 CREATE EXTENSION IF NOT EXISTS vector;
 
 # Çıkın
