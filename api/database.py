@@ -10,7 +10,7 @@ import uuid
 import threading
 import time
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 
 # Database file path
@@ -21,12 +21,14 @@ _db_lock = threading.Lock()
 
 def get_db_connection():
     """Get database connection with proper settings"""
-    conn = sqlite3.connect(DB_PATH, timeout=60.0)
+    conn = sqlite3.connect(DB_PATH, timeout=60.0, check_same_thread=False)
     cursor = conn.cursor()
     
-    # Simple settings without WAL mode
-    cursor.execute('PRAGMA journal_mode=DELETE')
-    cursor.execute('PRAGMA synchronous=FULL')
+    # Performance optimizations
+    cursor.execute('PRAGMA journal_mode=WAL')
+    cursor.execute('PRAGMA synchronous=NORMAL')
+    cursor.execute('PRAGMA cache_size=1000')
+    cursor.execute('PRAGMA temp_store=memory')
     cursor.execute('PRAGMA busy_timeout=30000')
     
     return conn, cursor
@@ -65,6 +67,18 @@ def init_db():
             cursor.execute('ALTER TABLE users ADD COLUMN user_type TEXT DEFAULT "mezun"')
         except sqlite3.OperationalError:
             pass  # Column already exists
+        
+        # Create indexes for better performance
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_user_type ON users(user_type)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions(token)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON user_sessions(user_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_expires ON user_sessions(expires_at)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_applications_user_id ON applications(user_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications(job_id)')
+        
+        # Clean up expired sessions periodically
+        cursor.execute('DELETE FROM user_sessions WHERE expires_at < CURRENT_TIMESTAMP')
         
         # Jobs table
         cursor.execute('''
@@ -120,7 +134,43 @@ def verify_password(password: str, hashed: str) -> bool:
     """Verify password against hash"""
     return hash_password(password) == hashed
 
-def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
+def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
+    """Get user by email address"""
+    with _db_lock:
+        conn, cursor = get_db_connection()
+        
+        cursor.execute('''
+            SELECT id, email, first_name, last_name, upschool_program,
+                   phone, graduation_date, experience_level, location,
+                   portfolio_url, github_url, linkedin_url, about_me, skills, user_type
+            FROM users WHERE email = ?
+        ''', (email.lower().strip(),))
+        
+        user = cursor.fetchone()
+        conn.close()
+        
+        if user:
+            return {
+                "id": user[0],
+                "email": user[1],
+                "firstName": user[2],
+                "lastName": user[3],
+                "upschoolProgram": user[4],
+                "phone": user[5],
+                "graduationDate": user[6],
+                "experienceLevel": user[7],
+                "location": user[8],
+                "portfolioUrl": user[9],
+                "githubUrl": user[10],
+                "linkedinUrl": user[11],
+                "aboutMe": user[12],
+                "skills": json.loads(user[13]) if user[13] else [],
+                "userType": user[14] if len(user) > 14 else "mezun"
+            }
+        
+        return None
+
+def create_user(user_data: Dict[str, Any]) -> str:
     """Create a new user"""
     with _db_lock:
         conn, cursor = get_db_connection()
@@ -132,8 +182,8 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
                 INSERT INTO users (
                     id, email, password_hash, first_name, last_name, phone,
                     upschool_program, graduation_date, experience_level, location,
-                    portfolio_url, github_url, linkedin_url, about_me, skills
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    portfolio_url, github_url, linkedin_url, about_me, skills, user_type
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 user_id,
                 user_data['email'].lower().strip(),
@@ -143,26 +193,20 @@ def create_user(user_data: Dict[str, Any]) -> Dict[str, Any]:
                 user_data.get('phone', ''),
                 user_data['upschoolProgram'],
                 user_data.get('graduationDate', ''),
-                # experience level is string like 'entry' | 'junior' | 'mid' | 'senior'
-                user_data.get('experience', 'entry'),
+                user_data.get('experienceLevel', 'entry'),
                 user_data.get('location', ''),
-                user_data.get('portfolio', ''),
-                user_data.get('github', ''),
-                user_data.get('linkedin', ''),
+                user_data.get('portfolioUrl', ''),
+                user_data.get('githubUrl', ''),
+                user_data.get('linkedinUrl', ''),
                 user_data.get('aboutMe', ''),
-                json.dumps(user_data.get('skills', []))
+                json.dumps(user_data.get('skills', [])),
+                user_data.get('userType', 'mezun')
             ))
         
         conn.commit()
         conn.close()
         
-        return {
-            "id": user_id,
-            "email": user_data['email'],
-            "firstName": user_data['firstName'],
-            "lastName": user_data['lastName'],
-            "upschoolProgram": user_data['upschoolProgram']
-        }
+        return user_id
 
 def authenticate_user(email: str, password: str) -> Optional[Dict[str, Any]]:
     """Authenticate user and return user data"""
@@ -171,9 +215,9 @@ def authenticate_user(email: str, password: str) -> Optional[Dict[str, Any]]:
         
         cursor.execute('''
             SELECT id, email, password_hash, first_name, last_name, upschool_program,
-                   phone, graduation_date, experience_level, location, skills
+                   phone, graduation_date, experience_level, location, skills, user_type
             FROM users WHERE email = ?
-        ''', (email.lower(),))
+        ''', (email.lower().strip(),))
         
         user = cursor.fetchone()
         conn.close()
@@ -189,7 +233,8 @@ def authenticate_user(email: str, password: str) -> Optional[Dict[str, Any]]:
                 "graduationDate": user[7],
                 "experienceLevel": user[8],
                 "location": user[9],
-                "skills": json.loads(user[10]) if user[10] else []
+                "skills": json.loads(user[10]) if user[10] else [],
+                "userType": user[11] if len(user) > 11 else "mezun"
             }
         
         return None
@@ -267,7 +312,7 @@ def create_session(user_id: str) -> str:
         
         session_id = str(uuid.uuid4())
         token = str(uuid.uuid4())
-        expires_at = datetime.now().replace(hour=23, minute=59, second=59)
+        expires_at = datetime.now() + timedelta(hours=24)
         
         cursor.execute('''
             INSERT INTO user_sessions (id, user_id, token, expires_at)
@@ -279,20 +324,56 @@ def create_session(user_id: str) -> str:
         
         return token
 
-def validate_session(token: str) -> Optional[str]:
-    """Validate session token and return user_id"""
+def validate_session(token: str) -> Optional[Dict[str, Any]]:
+    """Validate session token and return user data"""
     with _db_lock:
         conn, cursor = get_db_connection()
         
         cursor.execute('''
-            SELECT user_id FROM user_sessions 
-            WHERE token = ? AND expires_at > CURRENT_TIMESTAMP
+            SELECT u.id, u.email, u.first_name, u.last_name, u.upschool_program,
+                   u.phone, u.graduation_date, u.experience_level, u.location,
+                   u.portfolio_url, u.github_url, u.linkedin_url, u.about_me, 
+                   u.skills, u.user_type
+            FROM user_sessions s
+            JOIN users u ON s.user_id = u.id
+            WHERE s.token = ? AND s.expires_at > CURRENT_TIMESTAMP
         ''', (token,))
         
-        result = cursor.fetchone()
+        user = cursor.fetchone()
         conn.close()
         
-        return result[0] if result else None
+        if user:
+            return {
+                "id": user[0],
+                "email": user[1],
+                "firstName": user[2],
+                "lastName": user[3],
+                "upschoolProgram": user[4],
+                "phone": user[5],
+                "graduationDate": user[6],
+                "experienceLevel": user[7],
+                "location": user[8],
+                "portfolioUrl": user[9],
+                "githubUrl": user[10],
+                "linkedinUrl": user[11],
+                "aboutMe": user[12],
+                "skills": json.loads(user[13]) if user[13] else [],
+                "userType": user[14] if len(user) > 14 else "mezun"
+            }
+        
+        return None
+
+def cleanup_expired_sessions():
+    """Clean up expired sessions"""
+    try:
+        with _db_lock:
+            conn, cursor = get_db_connection()
+            cursor.execute('DELETE FROM user_sessions WHERE expires_at < CURRENT_TIMESTAMP')
+            conn.commit()
+            conn.close()
+    except Exception as e:
+        print(f"Error cleaning up sessions: {e}")
 
 # Initialize database on import
-init_db() 
+if __name__ != "__main__":
+    init_db() 

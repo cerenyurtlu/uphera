@@ -7,11 +7,14 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 import json
 
-# Import the optimized app
-from ..main_optimized import app
-from ..config import settings
-from ..database_optimized import init_optimized_db, execute_query
-from ..auth import hash_password
+# Import the app
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from main import app
+from config import settings
+from database import init_db, create_user, authenticate_user, hash_password
 
 # Test client
 client = TestClient(app)

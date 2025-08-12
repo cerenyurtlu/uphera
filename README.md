@@ -1,4 +1,4 @@
-# 🚀 Up Hera - Teknolojide Öncü Kadınlar Topluluğu
+# 🚀 UpHera - Teknolojide Öncü Kadınlar Topluluğu
 **UpSchool Mezunu Teknolojide Rol Model Kadınların Kariyer Yolculuğunda AI Mentoru** 👩‍💻✨
 
 ## 📋 Proje Özeti
@@ -407,4 +407,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**🚀 Up Hera - Teknoloji kadınlarının kariyer yolculuğunda gerçek AI desteği!**
+**🚀 UpHera - Teknolojide Öncü Kadınlar Topluluğu**

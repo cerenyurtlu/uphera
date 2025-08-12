@@ -11,7 +11,7 @@ import os
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any
 
-from fastapi import FastAPI, HTTPException, Depends, Header, File, UploadFile, Query, Request, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, Header, File, UploadFile, Query, Request, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse, Response
 from pydantic import BaseModel
@@ -28,8 +28,24 @@ from database import (
 )
 
 # Services
-from services.enhanced_ai_service import enhanced_ai_service
-from services.job_service import job_service
+try:
+    from services.enhanced_ai_service import enhanced_ai_service
+except ImportError:
+    enhanced_ai_service = None
+    logger.warning("Enhanced AI service not available")
+
+try:
+    from services.job_service import job_service
+except ImportError:
+    job_service = None
+    logger.warning("Job service not available")
+
+try:
+    from services.websocket_service import websocket_service, manager
+except ImportError:
+    websocket_service = None
+    manager = None
+    logger.warning("WebSocket service not available")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -99,13 +115,17 @@ async def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
     
-    token = authorization.split(" ")[1]
-    user = validate_session(token)
-    
-    if not user:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    
-    return user
+    try:
+        token = authorization.split(" ")[1]
+        user = validate_session(token)
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid or expired token")
+        
+        return user
+    except Exception as e:
+        logger.error(f"Authentication error: {e}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 # Startup event
 @app.on_event("startup")
@@ -122,8 +142,9 @@ async def startup_event():
         # Initialize job service
         logger.info("✅ Job service initialized")
         
-        # Create upload directory
-        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+        # Create upload directory if needed
+        upload_dir = getattr(settings, 'UPLOAD_DIR', './uploads')
+        os.makedirs(upload_dir, exist_ok=True)
         logger.info("✅ Upload directory created")
         
         logger.info("🚀 Up Hera API started successfully!")
@@ -154,10 +175,18 @@ async def health_check():
     """Health check endpoint"""
     try:
         # Test database connection
-        test_user = get_user_by_id("test")  # This will test DB connection
+        from database import get_db_connection
+        conn, cursor = get_db_connection()
+        cursor.execute("SELECT 1")
+        conn.close()
         
         # Test AI service
-        ai_status = await enhanced_ai_service.check_ollama_status()
+        ai_status = False
+        if enhanced_ai_service:
+            try:
+                ai_status = await enhanced_ai_service.check_ollama_status()
+            except Exception:
+                ai_status = False
         
         return {
             "status": "healthy",
@@ -179,17 +208,26 @@ async def health_check():
 async def register_graduate(graduate: GraduateRegistration):
     """Register new graduate"""
     try:
+        # Validate email format
+        email = graduate.email.lower().strip()
+        if not email or "@" not in email:
+            raise HTTPException(status_code=400, detail="Geçerli bir e-posta adresi girin")
+        
+        # Validate password strength
+        if len(graduate.password) < 6:
+            raise HTTPException(status_code=400, detail="Şifre en az 6 karakter olmalı")
+        
         # Check if user already exists
-        existing_user = get_user_by_email(graduate.email)
+        existing_user = get_user_by_email(email)
         if existing_user:
             raise HTTPException(status_code=409, detail="Bu e-posta adresi zaten kayıtlı")
         
         # Create user
         user_data = {
-            "email": graduate.email,
+            "email": email,
             "password": graduate.password,
-            "firstName": graduate.firstName,
-            "lastName": graduate.lastName,
+            "firstName": graduate.firstName.strip(),
+            "lastName": graduate.lastName.strip(),
             "upschoolProgram": graduate.upschoolProgram,
             "graduationDate": graduate.graduationDate,
             "experienceLevel": graduate.experienceLevel,
@@ -200,6 +238,9 @@ async def register_graduate(graduate: GraduateRegistration):
         
         user_id = create_user(user_data)
         
+        # Create session for auto-login
+        token = create_session(user_id)
+        
         logger.info(f"✅ New graduate registered: {graduate.firstName} {graduate.lastName}")
         
         return {
@@ -208,9 +249,11 @@ async def register_graduate(graduate: GraduateRegistration):
             "user": {
                 "id": user_id,
                 "name": f"{graduate.firstName} {graduate.lastName}",
-                "email": graduate.email,
+                "email": email,
                 "program": graduate.upschoolProgram
-            }
+            },
+            "token": token,
+            "redirect_url": "/dashboard"
         }
         
     except HTTPException:
@@ -223,8 +266,13 @@ async def register_graduate(graduate: GraduateRegistration):
 async def login(request: LoginRequest):
     """User login"""
     try:
+        # Validate input
+        email = request.email.lower().strip()
+        if not email or not request.password:
+            raise HTTPException(status_code=400, detail="E-posta ve şifre gerekli")
+        
         # Authenticate user
-        user = authenticate_user(request.email, request.password)
+        user = authenticate_user(email, request.password)
         
         if not user:
             raise HTTPException(status_code=401, detail="E-posta veya şifre hatalı")
@@ -313,6 +361,17 @@ async def ai_chat(
     current_user: Dict = Depends(get_current_user)
 ):
     """AI chat with non-streaming response"""
+    if not enhanced_ai_service:
+        return {
+            "success": True,
+            "response": "AI servis şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+            "suggestions": [
+                "Kariyer hedeflerim neler olmalı?",
+                "Teknik becerilerimi nasıl geliştirebilirim?",
+                "Mülakat hazırlığı için ne yapmalıyım?"
+            ]
+        }
+    
     try:
         response_text = ""
         async for chunk in enhanced_ai_service.enhanced_chat(
@@ -444,15 +503,34 @@ async def get_jobs(
 ):
     """Get job listings with filters"""
     try:
-        jobs_data = job_service.get_jobs(
-            limit=limit,
-            offset=offset,
-            location=location,
-            job_type=job_type,
-            experience_level=experience_level,
-            remote_only=remote_only,
-            search_query=search
-        )
+        if job_service:
+            jobs_data = job_service.get_jobs(
+                limit=limit,
+                offset=offset,
+                location=location,
+                job_type=job_type,
+                experience_level=experience_level,
+                remote_only=remote_only,
+                search_query=search
+            )
+        else:
+            # Mock job data when service is not available
+            jobs_data = {
+                "jobs": [
+                    {
+                        "id": "1",
+                        "title": "Frontend Developer",
+                        "company": "TechCorp",
+                        "location": "Istanbul",
+                        "salary": "15000-25000 TL",
+                        "remote": True,
+                        "description": "React ve TypeScript ile frontend geliştirme"
+                    }
+                ],
+                "total": 1,
+                "page": 1,
+                "totalPages": 1
+            }
         
         return {
             "success": True,
@@ -592,10 +670,99 @@ async def get_success_stories():
 async def options_handler():
     return Response(status_code=200)
 
+# WebSocket endpoints
+@app.websocket("/ws/general/{user_id}")
+async def websocket_general(websocket: WebSocket, user_id: str):
+    """General WebSocket connection for real-time features"""
+    if not manager:
+        await websocket.close(code=1000, reason="WebSocket service not available")
+        return
+    
+    connection_id = await manager.connect(websocket, user_id, "general")
+    
+    try:
+        while True:
+            # Wait for messages
+            data = await websocket.receive_text()
+            message_data = json.loads(data)
+            
+            # Handle the message
+            await websocket_service.handle_message(websocket, user_id, message_data)
+            
+    except WebSocketDisconnect:
+        manager.disconnect(user_id, connection_id)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        manager.disconnect(user_id, connection_id)
+
+@app.websocket("/ws/chat/{user_id}")
+async def websocket_chat(websocket: WebSocket, user_id: str):
+    """Chat-specific WebSocket connection"""
+    connection_id = await manager.connect(websocket, user_id, "chat")
+    
+    try:
+        # Join general chat room
+        manager.join_room(user_id, "general_chat")
+        
+        while True:
+            data = await websocket.receive_text()
+            message_data = json.loads(data)
+            
+            # Handle chat-specific messages
+            await websocket_service.handle_message(websocket, user_id, message_data)
+            
+    except WebSocketDisconnect:
+        manager.leave_room(user_id, "general_chat")
+        manager.disconnect(user_id, connection_id)
+    except Exception as e:
+        logger.error(f"Chat WebSocket error: {e}")
+        manager.leave_room(user_id, "general_chat")
+        manager.disconnect(user_id, connection_id)
+
+@app.websocket("/ws/notifications/{user_id}")
+async def websocket_notifications(websocket: WebSocket, user_id: str):
+    """Notifications-specific WebSocket connection"""
+    connection_id = await manager.connect(websocket, user_id, "notifications")
+    
+    try:
+        # Send welcome message
+        await websocket.send_text(json.dumps({
+            "type": "welcome",
+            "message": "Bildirimler için bağlantı kuruldu",
+            "timestamp": datetime.now().isoformat()
+        }))
+        
+        while True:
+            data = await websocket.receive_text()
+            message_data = json.loads(data)
+            
+            # Handle notification-specific messages
+            await websocket_service.handle_message(websocket, user_id, message_data)
+            
+    except WebSocketDisconnect:
+        manager.disconnect(user_id, connection_id)
+    except Exception as e:
+        logger.error(f"Notifications WebSocket error: {e}")
+        manager.disconnect(user_id, connection_id)
+
+# Background task to monitor connections  
+@app.on_event("startup")
+async def startup_websocket_monitor():
+    """Start background tasks"""
+    try:
+        if websocket_service:
+            from services.websocket_service import start_connection_monitor
+            asyncio.create_task(start_connection_monitor())
+    except Exception as e:
+        logger.warning(f"WebSocket monitor not started: {e}")
+
 # Run server
 if __name__ == "__main__":
+    # Initialize database
+    init_db()
+    
     uvicorn.run(
-        "main_new:app",
+        "main:app",
         host=settings.API_HOST,
         port=settings.API_PORT,
         reload=settings.API_DEBUG,
