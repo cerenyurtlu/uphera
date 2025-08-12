@@ -54,7 +54,7 @@ deploy_api() {
     fi
     
     print_status "API projesi deploy ediliyor..."
-    vercel --prod
+    vercel --prod --name up-hera-api
     
     cd ..
 }
@@ -86,7 +86,7 @@ deploy_web() {
     npm run build
     
     print_status "Web projesi deploy ediliyor..."
-    vercel --prod
+    vercel --prod --name up-hera-web
     
     cd ..
 }
@@ -105,7 +105,7 @@ main() {
     echo "Hangi bileşenleri deploy etmek istiyorsunuz?"
     echo "1) Sadece API"
     echo "2) Sadece Web"
-    echo "3) Her ikisi"
+    echo "3) Her ikisi (önce API, sonra Web)"
     read -p "Seçiminiz (1-3): " choice
     
     case $choice in
@@ -116,7 +116,9 @@ main() {
             deploy_web
             ;;
         3)
+            print_status "Önce API deploy ediliyor..."
             deploy_api
+            print_status "Şimdi Web deploy ediliyor..."
             deploy_web
             ;;
         *)
@@ -127,6 +129,8 @@ main() {
     
     print_status "Deployment tamamlandı! 🎉"
     print_warning "Environment variables'ları Vercel dashboard'da ayarlamayı unutmayın!"
+    print_status "API URL: https://up-hera-api.vercel.app"
+    print_status "Web URL: https://up-hera-web.vercel.app"
 }
 
 # Run main function

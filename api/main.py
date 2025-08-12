@@ -193,20 +193,12 @@ async def health_check():
         cursor.execute("SELECT 1")
         conn.close()
         
-        # Test AI service
-        ai_status = False
-        if enhanced_ai_service:
-            try:
-                ai_status = await enhanced_ai_service.check_ollama_status()
-            except Exception:
-                ai_status = False
-        
         return {
             "status": "healthy",
             "timestamp": datetime.now().isoformat(),
             "services": {
                 "database": "connected",
-                "ai_service": "connected" if ai_status else "fallback_mode"
+                "ai_service": "disabled_for_vercel"
             }
         }
     except Exception as e:
@@ -367,48 +359,22 @@ async def update_profile(
         logger.error(f"❌ Profile update error: {e}")
         raise HTTPException(status_code=500, detail="Profil güncelleme hatası")
 
-# AI Chat endpoints
+# AI Chat endpoints (Temporarily disabled for Vercel deployment)
 @app.post("/ai-coach/chat")
 async def ai_chat(
     request: ChatRequest,
     current_user: Optional[Dict] = Depends(get_current_user_optional)
 ):
     """AI chat with non-streaming response"""
-    if not enhanced_ai_service:
-        return {
-            "success": True,
-            "response": "AI servis şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
-            "suggestions": [
-                "Kariyer hedeflerim neler olmalı?",
-                "Teknik becerilerimi nasıl geliştirebilirim?",
-                "Mülakat hazırlığı için ne yapmalıyım?"
-            ]
-        }
-    
-    try:
-        user_id = current_user["id"] if current_user else "anonymous_user"
-        response_text = ""
-        async for chunk in enhanced_ai_service.enhanced_chat(
-            user_id=user_id,
-            message=request.message,
-            context=request.context,
-            use_streaming=False
-        ):
-            response_text += chunk
-        
-        return {
-            "success": True,
-            "response": response_text,
-            "suggestions": [
-                "Kariyer hedeflerim neler olmalı?",
-                "Teknik becerilerimi nasıl geliştirebilirim?",
-                "Mülakat hazırlığı için ne yapmalıyım?"
-            ]
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ AI chat error: {e}")
-        raise HTTPException(status_code=500, detail="AI sohbet hatası")
+    return {
+        "success": True,
+        "response": "AI servis şu anda Vercel deployment nedeniyle geçici olarak kullanılamıyor. Lütfen daha sonra tekrar deneyin.",
+        "suggestions": [
+            "Kariyer hedeflerim neler olmalı?",
+            "Teknik becerilerimi nasıl geliştirebilirim?",
+            "Mülakat hazırlığı için ne yapmalıyım?"
+        ]
+    }
 
 @app.post("/ai-coach/chat/stream")
 async def ai_chat_stream(
@@ -416,28 +382,15 @@ async def ai_chat_stream(
     current_user: Optional[Dict] = Depends(get_current_user_optional)
 ):
     """AI chat with streaming response"""
-    try:
-        user_id = current_user["id"] if current_user else "anonymous_user"
-        async def generate():
-            async for chunk in enhanced_ai_service.enhanced_chat(
-                user_id=user_id,
-                message=request.message,
-                context=request.context,
-                use_streaming=True
-            ):
-                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
-            
-            yield f"data: {json.dumps({'done': True})}\n\n"
-        
-        return StreamingResponse(
-            generate(), 
-            media_type="text/plain",
-            headers={"Cache-Control": "no-cache"}
-        )
-        
-    except Exception as e:
-        logger.error(f"❌ AI stream error: {e}")
-        raise HTTPException(status_code=500, detail="AI stream hatası")
+    async def generate():
+        yield f"data: {json.dumps({'chunk': 'AI servis şu anda Vercel deployment nedeniyle geçici olarak kullanılamıyor.'})}\n\n"
+        yield f"data: {json.dumps({'done': True})}\n\n"
+    
+    return StreamingResponse(
+        generate(), 
+        media_type="text/plain",
+        headers={"Cache-Control": "no-cache"}
+    )
 
 @app.post("/ai-coach/document/upload")
 async def upload_document(
@@ -445,27 +398,10 @@ async def upload_document(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload and analyze document (CV, etc.)"""
-    try:
-        # Validate file
-        if file.size > settings.MAX_FILE_SIZE:
-            raise HTTPException(status_code=413, detail="Dosya boyutu çok büyük (max 10MB)")
-        
-        # Read file content
-        content = await file.read()
-        
-        # Process based on file type
-        if file.content_type == "application/pdf":
-            # TODO: Implement PDF text extraction
-            text_content = "PDF content extraction not implemented yet"
-        else:
-            text_content = content.decode('utf-8', errors='ignore')
-        
-        # Upload to AI service
-        result = await enhanced_ai_service.upload_document(
-            user_id=current_user["id"],
-            filename=file.filename,
-            content=text_content
-        )
+    return {
+        "success": True,
+        "message": "AI servis şu anda Vercel deployment nedeniyle geçici olarak kullanılamıyor."
+    }
         
         return result
         
@@ -481,28 +417,20 @@ async def get_chat_history(
     limit: int = Query(10, ge=1, le=50)
 ):
     """Get user's chat history"""
-    try:
-        history = enhanced_ai_service.get_chat_history(current_user["id"], limit)
-        return {
-            "success": True,
-            "history": history
-        }
-    except Exception as e:
-        logger.error(f"❌ Chat history error: {e}")
-        raise HTTPException(status_code=500, detail="Sohbet geçmişi alınamadı")
+    return {
+        "success": True,
+        "history": [],
+        "message": "AI servis şu anda Vercel deployment nedeniyle geçici olarak kullanılamıyor."
+    }
 
 @app.get("/ai-coach/insights")
 async def get_ai_insights(current_user: Dict = Depends(get_current_user)):
     """Get user's AI insights"""
-    try:
-        insights = enhanced_ai_service.get_user_insights(current_user["id"])
-        return {
-            "success": True,
-            "insights": insights
-        }
-    except Exception as e:
-        logger.error(f"❌ AI insights error: {e}")
-        raise HTTPException(status_code=500, detail="AI içgörüleri alınamadı")
+    return {
+        "success": True,
+        "insights": [],
+        "message": "AI servis şu anda Vercel deployment nedeniyle geçici olarak kullanılamıyor."
+    }
 
 # Job endpoints
 @app.get("/api/jobs")
