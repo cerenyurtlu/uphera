@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import AIChatbot from '../components/AIChatbot';
@@ -859,23 +860,6 @@ const ProfileScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="mt-16 py-8 border-t" style={{ borderColor: 'var(--up-light-gray)', background: 'var(--up-light-gray)' }}>
-        <div className="up-container">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <BrandLogo size={56} />
-            </div>
-            
-            <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 Up Hera</span>
-              <span>•</span>
-              <span>UpSchool Partnership</span>
-            </div>
-          </div>
-        </div>
-      </footer>
-
       {/* AI Chatbot */}
       <AIChatbot 
         isOpen={showAIChat}
@@ -883,6 +867,8 @@ const ProfileScreen: React.FC = () => {
         context="profile"
         userProfile={profileData}
       />
+
+      <Footer />
     </div>
   );
 };

@@ -48,7 +48,7 @@ class UpHeraApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
-    let lastError: Error;
+    let lastError: Error = new Error('No attempts made');
 
     // Try all available URLs
     for (let urlIndex = 0; urlIndex < this.baseUrls.length; urlIndex++) {
@@ -230,11 +230,12 @@ class UpHeraApiService {
     const formData = new FormData();
     formData.append('file', file);
 
+    const headers = this.getAuthHeaders();
     return this.makeRequest('/ai-coach/document/upload', {
       method: 'POST',
       body: formData,
       headers: {
-        'Authorization': this.getAuthHeaders()['Authorization'] || ''
+        'Authorization': (headers as any)['Authorization'] || ''
       }
     });
   }
@@ -291,6 +292,36 @@ class UpHeraApiService {
   // Network/Community APIs
   async getSuccessStories(): Promise<ApiResponse> {
     return this.makeRequest('/api/network/success-stories');
+  }
+
+  // Mentorship APIs
+  async getAvailableMentors(): Promise<ApiResponse> {
+    return this.makeRequest('/api/mentorship/mentors');
+  }
+
+  async sendMentorshipRequest(requestData: any): Promise<ApiResponse> {
+    return this.makeRequest('/api/mentorship/request', {
+      method: 'POST',
+      body: JSON.stringify(requestData)
+    });
+  }
+
+  // Events APIs
+  async getEvents(): Promise<ApiResponse> {
+    return this.makeRequest('/api/events');
+  }
+
+  async registerEvent(eventData: any): Promise<ApiResponse> {
+    return this.makeRequest('/api/events/register', {
+      method: 'POST',
+      body: JSON.stringify(eventData)
+    });
+  }
+
+  // Notifications (mock-friendly)
+  async getNotifications(): Promise<ApiResponse> {
+    // Backend'de /api/notifications varsa kullanır; yoksa graceful error döner
+    return this.makeRequest('/api/notifications');
   }
 
   // Health check

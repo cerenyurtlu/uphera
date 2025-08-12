@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Target, MessageCircle, BookOpen, Clock, Award, CheckCircle, Star, Zap, Brain, Heart } from 'lucide-react';
+import { Target, MessageCircle, Clock, Award, CheckCircle, Star, Zap, Brain, Heart } from 'lucide-react';
 import ModernButton from '../components/ModernButton';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import AIChatbot from '../components/AIChatbot';
 
 const InterviewPrepScreen: React.FC = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [showAICoach, setShowAICoach] = useState(false);
   const [completedModules, setCompletedModules] = useState<string[]>([]);
@@ -287,22 +288,7 @@ const InterviewPrepScreen: React.FC = () => {
         />
       )}
 
-      {/* Footer */}
-      <footer className="mt-16 py-8 border-t" style={{ borderColor: 'var(--up-light-gray)', background: 'var(--up-light-gray)' }}>
-        <div className="up-container">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <BrandLogo size={56} />
-            </div>
-            
-            <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 Up Hera</span>
-              <span>•</span>
-              <span>UpSchool Partnership</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

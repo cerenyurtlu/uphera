@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import BrandLogo from '../components/BrandLogo';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
@@ -50,80 +51,160 @@ const NotificationListScreen: React.FC = () => {
         
         // Fallback: Mock data kullan
         const mockNotifications: Notification[] = [
-      {
-        id: '1',
-        type: 'match',
-        title: 'Yeni Eşleşme! 🎯',
-        message: 'TechCorp İstanbul\'dan Frontend Developer pozisyonu ile %94 eşleşme! Bu fırsat tam senin profiline uygun.',
-        timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3 hours ago
-        read: false,
-        priority: 'high',
-        actionUrl: '/jobs/1',
-        actionText: 'Detayları Gör'
-      },
-      {
-        id: '2',
-        type: 'application',
-        title: 'Başvuru Durumu Güncellendi 📄',
-        message: 'StartupX\'e yaptığınız başvuru "İnceleme" aşamasından "Mülakat" aşamasına geçti.',
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
-        read: false,
-        priority: 'high',
-        actionUrl: '/dashboard',
-        actionText: 'Başvuruları Gör'
-      },
-      {
-        id: '3',
-        type: 'interview',
-        title: 'Mülakat Daveti 🎉',
-        message: 'DataFlow\'dan Python Developer pozisyonu için mülakat daveti aldınız. Mülakat tarihi: 25 Ocak 2025, 14:00.',
-        timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-        read: true,
-        priority: 'high',
-        actionUrl: '/interview-prep',
-        actionText: 'Hazırlığa Başla'
-      },
-      {
-        id: '4',
-        type: 'success',
-        title: 'Başvuru Onaylandı ✅',
-        message: 'CloudMasters\'a yaptığınız DevOps Engineer başvurunuz onaylandı ve değerlendirme aşamasında.',
-        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-        read: true,
-        priority: 'high'
-      },
-      {
-        id: '5',
-        type: 'system',
-        title: 'Profil Tamamlanma Önerisi 💪',
-        message: 'Profiliniz %87 tamamlanmış. LinkedIn hesabınızı bağlayarak %95\'e çıkarabilirsiniz.',
-        timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-        read: false,
-        priority: 'medium',
-        actionUrl: '/profile',
-        actionText: 'Profili Güçlendir'
-      },
-      {
-        id: '6',
-        type: 'message',
-        title: 'UpSchool Network Davetiyesi 👥',
-        message: 'Aynı bootcamp\'ten mezun olan Zeynep Kaya seni UpSchool Network\'te takip etmeye başladı.',
-        timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-        read: true,
-        priority: 'low',
-        actionUrl: '/network',
-        actionText: 'Network\'ü Gör'
-      },
-      {
-        id: '7',
-        type: 'application',
-        title: 'InnovateSoft Başvuru Durumu Güncellendi 📄',
-        message: 'InnovateSoft\'a yaptığınız Python Backend Developer başvurunuz "Değerlendirme" aşamasından "Mülakat" aşamasına geçti.',
-        timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
-        read: true,
-        priority: 'medium'
-      }
-    ];
+          {
+            id: '1',
+            type: 'match',
+            title: 'Mükemmel Eşleşme! 🎯',
+            message: 'Google\'dan Senior Frontend Developer pozisyonu ile %96 eşleşme! React, TypeScript ve modern web teknolojileri konusundaki deneyimin tam bu pozisyon için ideal.',
+            timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+            read: false,
+            priority: 'high',
+            actionUrl: '/jobs/1',
+            actionText: 'Başvur'
+          },
+          {
+            id: '2',
+            type: 'interview',
+            title: 'Spotify\'dan Mülakat Daveti! 🎉',
+            message: 'Spotify\'da Frontend Engineer pozisyonu için mülakat daveti aldınız! Mülakat 28 Ocak 2025, 15:00\'da online olarak gerçekleşecek. AI koçunuzla hazırlanmaya başlayın!',
+            timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+            read: false,
+            priority: 'high',
+            actionUrl: '/interview-prep',
+            actionText: 'Hazırlığa Başla'
+          },
+          {
+            id: '3',
+            type: 'application',
+            title: 'Netflix Başvuru İlerlemesi 📈',
+            message: 'Netflix\'e yaptığınız UI Engineer başvurunuz "Teknik Değerlendirme" aşamasından "Final Mülakat" aşamasına geçti! Son adımda başarılar!',
+            timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+            read: false,
+            priority: 'high',
+            actionUrl: '/dashboard',
+            actionText: 'Detayları Gör'
+          },
+          {
+            id: '4',
+            type: 'success',
+            title: 'Tebrikler! İşe Alındınız! 🎊',
+            message: 'Microsoft\'ta Software Engineer pozisyonu için yaptığınız başvuru kabul edildi! 1 Şubat 2025 tarihinde işe başlayacaksınız. UpSchool ailesi olarak gurur duyuyoruz!',
+            timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+            read: true,
+            priority: 'high',
+            actionUrl: '/success-stories',
+            actionText: 'Başarı Hikayeni Paylaş'
+          },
+          {
+            id: '5',
+            type: 'message',
+            title: 'Mentorluk İsteği Kabul Edildi 👩‍🏫',
+            message: 'Gizem Aktaş (Meta Senior Engineering Manager) mentorluk isteğinizi kabul etti! İlk görüşme 26 Ocak 2025, 19:00\'da planlandı.',
+            timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+            read: false,
+            priority: 'high',
+            actionUrl: '/mentorship',
+            actionText: 'Görüşmeye Katıl'
+          },
+          {
+            id: '6',
+            type: 'system',
+            title: 'Profil Gücünüz Artıyor! 💪',
+            message: 'Profiliniz %92\'ye yükseldi! GitHub hesabınızı bağlayarak %98\'e çıkarabilir ve daha fazla iş fırsatı yakalayabilirsiniz.',
+            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+            read: false,
+            priority: 'medium',
+            actionUrl: '/profile',
+            actionText: 'Profili Güçlendir'
+          },
+          {
+            id: '7',
+            type: 'message',
+            title: 'UpSchool Network Bağlantısı 👥',
+            message: 'Frontend Development #42 batch\'inden mezun olan Elif Demir (Google Senior Developer) seni UpSchool Network\'te takip etmeye başladı ve mesaj gönderdi.',
+            timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+            read: true,
+            priority: 'medium',
+            actionUrl: '/network',
+            actionText: 'Mesajı Gör'
+          },
+          {
+            id: '8',
+            type: 'application',
+            title: 'Amazon Teknik Mülakat Sonucu 📋',
+            message: 'Amazon\'da Frontend Developer pozisyonu için yaptığınız teknik mülakat başarılı geçti! Final HR mülakatı 30 Ocak 2025\'te planlanıyor.',
+            timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+            read: true,
+            priority: 'high',
+            actionUrl: '/interview-prep',
+            actionText: 'HR Mülakatına Hazırlan'
+          },
+          {
+            id: '9',
+            type: 'success',
+            title: 'Freelance Proje Tamamlandı! 💼',
+            message: 'E-ticaret sitesi projesi başarıyla tamamlandı ve müşteri tarafından onaylandı! 25.000 TL kazancınız hesabınıza aktarıldı.',
+            timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+            read: true,
+            priority: 'medium',
+            actionUrl: '/freelance-projects',
+            actionText: 'Yeni Projeleri Gör'
+          },
+          {
+            id: '10',
+            type: 'system',
+            title: 'AI Koçunuz Sizi Öneriyor! 🤖',
+            message: 'AI koçunuz, React Native konusundaki deneyiminizi geliştirmek için yeni bir kurs öneriyor. Bu beceri ile %40 daha fazla iş fırsatı yakalayabilirsiniz.',
+            timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+            read: false,
+            priority: 'medium',
+            actionUrl: '/dashboard',
+            actionText: 'Öneriyi İncele'
+          },
+          {
+            id: '11',
+            type: 'message',
+            title: 'UpSchool Etkinlik Davetiyesi 📅',
+            message: '25 Ocak 2025\'te "Women in Tech: Career Growth" etkinliğine davetlisiniz! Google, Microsoft ve Netflix\'ten kadın liderler konuşacak.',
+            timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
+            read: true,
+            priority: 'medium',
+            actionUrl: '/events',
+            actionText: 'Kayıt Ol'
+          },
+          {
+            id: '12',
+            type: 'application',
+            title: 'Apple Başvuru Durumu 📱',
+            message: 'Apple\'a yaptığınız iOS Developer başvurunuz "İnceleme" aşamasında. CV\'niz teknik ekibe iletildi, 1-2 hafta içinde geri dönüş bekleniyor.',
+            timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
+            read: true,
+            priority: 'low',
+            actionUrl: '/jobs',
+            actionText: 'Diğer İlanları Gör'
+          },
+          {
+            id: '13',
+            type: 'success',
+            title: 'Mentorluk Tamamlandı! 🌟',
+            message: 'Selin Demirci (Spotify Principal Architect) ile 3 aylık mentorluk süreciniz başarıyla tamamlandı! Değerlendirme puanınız: 5/5 yıldız.',
+            timestamp: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+            read: true,
+            priority: 'medium',
+            actionUrl: '/mentorship',
+            actionText: 'Yeni Mentor Bul'
+          },
+          {
+            id: '14',
+            type: 'system',
+            title: 'Başarı Hikayeniz Yayınlandı! 📖',
+            message: 'UpSchool başarı hikayeniz "From Bootcamp to Google" başlığıyla yayınlandı! 1.200+ kişi hikayenizi okudu ve ilham aldı.',
+            timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+            read: true,
+            priority: 'low',
+            actionText: 'Hikayeyi Gör'
+          }
+        ];
 
         setNotifications(mockNotifications);
       } finally {
@@ -404,22 +485,7 @@ const NotificationListScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="mt-16 py-8 border-t" style={{ borderColor: 'var(--up-light-gray)', background: 'var(--up-light-gray)' }}>
-        <div className="up-container">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <BrandLogo size={56} />
-            </div>
-            
-            <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 Up Hera</span>
-              <span>•</span>
-              <span>UpSchool Partnership</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

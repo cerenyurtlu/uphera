@@ -68,17 +68,7 @@ def init_db():
         except sqlite3.OperationalError:
             pass  # Column already exists
         
-        # Create indexes for better performance
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_user_type ON users(user_type)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions(token)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON user_sessions(user_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_expires ON user_sessions(expires_at)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_applications_user_id ON applications(user_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications(job_id)')
-        
-        # Clean up expired sessions periodically
-        cursor.execute('DELETE FROM user_sessions WHERE expires_at < CURRENT_TIMESTAMP')
+
         
         # Jobs table
         cursor.execute('''
@@ -86,14 +76,23 @@ def init_db():
                 id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
                 company TEXT NOT NULL,
+                company_logo TEXT,
                 location TEXT,
                 description TEXT,
                 requirements TEXT, -- JSON string
                 salary_min INTEGER,
                 salary_max INTEGER,
                 job_type TEXT, -- full-time, part-time, contract
+                experience_level TEXT DEFAULT 'entry',
+                skills TEXT, -- JSON array
+                benefits TEXT, -- JSON array
                 remote_friendly BOOLEAN DEFAULT FALSE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                application_deadline TIMESTAMP,
+                views INTEGER DEFAULT 0,
+                applications_count INTEGER DEFAULT 0
             )
         ''')
         
@@ -121,6 +120,18 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users (id)
             )
         ''')
+        
+        # Create indexes for better performance (after tables are created)
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_user_type ON users(user_type)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_token ON user_sessions(token)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON user_sessions(user_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_expires ON user_sessions(expires_at)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_applications_user_id ON applications(user_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_applications_job_id ON applications(job_id)')
+        
+        # Clean up expired sessions periodically
+        cursor.execute('DELETE FROM user_sessions WHERE expires_at < CURRENT_TIMESTAMP')
         
         conn.commit()
         conn.close()
@@ -374,6 +385,4 @@ def cleanup_expired_sessions():
     except Exception as e:
         print(f"Error cleaning up sessions: {e}")
 
-# Initialize database on import
-if __name__ != "__main__":
-    init_db() 
+# Database will be initialized by main.py

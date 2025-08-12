@@ -127,6 +127,19 @@ async def get_current_user(authorization: Optional[str] = Header(None)) -> Dict[
         logger.error(f"Authentication error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
 
+async def get_current_user_optional(authorization: Optional[str] = Header(None)) -> Optional[Dict[str, Any]]:
+    """Get current authenticated user (optional - returns None if not authenticated)"""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    
+    try:
+        token = authorization.split(" ")[1]
+        user = validate_session(token)
+        return user
+    except Exception as e:
+        logger.warning(f"Optional authentication failed: {e}")
+        return None
+
 # Startup event
 @app.on_event("startup")
 async def startup_event():
@@ -358,7 +371,7 @@ async def update_profile(
 @app.post("/ai-coach/chat")
 async def ai_chat(
     request: ChatRequest,
-    current_user: Dict = Depends(get_current_user)
+    current_user: Optional[Dict] = Depends(get_current_user_optional)
 ):
     """AI chat with non-streaming response"""
     if not enhanced_ai_service:
@@ -373,9 +386,10 @@ async def ai_chat(
         }
     
     try:
+        user_id = current_user["id"] if current_user else "anonymous_user"
         response_text = ""
         async for chunk in enhanced_ai_service.enhanced_chat(
-            user_id=current_user["id"],
+            user_id=user_id,
             message=request.message,
             context=request.context,
             use_streaming=False
@@ -399,13 +413,14 @@ async def ai_chat(
 @app.post("/ai-coach/chat/stream")
 async def ai_chat_stream(
     request: ChatRequest,
-    current_user: Dict = Depends(get_current_user)
+    current_user: Optional[Dict] = Depends(get_current_user_optional)
 ):
     """AI chat with streaming response"""
     try:
+        user_id = current_user["id"] if current_user else "anonymous_user"
         async def generate():
             async for chunk in enhanced_ai_service.enhanced_chat(
-                user_id=current_user["id"],
+                user_id=user_id,
                 message=request.message,
                 context=request.context,
                 use_streaming=True

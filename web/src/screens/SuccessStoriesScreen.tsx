@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
-import { ChevronLeft, Star, MapPin, Calendar, TrendingUp, Award, Heart, Quote, Sparkles, Target, Trophy } from 'lucide-react';
+import { Star, TrendingUp, Quote, Sparkles, Target, Trophy } from 'lucide-react';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import ModernCard from '../components/ModernCard';
-import ModernButton from '../components/ModernButton';
 import { useNavigate } from 'react-router-dom';
 
 interface SuccessStory {
@@ -63,10 +62,10 @@ const SuccessStoryCard: React.FC<{
 };
 
 const SuccessStoriesScreen: React.FC = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [selectedStory, setSelectedStory] = useState<SuccessStory | null>(null);
   const [showStoryModal, setShowStoryModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState({
+  const [_currentUser, setCurrentUser] = useState({
     name: "Yükleniyor...",
     email: "",
     skills: [],
@@ -275,10 +274,8 @@ const SuccessStoriesScreen: React.FC = () => {
             />
           ))}
         </div>
-      </div>
 
-      {/* Motivation Section */}
-      <div className="up-container py-8">
+        {/* Motivation Section - Başarı hikayelerinin altında */}
         <ModernCard className="p-8 text-center bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 mb-8">
           <div className="flex items-center justify-center mb-4">
             <Sparkles className="h-8 w-8 mr-3" style={{ color: 'var(--up-primary)' }} />
@@ -309,93 +306,6 @@ const SuccessStoriesScreen: React.FC = () => {
             </div>
           </div>
         </ModernCard>
-
-        {/* Success Stories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {successStories.map((story) => (
-            <ModernCard 
-              key={story.id} 
-              className={`p-6 hover:shadow-lg transition-shadow cursor-pointer ${story.is_featured ? 'ring-2 ring-yellow-400' : ''}`}
-              onClick={() => handleStoryClick(story)}
-            >
-              {story.is_featured && (
-                <div className="flex items-center justify-center mb-3">
-                  <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                    ⭐ Öne Çıkan Hikaye
-                  </span>
-                </div>
-              )}
-              
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <img 
-                    src={story.image} 
-                    alt={story.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div>
-                    <h3 className="font-bold text-lg" style={{ color: 'var(--up-primary-dark)' }}>
-                      {story.name}
-                    </h3>
-                    <p className="text-sm font-medium" style={{ color: 'var(--up-primary)' }}>
-                      {story.role}
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-                      {story.company}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center space-x-1 mb-1">
-                    <Star className="h-3 w-3" style={{ color: 'var(--up-primary)' }} />
-                    <span className="text-sm font-medium">{story.rating}</span>
-                  </div>
-                  <span className="text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-                    {story.timeline}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center space-x-2 text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                  <MapPin className="h-3 w-3" />
-                  <span>{story.location}</span>
-                </div>
-                
-                <div className="flex items-center space-x-2 text-sm" style={{ color: 'var(--up-primary)' }}>
-                  <TrendingUp className="h-3 w-3" />
-                  <span className="font-medium">{story.current_salary}</span>
-                </div>
-
-                <div className="flex items-center space-x-2 text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                  <Award className="h-3 w-3" />
-                  <span>{story.upschool_batch}</span>
-                </div>
-
-                <p className="text-sm" style={{ color: 'var(--up-dark-gray)' }}>
-                  {story.story.substring(0, 120)}...
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'var(--up-light-gray)' }}>
-                <div className="flex items-center space-x-2">
-                  <Heart className="h-4 w-4" style={{ color: 'var(--up-primary)' }} />
-                  <span className="text-xs" style={{ color: 'var(--up-primary)' }}>
-                    İlham Verici
-                  </span>
-                </div>
-                
-                <ModernButton
-                  size="sm"
-                  variant="outline"
-                >
-                  <Quote className="h-3 w-3 mr-1" />
-                  Detayları Gör
-                </ModernButton>
-              </div>
-            </ModernCard>
-          ))}
-        </div>
       </div>
 
       {/* Story Detail Modal */}
@@ -513,6 +423,8 @@ const SuccessStoriesScreen: React.FC = () => {
           </div>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };

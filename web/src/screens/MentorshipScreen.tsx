@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { MessageCircle, Star, MapPin, Award, Send, UserPlus } from 'lucide-react';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import { useNavigate } from 'react-router-dom';
@@ -476,7 +477,7 @@ const MentorshipScreen: React.FC = () => {
         </div>
       )}
 
-
+      <Footer />
     </div>
   );
 };

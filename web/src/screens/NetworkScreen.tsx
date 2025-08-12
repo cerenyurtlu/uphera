@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import BrandLogo from '../components/BrandLogo';
@@ -63,17 +64,175 @@ const NetworkScreen: React.FC = () => {
         }
 
         // API'den network üyelerini getir
-        const response = await apiService.getNetworkMembers();
-        if (response.success) {
-          const processedMembers = response.members.map((member: any) => ({
-            ...member,
-            role: member.currentRole || member.role,
-            profileImage: <FiUser className="text-3xl text-purple-600" />,
-            mentorAvailable: member.connectionStatus === 'connected'
-          }));
-          setNetworkMembers(processedMembers);
-        } else {
-          toast.error('Network üyeleri yüklenirken hata oluştu');
+        try {
+          const response = await apiService.getNetworkMembers();
+          if (response.success) {
+            const processedMembers = response.members.map((member: any) => ({
+              ...member,
+              role: member.currentRole || member.role,
+              profileImage: <FiUser className="text-3xl text-purple-600" />,
+              mentorAvailable: member.connectionStatus === 'connected'
+            }));
+            setNetworkMembers(processedMembers);
+          } else {
+            throw new Error('API response failed');
+          }
+        } catch (apiError) {
+          console.log('API failed, using mock data');
+          // Fallback to mock data
+          const mockMembers: NetworkMember[] = [
+            {
+              id: "member-1",
+              name: "Elif Demir",
+              role: "Senior Frontend Developer",
+              company: "Google",
+              location: "İstanbul",
+              skills: ["React", "TypeScript", "Next.js", "GraphQL"],
+              experience: "5 yıl",
+              bootcamp: "Frontend Development #42",
+              graduationYear: "2019",
+              profileImage: <FiUser className="w-10 h-10 text-blue-400" />,
+              isOnline: true,
+              mentorAvailable: true,
+              commonSkills: 3
+            },
+            {
+              id: "member-2", 
+              name: "Zeynep Akar",
+              role: "ML Engineer", 
+              company: "Microsoft",
+              location: "Ankara",
+              skills: ["Python", "TensorFlow", "PyTorch", "Docker"],
+              experience: "4 yıl",
+              bootcamp: "Data Science #28",
+              graduationYear: "2020",
+              profileImage: <FiUser className="w-10 h-10 text-purple-400" />,
+              isOnline: false,
+              mentorAvailable: true,
+              commonSkills: 2
+            },
+            {
+              id: "member-3",
+              name: "Selin Koç",
+              role: "UI/UX Designer",
+              company: "Amazon",
+              location: "İzmir", 
+              skills: ["Figma", "Adobe XD", "Sketch", "Prototyping"],
+              experience: "3 yıl",
+              bootcamp: "UI/UX Design #35",
+              graduationYear: "2021",
+              profileImage: <FiUser className="w-10 h-10 text-pink-400" />,
+              isOnline: true,
+              mentorAvailable: false,
+              commonSkills: 1
+            },
+            {
+              id: "member-4",
+              name: "Ayşe Gürel",
+              role: "DevOps Engineer",
+              company: "Netflix",
+              location: "İstanbul",
+              skills: ["AWS", "Kubernetes", "Docker", "Terraform"],
+              experience: "6 yıl", 
+              bootcamp: "Backend Development #31",
+              graduationYear: "2018",
+              profileImage: <FiUser className="w-10 h-10 text-green-400" />,
+              isOnline: true,
+              mentorAvailable: true,
+              commonSkills: 2
+            },
+            {
+              id: "member-5",
+              name: "Cemre Özkan", 
+              role: "Mobile Developer",
+              company: "Spotify",
+              location: "Bursa",
+              skills: ["React Native", "Swift", "Kotlin", "Firebase"],
+              experience: "4 yıl",
+              bootcamp: "Mobile Development #29",
+              graduationYear: "2020",
+              profileImage: <FiUser className="w-10 h-10 text-orange-400" />,
+              isOnline: false,
+              mentorAvailable: true,
+              commonSkills: 2
+            },
+            {
+              id: "member-6",
+              name: "Derin Yılmaz",
+              role: "Full Stack Developer",
+              company: "Airbnb",
+              location: "Antalya",
+              skills: ["Node.js", "React", "PostgreSQL", "Redis"],
+              experience: "5 yıl",
+              bootcamp: "Full Stack Development #38",
+              graduationYear: "2019",
+              profileImage: <FiUser className="w-10 h-10 text-indigo-400" />,
+              isOnline: true,
+              mentorAvailable: false,
+              commonSkills: 3
+            },
+            {
+              id: "member-7",
+              name: "Gül Sarı",
+              role: "Product Manager",
+              company: "Uber",
+              location: "İstanbul",
+              skills: ["Product Strategy", "Analytics", "SQL", "Roadmapping"],
+              experience: "7 yıl",
+              bootcamp: "Product Management #25",
+              graduationYear: "2017",
+              profileImage: <FiUser className="w-10 h-10 text-yellow-400" />,
+              isOnline: true,
+              mentorAvailable: true,
+              commonSkills: 1
+            },
+            {
+              id: "member-8",
+              name: "Beste Kara",
+              role: "QA Engineer",
+              company: "Tesla",
+              location: "Adana",
+              skills: ["Selenium", "Cypress", "Jest", "Test Automation"],
+              experience: "3 yıl",
+              bootcamp: "QA Automation #22",
+              graduationYear: "2021",
+              profileImage: <FiUser className="w-10 h-10 text-teal-400" />,
+              isOnline: false,
+              mentorAvailable: false,
+              commonSkills: 2
+            },
+            {
+              id: "member-9",
+              name: "İrem Beyaz",
+              role: "Blockchain Developer",
+              company: "Coinbase",
+              location: "İstanbul",
+              skills: ["Solidity", "Web3.js", "Ethereum", "Smart Contracts"],
+              experience: "2 yıl",
+              bootcamp: "Blockchain Development #15",
+              graduationYear: "2022",
+              profileImage: <FiUser className="w-10 h-10 text-amber-400" />,
+              isOnline: true,
+              mentorAvailable: false,
+              commonSkills: 1
+            },
+            {
+              id: "member-10",
+              name: "Nihan Kırmızı",
+              role: "Data Scientist",
+              company: "LinkedIn",
+              location: "Ankara",
+              skills: ["R", "Python", "Tableau", "Machine Learning"],
+              experience: "4 yıl",
+              bootcamp: "Data Science #26",
+              graduationYear: "2020",
+              profileImage: <FiUser className="w-10 h-10 text-cyan-400" />,
+              isOnline: true,
+              mentorAvailable: true,
+              commonSkills: 2
+            }
+          ];
+          setNetworkMembers(mockMembers);
         }
       } catch (error) {
         console.error('Network verisi yükleme hatası:', error);
@@ -405,23 +564,6 @@ const NetworkScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="mt-16 py-8 border-t" style={{ borderColor: 'var(--up-light-gray)', background: 'var(--up-light-gray)' }}>
-        <div className="up-container">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <BrandLogo size={56} />
-            </div>
-            
-            <div className="flex items-center justify-center space-x-6 text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-              <span>© 2025 UpSchool Network</span>
-              <span>•</span>
-              <span>Teknolojideki Kadınlar Topluluğu</span>
-            </div>
-          </div>
-        </div>
-      </footer>
-
       {/* AI Chatbot */}
       <AIChatbot 
         isOpen={showAIChat}
@@ -429,6 +571,8 @@ const NetworkScreen: React.FC = () => {
         context="network"
         userProfile={currentUser}
       />
+
+      <Footer />
     </div>
   );
 };

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 import toast from 'react-hot-toast';
 import { apiService } from '../services/api';
 import { 
-  ArrowLeft, 
   Calendar, 
   Clock, 
   MapPin, 
@@ -12,27 +12,22 @@ import {
   Star, 
   CheckCircle, 
   ExternalLink, 
-  Filter, 
   Search, 
   Plus,
   Grid,
-  List,
   ChevronLeft,
   ChevronRight,
   User,
-  Bell,
   CalendarCheck,
   Building,
   Award,
   FileText
 } from 'lucide-react';
-import BrandLogo from '../components/BrandLogo';
-import NotificationBell from '../components/NotificationBell';
 import ModernButton from '../components/ModernButton';
 import ModernCard from '../components/ModernCard';
 
 const EventsScreen: React.FC = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('grid');
@@ -45,41 +40,186 @@ const EventsScreen: React.FC = () => {
 
   // API'den etkinlikleri yükle
   useEffect(() => {
-    const fetchEvents = async () => {
+    const loadEvents = async () => {
       try {
         setLoading(true);
         const response = await apiService.getEvents();
         if (response.success) {
           setEvents(response.events);
         } else {
-          toast.error('Etkinlikler yüklenirken hata oluştu');
+          throw new Error('API failed');
         }
       } catch (error) {
-        console.error('Etkinlik yükleme hatası:', error);
-        toast.error('Etkinlikler yüklenirken hata oluştu');
+        console.log('API failed, using mock events');
+        // Mock etkinlik verileri
+        const mockEvents = [
+          {
+            id: 1,
+            title: "Tech Talk: Women in AI",
+            category: "tech-talk",
+            description: "Google'dan Dr. Ayşe Kara ile yapay zeka alanında kadınların rolü ve geleceği üzerine özel söyleşi",
+            date: "2025-01-20",
+            time: "19:00",
+            duration: "2 saat",
+            location: "Online - Zoom",
+            type: "online",
+            isRecurring: false,
+            speaker: "Dr. Ayşe Kara",
+            speakerTitle: "Senior AI Researcher @ Google",
+            registeredCount: 124,
+            maxCapacity: 200,
+            price: "Ücretsiz",
+            difficulty: "Beginner",
+            tags: ["AI", "Career", "Women in Tech"],
+            isRegistered: false,
+            image: "/api/placeholder/400/200",
+            agenda: [
+              "AI alanında kadınların mevcut durumu",
+              "Kariyer fırsatları ve öneriler", 
+              "Soru-cevap oturumu"
+            ]
+          },
+          {
+            id: 2,
+            title: "Frontend Development Workshop",
+            category: "workshop",
+            description: "React ve TypeScript ile modern web uygulaması geliştirme workshop'u. Hands-on deneyim ile öğrenin.",
+            date: "2025-01-25",
+            time: "10:00",
+            duration: "6 saat",
+            location: "İstanbul Tech Hub - Levent",
+            type: "hybrid",
+            isRecurring: false,
+            speaker: "Elif Demir",
+            speakerTitle: "Senior Frontend Developer @ Netflix",
+            registeredCount: 45,
+            maxCapacity: 50,
+            price: "250 TL",
+            difficulty: "Intermediate",
+            tags: ["React", "TypeScript", "Hands-on"],
+            isRegistered: false,
+            image: "/api/placeholder/400/200",
+            agenda: [
+              "React Hooks ve Modern Patterns",
+              "TypeScript Best Practices",
+              "Proje geliştirme"
+            ]
+          },
+          {
+            id: 3,
+            title: "UpSchool Mezunları Buluşması",
+            category: "networking",
+            description: "İstanbul'daki UpSchool mezunları için networking etkinliği. Deneyim paylaşımı ve yeni bağlantılar.",
+            date: "2025-02-01", 
+            time: "14:00",
+            duration: "4 saat",
+            location: "Starbucks Reserve - Zorlu Center",
+            type: "in-person",
+            isRecurring: true,
+            speaker: "UpSchool Community",
+            speakerTitle: "Community Team",
+            registeredCount: 78,
+            maxCapacity: 100,
+            price: "Ücretsiz",
+            difficulty: "All Levels",
+            tags: ["Networking", "Alumni", "Social"],
+            isRegistered: true,
+            image: "/api/placeholder/400/200",
+            agenda: [
+              "Hoş geldin kahvesi",
+              "Deneyim paylaşımı oturumları",
+              "Grup aktiviteleri"
+            ]
+          },
+          {
+            id: 4,
+            title: "Data Science Masterclass",
+            category: "masterclass",
+            description: "Machine Learning ve Deep Learning konularında uzman eğitmenlerle ileri seviye masterclass.",
+            date: "2025-02-10",
+            time: "13:00", 
+            duration: "8 saat",
+            location: "Online - Teams",
+            type: "online",
+            isRecurring: false,
+            speaker: "Prof. Dr. Zeynep Akar",
+            speakerTitle: "Data Science Lead @ Microsoft",
+            registeredCount: 67,
+            maxCapacity: 80,
+            price: "500 TL",
+            difficulty: "Advanced",
+            tags: ["Data Science", "ML", "Deep Learning"],
+            isRegistered: false,
+            image: "/api/placeholder/400/200",
+            agenda: [
+              "ML Algorithms Deep Dive",
+              "Neural Networks praktik",
+              "Real-world case studies"
+            ]
+          },
+          {
+            id: 5,
+            title: "Startup Pitch Competition",
+            category: "competition",
+            description: "UpSchool mezunlarının startup fikirlerini sunabileceği pitch yarışması. Kazanana 50.000 TL ödül!",
+            date: "2025-02-15",
+            time: "09:00",
+            duration: "Full Day",
+            location: "Türk Telekom Stadyumu - İstanbul",
+            type: "in-person",
+            isRecurring: false,
+            speaker: "Jüri Paneli",
+            speakerTitle: "Sektör Uzmanları",
+            registeredCount: 156,
+            maxCapacity: 300,
+            price: "Ücretsiz",
+            difficulty: "All Levels",
+            tags: ["Startup", "Pitch", "Competition"],
+            isRegistered: false,
+            image: "/api/placeholder/400/200",
+            agenda: [
+              "Açılış konuşması",
+              "Pitch sunumları",
+              "Jüri değerlendirmesi ve ödül töreni"
+            ]
+          },
+          {
+            id: 6,
+            title: "UI/UX Design Trends 2025",
+            category: "design",
+            description: "2025 yılının UI/UX trendleri ve Figma ile modern design sistemleri oluşturma workshop'u.",
+            date: "2025-02-20",
+            time: "16:00",
+            duration: "3 saat",
+            location: "Ankara Design Studio",
+            type: "hybrid",
+            isRecurring: false,
+            speaker: "Selin Koç",
+            speakerTitle: "Design Lead @ Spotify",
+            registeredCount: 89,
+            maxCapacity: 120,
+            price: "300 TL",
+            difficulty: "Intermediate",
+            tags: ["UI/UX", "Design", "Trends", "Figma"],
+            isRegistered: true,
+            image: "/api/placeholder/400/200",
+            agenda: [
+              "2025 Design Trends",
+              "Design System Workshop",
+              "Portfolio Review"
+            ]
+          }
+        ];
+        setEvents(mockEvents);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEvents();
+    loadEvents();
   }, []);
 
-  const categories = [
-    { id: 'all', label: 'Tümü', icon: Calendar, count: events.length, color: 'bg-gray-100 text-gray-700' },
-    { id: 'networking', label: 'Networking', icon: Users, count: events.filter(e => e.category === 'networking').length, color: 'bg-blue-100 text-blue-700' },
-    { id: 'workshop', label: 'Workshop', icon: Building, count: events.filter(e => e.category === 'workshop').length, color: 'bg-green-100 text-green-700' },
-    { id: 'panel', label: 'Panel', icon: Award, count: events.filter(e => e.category === 'panel').length, color: 'bg-purple-100 text-purple-700' },
-    { id: 'casual', label: 'Casual', icon: Star, count: events.filter(e => e.category === 'casual').length, color: 'bg-yellow-100 text-yellow-700' }
-  ];
-
-  const filteredEvents = events.filter(event => {
-    const matchesCategory = selectedFilter === 'all' || event.category === selectedFilter;
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
+  // İlk categories ve filteredEvents tanımları kaldırıldı
 
   const handleEventRegistration = async (eventId: string, eventTitle: string) => {
     const event = events.find(e => e.id === eventId);
@@ -94,7 +234,7 @@ const EventsScreen: React.FC = () => {
         toast.error('Bu etkinlik için kontenjan dolmuş');
         return;
       }
-      
+
       // Show registration modal for important events
       if (event.featured || event.maxParticipants <= 30) {
         setSelectedEvent(event);
@@ -105,105 +245,54 @@ const EventsScreen: React.FC = () => {
       }
     }
   };
-      time: "10:00",
-      duration: "6 saat",
-      location: "UpSchool Campus İzmir",
+
+  // Mock events data
+  const mockEvents = [
+    {
+      id: "1",
+      title: "React & TypeScript Workshop",
+      category: "workshop",
+      date: "2025-08-15",
+      time: "14:00",
+      duration: "4 saat",
+      location: "UpSchool Campus İstanbul",
       type: "Yüz Yüze",
-      organizer: "UpSchool Backend Team",
-      description: "Node.js ve MongoDB ile backend geliştirme deep-dive workshop'u. RESTful API, authentication ve deployment konuları.",
-      maxParticipants: 20,
-      currentParticipants: 8,
-      tags: ["Node.js", "MongoDB", "Backend", "API"],
-      level: "Orta-İleri",
+      organizer: "UpSchool Frontend Team",
+      description: "Modern React uygulamaları geliştirme workshop'u. TypeScript ile type-safe kod yazma teknikleri.",
+      maxParticipants: 25,
+      currentParticipants: 18,
+      tags: ["React", "TypeScript", "Frontend", "Workshop"],
+      level: "Orta",
       featured: true,
-      image: "/api/placeholder/400/200",
-      agenda: [
-        { time: "10:00", title: "Node.js Temelleri" },
-        { time: "11:30", title: "MongoDB & Mongoose" },
-        { time: "12:30", title: "Öğle Yemeği" },
-        { time: "13:30", title: "RESTful API Geliştirme" },
-        { time: "15:00", title: "Authentication & Security" },
-        { time: "16:00", title: "Deployment & Best Practices" }
-      ],
-      speakers: [
-        { name: "Ahmet Yıldırım", role: "Senior Backend Engineer @ GittiGidiyor", avatar: "/api/placeholder/40/40" }
-      ],
-      requirements: ["Laptop", "Node.js Installed", "Basic JS Knowledge"],
-      benefits: ["Certificate", "Code Repository", "Lunch"]
+      image: "/api/placeholder/400/200"
     },
     {
-      id: "6",
+      id: "2",
       title: "Women in Tech: Inspiration Talk",
       category: "panel",
-      date: "2025-03-08",
+      date: "2025-08-20",
       time: "19:00",
       duration: "2.5 saat",
       location: "Online (YouTube Live)",
       type: "Online",
       organizer: "UpSchool Women Leadership",
-      description: "8 Mart Dünya Kadınlar Günü özel etkinliği. Teknoloji sektöründe lider kadınlarla ilham verici konuşmalar.",
+      description: "Teknoloji sektöründe lider kadınlarla ilham verici konuşmalar.",
       maxParticipants: 500,
       currentParticipants: 234,
       tags: ["Women", "Leadership", "Inspiration", "Tech"],
       level: "Tüm Seviyeler",
       featured: true,
-      image: "/api/placeholder/400/200",
-      agenda: [
-        { time: "19:00", title: "Açılış ve Hoşgeldin" },
-        { time: "19:15", title: "Keynote: Tech'te Kadın Olmak" },
-        { time: "19:45", title: "Success Stories Panel" },
-        { time: "20:30", title: "Live Q&A" },
-        { time: "21:15", title: "Networking Rooms" }
-      ],
-      speakers: [
-        { name: "Dr. Esra Karakaş", role: "AI Director @ Google", avatar: "/api/placeholder/40/40" },
-        { name: "Aylin Pekcanlar", role: "VP Engineering @ Spotify", avatar: "/api/placeholder/40/40" }
-      ],
-      requirements: ["Internet Connection"],
-      benefits: ["Inspiration", "Networking", "Recording Access"]
+      image: "/api/placeholder/400/200"
     }
   ];
 
-  const categories = [
-    { id: 'all', label: 'Tümü', icon: Calendar, count: events.length, color: 'bg-gray-100 text-gray-700' },
-    { id: 'networking', label: 'Networking', icon: Users, count: events.filter(e => e.category === 'networking').length, color: 'bg-blue-100 text-blue-700' },
-    { id: 'workshop', label: 'Workshop', icon: Building, count: events.filter(e => e.category === 'workshop').length, color: 'bg-green-100 text-green-700' },
-    { id: 'panel', label: 'Panel', icon: Award, count: events.filter(e => e.category === 'panel').length, color: 'bg-purple-100 text-purple-700' },
-    { id: 'casual', label: 'Casual', icon: Star, count: events.filter(e => e.category === 'casual').length, color: 'bg-yellow-100 text-yellow-700' }
-  ];
-
-  const filteredEvents = events.filter(event => {
-    const matchesCategory = selectedFilter === 'all' || event.category === selectedFilter;
-    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         event.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
-
-  const handleEventRegistration = async (eventId: string, eventTitle: string) => {
-    const event = events.find(e => e.id === eventId);
-    if (!event) return;
-
-    if (registeredEvents.includes(eventId)) {
-      // İptal etme işlemi (şimdilik sadece local state)
-      setRegisteredEvents(registeredEvents.filter(id => id !== eventId));
-      toast.success(`${eventTitle} etkinliğinden kaydınız iptal edildi`);
-    } else {
-      if (event.currentParticipants >= event.maxParticipants) {
-        toast.error('Bu etkinlik için kontenjan dolmuş');
-        return;
-      }
-      
-      // Show registration modal for important events
-      if (event.featured || event.maxParticipants <= 30) {
-        setSelectedEvent(event);
-        setShowRegistrationModal(true);
-      } else {
-        // Quick registration for larger events
-        await handleQuickRegistration(eventId, eventTitle);
-      }
+  // Load mock data if events are empty
+  useEffect(() => {
+    if (events.length === 0) {
+      setEvents(mockEvents);
+      setLoading(false);
     }
-  };
+  }, []);
 
   const handleQuickRegistration = async (eventId: string, eventTitle: string) => {
     try {
@@ -279,16 +368,7 @@ const EventsScreen: React.FC = () => {
     );
   }
 
-  const oldConfirmRegistration = () => {
-    if (selectedEvent) {
-      setRegisteredEvents([...registeredEvents, selectedEvent.id]);
-      toast.success(`${selectedEvent.title} etkinliğine başarıyla kaydoldunuz! 🎉`, {
-        icon: '🎯'
-      });
-      setShowRegistrationModal(false);
-      setSelectedEvent(null);
-    }
-  };
+
 
   // Calendar view helpers
   const getDaysInMonth = (date: Date) => {
@@ -333,6 +413,18 @@ const EventsScreen: React.FC = () => {
   const handleCreateEvent = () => {
     toast.success(<span>Etkinlik oluşturma formu yakında! <FileText className="inline h-4 w-4" /></span>);
   };
+
+  // Filter events based on selected criteria
+  const filteredEvents = events.filter(event => {
+    const matchesSearch = searchTerm === '' || 
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesCategory = selectedFilter === 'all' || event.category === selectedFilter;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
@@ -427,7 +519,15 @@ const EventsScreen: React.FC = () => {
 
         {/* Category Filters */}
         <div className="flex flex-wrap gap-3 mb-8">
-          {categories.map((category) => {
+          {[
+            { id: 'all', label: 'Tümü', icon: Grid, color: 'bg-gray-100 text-gray-700', count: events.length },
+            { id: 'tech-talk', label: 'Tech Talk', icon: User, color: 'bg-blue-100 text-blue-700', count: 2 },
+            { id: 'workshop', label: 'Workshop', icon: Building, color: 'bg-green-100 text-green-700', count: 2 },
+            { id: 'networking', label: 'Networking', icon: Users, color: 'bg-purple-100 text-purple-700', count: 1 },
+            { id: 'masterclass', label: 'Masterclass', icon: Award, color: 'bg-orange-100 text-orange-700', count: 1 },
+            { id: 'competition', label: 'Yarışma', icon: CalendarCheck, color: 'bg-red-100 text-red-700', count: 1 },
+            { id: 'design', label: 'Design', icon: FileText, color: 'bg-pink-100 text-pink-700', count: 1 }
+          ].map((category) => {
             const Icon = category.icon;
             return (
               <button
@@ -455,7 +555,7 @@ const EventsScreen: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredEvents.map((event) => {
               const isRegistered = registeredEvents.includes(event.id);
-              const spotsLeft = event.maxParticipants - event.currentParticipants;
+              const spotsLeft = (event.maxCapacity || event.maxParticipants || 100) - (event.registeredCount || event.currentParticipants || 0);
               const registrationOpen = spotsLeft > 0;
               
               return (
@@ -470,15 +570,15 @@ const EventsScreen: React.FC = () => {
                         </span>
                       )}
                       <span className={`px-2 py-1 rounded-full text-xs font-bold text-white ${
-                        event.type === 'Online' ? 'bg-green-500' : 
-                        event.type === 'Hibrit' ? 'bg-orange-500' : 'bg-blue-500'
+                        event.type === 'online' ? 'bg-green-500' : 
+                        event.type === 'hybrid' ? 'bg-orange-500' : 'bg-blue-500'
                       }`}>
-                        {event.type}
+                        {event.type === 'online' ? 'Online' : event.type === 'hybrid' ? 'Hibrit' : 'Yüz Yüze'}
                       </span>
                     </div>
                     <div className="absolute bottom-4 left-4 text-white">
                       <h3 className="text-xl font-bold mb-1">{event.title}</h3>
-                      <p className="text-sm opacity-90">{event.organizer}</p>
+                      <p className="text-sm opacity-90">{event.speaker || 'UpSchool Community'}</p>
                     </div>
                   </div>
 
@@ -509,7 +609,7 @@ const EventsScreen: React.FC = () => {
 
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {event.tags.slice(0, 3).map((tag, index) => (
+                      {(event.tags || []).slice(0, 3).map((tag: string, index: number) => (
                         <span
                           key={index}
                           className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium"
@@ -517,32 +617,27 @@ const EventsScreen: React.FC = () => {
                           {tag}
                         </span>
                       ))}
-                      {event.tags.length > 3 && (
+                      {(event.tags || []).length > 3 && (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                          +{event.tags.length - 3} more
+                          +{(event.tags || []).length - 3} more
                         </span>
                       )}
                     </div>
 
-                    {/* Speakers */}
-                    {event.speakers.length > 0 && (
+                    {/* Speaker Info */}
+                    {event.speaker && (
                       <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-700 mb-2">Konuşmacılar:</p>
-                        <div className="flex -space-x-2">
-                          {event.speakers.slice(0, 3).map((speaker, index) => (
-                            <div
-                              key={index}
-                              className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center text-xs font-bold text-gray-600"
-                              title={speaker.name}
-                            >
-                              {speaker.name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                          ))}
-                          {event.speakers.length > 3 && (
-                            <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-xs text-gray-500">
-                              +{event.speakers.length - 3}
-                            </div>
-                          )}
+                        <p className="text-sm font-medium text-gray-700 mb-2">Konuşmacı:</p>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center text-xs font-bold">
+                            {event.speaker.split(' ').map((n: string) => n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{event.speaker}</p>
+                            {event.speakerTitle && (
+                              <p className="text-xs text-gray-500">{event.speakerTitle}</p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -551,7 +646,7 @@ const EventsScreen: React.FC = () => {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-2 text-sm">
                         <Users className="h-4 w-4 text-gray-500" />
-                        <span>{event.currentParticipants}/{event.maxParticipants} katılımcı</span>
+                        <span>{event.registeredCount || 0}/{event.maxCapacity || 100} katılımcı</span>
                         {spotsLeft <= 5 && spotsLeft > 0 && (
                           <span className="text-red-600 font-medium">
                             ({spotsLeft} yer kaldı!)
@@ -559,7 +654,7 @@ const EventsScreen: React.FC = () => {
                         )}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {event.level}
+                        {event.difficulty || 'Tüm Seviyeler'}
                       </div>
                     </div>
 
@@ -567,7 +662,7 @@ const EventsScreen: React.FC = () => {
                     <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
                       <div 
                         className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(event.currentParticipants / event.maxParticipants) * 100}%` }}
+                        style={{ width: `${((event.registeredCount || 0) / (event.maxCapacity || 100)) * 100}%` }}
                       ></div>
                     </div>
 
@@ -782,6 +877,8 @@ const EventsScreen: React.FC = () => {
           </ModernCard>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };

@@ -5,20 +5,52 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional, AsyncGenerator, Any
 from datetime import datetime
+import time
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import google.generativeai as genai
 
 import chromadb
 from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_ollama import OllamaLLM
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.memory import ConversationBufferWindowMemory
-from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
+from langchain.llms.base import LLM
+from langchain.callbacks.manager import CallbackManagerForLLMRun
 import PyPDF2
 from io import BytesIO
+
+# Configure Gemini API
+genai.configure(api_key='AIzaSyDzneKXfPU_tq5-8K0DIDRvgZ1qd0PjjWg')
+
+# Gemini LLM wrapper for LangChain compatibility
+class GeminiLLM(LLM):
+    def __init__(self, model_name: str = "gemini-2.5-flash-lite"):
+        super().__init__()
+        self.model_name = model_name
+        self.model = genai.GenerativeModel(model_name)
+    
+    @property
+    def _llm_type(self) -> str:
+        return "gemini"
+    
+    def _call(
+        self,
+        prompt: str,
+        stop: Optional[List[str]] = None,
+        run_manager: Optional[CallbackManagerForLLMRun] = None,
+        **kwargs: Any,
+    ) -> str:
+        try:
+            response = self.model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            logging.error(f"Gemini API error: {e}")
+            return "Üzgünüm, şu anda yanıt veremiyorum. Lütfen daha sonra tekrar deneyin."
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +61,7 @@ class EnhancedAdaAI:
     - LangChain for conversation memory
     - Sentence Transformers for Turkish embeddings
     - CV upload and parsing capabilities
+    - Google Gemini API for fast responses
     """
     
     def __init__(self):
@@ -39,15 +72,29 @@ class EnhancedAdaAI:
         self.chroma_dir = self.data_dir / "chroma_db"
         self.chroma_dir.mkdir(exist_ok=True)
         
+        # Performance optimizations
+        self.response_cache = {}  # Simple in-memory cache
+        self.cache_ttl = 300  # 5 minutes
+        self.executor = ThreadPoolExecutor(max_workers=4)
+        
+        # Initialize Google Gemini API directly for faster responses
+        self.gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+        
         # Initialize embeddings (Turkish-English BGE model)
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="BAAI/bge-base-en-v1.5",  # Fallback to English if Turkish not available
+            model_name="BAAI/bge-base-en-v1.5",
             model_kwargs={'device': 'cpu'},
             encode_kwargs={'normalize_embeddings': True}
         )
         
-        # Initialize ChromaDB
-        self.chroma_client = chromadb.PersistentClient(path=str(self.chroma_dir))
+        # Initialize ChromaDB with performance settings
+        self.chroma_client = chromadb.PersistentClient(
+            path=str(self.chroma_dir),
+            settings=Settings(
+                anonymized_telemetry=False,
+                allow_reset=True
+            )
+        )
         
         # Initialize vector store
         self.vector_store = Chroma(
@@ -55,13 +102,6 @@ class EnhancedAdaAI:
             collection_name="upschool_documents",
             embedding_function=self.embeddings,
             persist_directory=str(self.chroma_dir)
-        )
-        
-        # Initialize LLM
-        self.llm = OllamaLLM(
-            model="llama3.2:3b",
-            temperature=0.7,
-            base_url="http://localhost:11434"
         )
         
         # Text splitter for documents
@@ -74,9 +114,33 @@ class EnhancedAdaAI:
         # Initialize memory for each user session
         self.user_memories: Dict[str, ConversationBufferWindowMemory] = {}
         
+        # Pre-computed responses for common questions
+        self.quick_responses = self._setup_quick_responses()
+        
         # Initialize UpSchool knowledge base
         self._setup_upschool_knowledge()
         
+    def _setup_quick_responses(self) -> Dict[str, str]:
+        """Setup pre-computed responses for common questions"""
+        return {
+            "merhaba": "Merhaba! 👋 Ben Ada AI - Up Hera topluluğunun AI mentoru! Senin teknoloji yolculuğunda yanındayım. Size nasıl yardım edebilirim?",
+            "selam": "Selam! 🚀 Ada AI burada! UpSchool mezunu olarak kariyer hedeflerine ulaşmana yardım edeceğim. Hangi konuda sohbet etmek istiyorsun?",
+            "nasılsın": "Harika! Seninle sohbet etmek beni mutlu ediyor. UpSchool topluluğunun gücüyle birlikte harika şeyler başaracağız! 💪",
+            "yardım": "Tabii! Size şu konularda yardım edebilirim:\n• 🎯 Mülakat hazırlığı\n• 📄 CV optimizasyonu\n• 💼 İş arama stratejileri\n• 🚀 Kariyer planlama\n• 💻 Teknik beceri geliştirme\n\nHangi konuda yardım istiyorsun?",
+            "teşekkür": "Rica ederim! 😊 UpSchool topluluğu olarak birbirimizi desteklemeye devam edelim. Başka bir sorunuz var mı?",
+            "görüşürüz": "Görüşmek üzere! 👋 Başarılar dilerim. UpSchool topluluğu her zaman yanında! 💪",
+            "mülakat": "🎯 **Mülakat Hazırlık Rehberi**\n\n**Teknik Mülakat İçin:**\n• STAR tekniği ile projelerini anlat\n• Kod yazarken düşüncelerini sesli ifade et\n• Time complexity ve space complexity'yi belirt\n• Test case'ler düşün\n\n**Behavioral Sorular İçin:**\n• \"En zor proje\" sorusu için UpSchool projelerini kullan\n• \"Takım çalışması\" için grup projelerini anlat\n• \"Hata yönetimi\" için debugging deneyimlerini paylaş\n\n**Özgüven İçin:**\n• Her gün 15 dakika ayna karşısında pratik yap\n• Pozitif self-talk geliştir\n• Nefes teknikleri öğren",
+            "cv": "📄 **CV Optimizasyon Rehberi**\n\n**Güçlü CV İçin:**\n• Action verbs kullan (Geliştirdim, Yönettim, Optimize ettim)\n• Sayısal sonuçlar ekle (Kullanıcı deneyimini %40 artırdım)\n• UpSchool projelerini öne çıkar\n• GitHub linkini ekle\n\n**Teknik CV Formatı:**\n• Contact bilgileri\n• Professional Summary (2-3 cümle)\n• Skills (Frontend, Backend, Tools)\n• Projects (En güçlü 3-4 proje)\n• Education (UpSchool vurgusu)",
+            "react": "⚛️ **Frontend Development Rehberi**\n\n**Öğrenme Yolu:**\n1. **HTML/CSS** (2-3 hafta)\n2. **JavaScript** (4-6 hafta)\n3. **React** (6-8 hafta)\n4. **TypeScript** (2-3 hafta)\n5. **State Management** (Redux/Zustand)\n\n**Önerilen Projeler:**\n• Todo App (React + LocalStorage)\n• Weather App (API integration)\n• E-commerce (Full stack)\n• Portfolio Website",
+            "python": "🐍 **Data Science & Python Rehberi**\n\n**Öğrenme Yolu:**\n1. **Python Temelleri** (3-4 hafta)\n2. **Pandas & NumPy** (2-3 hafta)\n3. **Data Visualization** (Matplotlib, Seaborn)\n4. **Machine Learning** (Scikit-learn)\n5. **Deep Learning** (TensorFlow/PyTorch)\n\n**Önerilen Projeler:**\n• Data Analysis Dashboard\n• ML Model (Classification/Regression)\n• Web Scraping Tool\n• Data Visualization App",
+            "javascript": "🟨 **JavaScript Rehberi**\n\n**Temel Konular:**\n• Variables, Functions, Objects\n• ES6+ Features (Arrow functions, Destructuring)\n• Async/Await ve Promises\n• DOM Manipulation\n• Event Handling\n\n**İleri Seviye:**\n• Closures ve Scope\n• Prototypes ve Inheritance\n• Error Handling\n• Modules (ES6)\n• Testing (Jest)\n\n**Proje Önerileri:**\n• Calculator App\n• Todo List\n• Weather App\n• Quiz Game",
+            "typescript": "🔷 **TypeScript Rehberi**\n\n**Temel Konular:**\n• Type Annotations\n• Interfaces ve Types\n• Generics\n• Enums\n• Union Types\n\n**İleri Seviye:**\n• Advanced Types\n• Decorators\n• Namespaces\n• Module Resolution\n• Type Guards\n\n**Proje Önerileri:**\n• Type-safe API Client\n• React + TypeScript App\n• Node.js Backend\n• Library Development",
+            "node": "🟢 **Node.js Rehberi**\n\n**Temel Konular:**\n• Event Loop\n• Streams ve Buffers\n• File System\n• HTTP Module\n• NPM ve Package Management\n\n**Framework'ler:**\n• Express.js\n• Fastify\n• NestJS\n• Koa\n\n**Database:**\n• MongoDB (Mongoose)\n• PostgreSQL (Prisma)\n• Redis\n\n**Proje Önerileri:**\n• REST API\n• Real-time Chat App\n• File Upload Service\n• Authentication System",
+            "kariyer": "💼 **Kariyer Rehberi**\n\n**İş Arama Stratejileri:**\n• LinkedIn profilini güncelle ve aktif ol\n• GitHub'da projelerini paylaş\n• Networking etkinliklerine katıl\n• UpSchool topluluğunu kullan\n\n**Popüler Pozisyonlar:**\n• Frontend Developer (React, Vue.js)\n• Backend Developer (Node.js, Python)\n• Full Stack Developer\n• Data Scientist\n• UI/UX Designer\n\n**Maaş Beklentileri (Türkiye):**\n• Junior: 15.000-25.000 TL\n• Mid-level: 25.000-40.000 TL\n• Senior: 40.000-60.000 TL+",
+            "network": "👥 **Network Kurma Rehberi**\n\n**LinkedIn Optimizasyonu:**\n• Profil fotoğrafı ve banner\n• Güçlü headline yaz\n• Deneyim ve eğitim detayları\n• Skills ve endorsements\n\n**Networking Stratejileri:**\n• Tech meetup'lara katıl\n• Online topluluklarda aktif ol\n• Mentor bul ve mentorluk ver\n• Konferanslara katıl\n\n**UpSchool Topluluğu:**\n• Mezun gruplarında aktif ol\n• Proje paylaşımları yap\n• Deneyim paylaş\n• Yeni mezunlara yardım et",
+            "proje": "🚀 **Proje Geliştirme Rehberi**\n\n**Portfolio Projeleri:**\n• E-commerce Platform\n• Task Management App\n• Social Media Clone\n• Data Visualization Dashboard\n\n**Proje Geliştirme Süreci:**\n• Planning ve Wireframing\n• UI/UX Design\n• Development (Agile)\n• Testing ve Debugging\n• Deployment\n\n**GitHub Optimizasyonu:**\n• README dosyaları yaz\n• Live demo linkleri ekle\n• Clean code yaz\n• Regular commits yap"
+        }
+    
     def _setup_upschool_knowledge(self):
         """Setup UpSchool specific knowledge base"""
         
@@ -256,9 +320,9 @@ class EnhancedAdaAI:
         """
         
         try:
-            response = await asyncio.to_thread(self.llm.invoke, analysis_prompt)
+            response = await asyncio.to_thread(self.gemini_model.generate_content, analysis_prompt)
             return {
-                "analysis": response,
+                "analysis": response.text,
                 "analyzed_at": datetime.now().isoformat()
             }
         except Exception as e:
@@ -278,10 +342,36 @@ class EnhancedAdaAI:
         """Get enhanced response with retrieval and memory"""
         
         try:
+            # Check for quick responses first (instant replies)
+            message_lower = message.lower().strip()
+            
+            # Extended quick response matching
+            for key, response in self.quick_responses.items():
+                if key in message_lower:
+                    logger.info(f"Serving quick response for user {user_id} - matched: {key}")
+                    words = response.split()
+                    for i, word in enumerate(words):
+                        yield word + " "
+                        if i % 2 == 0:  # Faster streaming for quick responses
+                            await asyncio.sleep(0.02)  # Even faster
+                    return
+            
+            # Check cache for similar questions
+            cache_key = f"{message_lower}_{context}"
+            if cache_key in self.response_cache and time.time() - self.response_cache[cache_key]['timestamp'] < self.cache_ttl:
+                cached_response = self.response_cache[cache_key]['response']
+                logger.info(f"Serving cached response for user {user_id}")
+                words = cached_response.split()
+                for i, word in enumerate(words):
+                    yield word + " "
+                    if i % 3 == 0:
+                        await asyncio.sleep(0.03)  # Faster
+                return
+
             # Get user memory
             memory = self.get_user_memory(user_id)
             
-            # Search relevant documents
+            # Search relevant documents (async)
             relevant_docs = await self._search_relevant_context(
                 message, user_id, context
             )
@@ -291,31 +381,35 @@ class EnhancedAdaAI:
                 message, context, user_data, relevant_docs
             )
             
-            # Create retrieval chain
-            retrieval_chain = ConversationalRetrievalChain.from_llm(
-                llm=self.llm,
-                retriever=self.vector_store.as_retriever(search_kwargs={"k": 3}),
-                memory=memory,
-                return_source_documents=True,
-                verbose=True
-            )
-            
-            # Get response
-            response = await asyncio.to_thread(
-                retrieval_chain.invoke,
-                {"question": enhanced_prompt}
-            )
-            
-            # Stream the response
-            full_response = response['answer']
-            
-            # Simulate streaming
-            words = full_response.split()
-            for i, word in enumerate(words):
-                yield word + " "
-                if i % 3 == 0:  # Add small delay every few words
-                    await asyncio.sleep(0.05)
-            
+            # Get response with timeout using Gemini directly
+            try:
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(
+                        self.gemini_model.generate_content,
+                        enhanced_prompt
+                    ),
+                    timeout=10.0  # 10 second timeout for faster responses
+                )
+                
+                response_text = response.text
+                
+                # Cache the response
+                self.response_cache[cache_key] = {
+                    "response": response_text,
+                    "timestamp": time.time()
+                }
+                
+                # Stream the response
+                words = response_text.split()
+                for i, word in enumerate(words):
+                    yield word + " "
+                    if i % 3 == 0:
+                        await asyncio.sleep(0.02)  # Very fast streaming for Gemini
+                        
+            except asyncio.TimeoutError:
+                logger.warning(f"Response timeout for user {user_id}")
+                yield "⏱️ Yanıt biraz uzun sürüyor... Lütfen bekleyin veya sorunuzu daha kısa tutun."
+                
         except Exception as e:
             logger.error(f"Enhanced response error: {e}")
             yield f"❌ Üzgünüm, şu anda teknik bir sorun yaşıyorum. Hata: {str(e)}"
@@ -417,10 +511,10 @@ class EnhancedAdaAI:
             Kısa ve actionable tavsiyeler ver:
             """
             
-            response = await asyncio.to_thread(self.llm.invoke, insights_prompt)
+            response = await asyncio.to_thread(self.gemini_model.generate_content, insights_prompt)
             
             return {
-                "insights": response,
+                "insights": response.text,
                 "has_cv": True,
                 "cv_chunks": len(cv_docs),
                 "analyzed_at": datetime.now().isoformat()
