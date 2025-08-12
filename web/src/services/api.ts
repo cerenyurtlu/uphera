@@ -13,6 +13,7 @@ interface ApiResponse<T = any> {
 
 class UpHeraApiService {
   private baseUrls = [
+    import.meta.env.VITE_API_URL || 'https://up-hera-api.vercel.app',
     'http://127.0.0.1:8000',
     'http://localhost:8000'
   ];

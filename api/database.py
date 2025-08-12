@@ -12,12 +12,26 @@ import time
 import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
+from sqlalchemy import create_engine
+import settings
 
 # Database file path
 DB_PATH = "uphera.db"
 
 # Database lock for thread safety
 _db_lock = threading.Lock()
+
+# Database configuration
+DATABASE_URL = settings.DATABASE_URL
+
+# Vercel için PostgreSQL kullan
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+)
 
 def get_db_connection():
     """Get database connection with proper settings"""

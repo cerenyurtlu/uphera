@@ -771,15 +771,7 @@ async def startup_websocket_monitor():
     except Exception as e:
         logger.warning(f"WebSocket monitor not started: {e}")
 
-# Run server
+# Vercel için export
 if __name__ == "__main__":
-    # Initialize database
-    init_db()
-    
-    uvicorn.run(
-        "main:app",
-        host=settings.API_HOST,
-        port=settings.API_PORT,
-        reload=settings.API_DEBUG,
-        log_level="info"
-    )
+    import uvicorn
+    uvicorn.run(app, host=settings.API_HOST, port=settings.API_PORT)
