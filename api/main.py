@@ -496,6 +496,8 @@ async def ai_chat_stream(
         
         async def generate():
             try:
+                # Immediate ping to establish SSE connection and avoid proxy timeouts
+                yield f"data: {json.dumps({'type': 'info', 'content': 'connected'})}\n\n"
                 async for chunk in get_enhanced_ai_response(
                     user_id=user_id,
                     message=request.message,

@@ -511,7 +511,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
 
         if (useStreaming) {
           // Streaming API call with extended timeout and SSE accept header
-          const STREAM_TIMEOUT_MS = 25000;
+          const STREAM_TIMEOUT_MS = 55000;
 
           for (const base of apiBases) {
             const apiEndpoint = `${base}/ai-coach/chat/stream`;
@@ -597,32 +597,48 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
           // Non-streaming fallback if streaming failed on all bases
           if (!success) {
             try {
-              const fallbackResp = await fetch(`${apiService.getBaseUrl()}/ai-coach/chat`, {
-                method: 'POST',
-                headers: apiService.getJsonHeaders(),
-                body: JSON.stringify({
-                  message: text,
-                  context: context,
-                  user_data: userProfile ? {
-                    id: userProfile.id || 'demo_user',
-                    name: userProfile.name,
-                    upschool_batch: userProfile.upschoolProgram || userProfile.upschool_batch || 'Data Science',
-                    skills: userProfile.skills || ['Python', 'Machine Learning', 'Data Analysis'],
-                    career_goal: userProfile.career_goal || 'Data Scientist pozisyonu'
-                  } : null,
-                  conversation_history: messages.slice(-6).map(msg => ({
-                    type: msg.type,
-                    content: msg.content
-                  })),
-                  use_streaming: false
-                })
-              });
-              const data = await fallbackResp.json().catch(() => null);
-              if (fallbackResp.ok && data?.success && data?.response) {
-                setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: data.response, isStreaming: false, enhanced: true, suggestions: data.suggestions || [] } : msg));
-                success = true;
-              } else {
-                throw new Error(data?.response || 'İstek başarısız');
+              // Try non-streaming on all bases with extended timeout
+              const NON_STREAM_TIMEOUT_MS = 55000;
+              let nonStreamOk = false;
+              for (const base of apiBases) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), NON_STREAM_TIMEOUT_MS);
+                try {
+                  const fallbackResp = await fetch(`${base}/ai-coach/chat`, {
+                    method: 'POST',
+                    headers: apiService.getJsonHeaders(),
+                    body: JSON.stringify({
+                      message: text,
+                      context: context,
+                      user_data: userProfile ? {
+                        id: userProfile.id || 'demo_user',
+                        name: userProfile.name,
+                        upschool_batch: userProfile.upschoolProgram || userProfile.upschool_batch || 'Data Science',
+                        skills: userProfile.skills || ['Python', 'Machine Learning', 'Data Analysis'],
+                        career_goal: userProfile.career_goal || 'Data Scientist pozisyonu'
+                      } : null,
+                      conversation_history: messages.slice(-6).map(msg => ({
+                        type: msg.type,
+                        content: msg.content
+                      })),
+                      use_streaming: false
+                    }),
+                    signal: controller.signal
+                  });
+                  clearTimeout(timeoutId);
+                  const data = await fallbackResp.json().catch(() => null);
+                  if (fallbackResp.ok && data?.success && data?.response) {
+                    setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: data.response, isStreaming: false, enhanced: true, suggestions: data.suggestions || [] } : msg));
+                    nonStreamOk = true;
+                    break;
+                  }
+                } catch (err) {
+                  clearTimeout(timeoutId);
+                  continue;
+                }
+              }
+              if (!nonStreamOk) {
+                throw new Error('Bağlantı hatası');
               }
             } catch (e) {
               throw lastError || e || new Error('Bağlantı hatası');
