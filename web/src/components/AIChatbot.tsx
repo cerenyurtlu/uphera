@@ -47,6 +47,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const assistantContentRef = useRef<string>("");
 
   // Context-specific welcome messages
   const getWelcomeMessage = () => {
@@ -507,6 +508,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
     };
 
     setMessages(prev => [...prev, assistantMessage]);
+    assistantContentRef.current = '';
 
     try {
       // Sadece LLM akışı: local/mock hızlı yanıtları tamamen kaldırıldı
@@ -578,6 +580,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                         const parsed = JSON.parse(data);
                         if (parsed.type === 'content') {
                           accumulatedContent += parsed.content;
+                          assistantContentRef.current = accumulatedContent;
                           setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: accumulatedContent } : msg));
                         } else if (parsed.type === 'suggestions') {
                           suggestions = parsed.suggestions || [];
@@ -634,7 +637,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                   });
                   clearTimeout(timeoutId);
                   const data = await fallbackResp.json().catch(() => null);
-                  if (fallbackResp.ok && data?.success && data?.response) {
+                  if (fallbackResp.ok && data?.response) {
                     setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: data.response, isStreaming: false, enhanced: true, suggestions: data.suggestions || [] } : msg));
                     nonStreamOk = true;
                     break;
@@ -684,7 +687,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
               });
               clearTimeout(timeoutId);
               const data = await resp.json().catch(() => null);
-              if (resp.ok && data?.success && data?.response) {
+              if (resp.ok && data?.response) {
                 setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: data.response, isStreaming: false, enhanced: true, suggestions: data.suggestions || [] } : msg));
                 nonStreamOk = true;
                 break;
@@ -705,8 +708,13 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
     } catch (error) {
       console.error('AI Chat Error:', error);
       
-      // Hata durumunda kullanıcı dostu kısa mesaj göster, "offline" etiketi kullanma
-      setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: '❌ Bağlantı hatası veya zaman aşımı. Lütfen biraz sonra tekrar deneyin.', isStreaming: false } : msg));
+      // Eğer kısmi içerik geldiyse onu koru, sadece streaming'i kapat
+      if (assistantContentRef.current && assistantContentRef.current.trim().length > 0) {
+        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, isStreaming: false } : msg));
+      } else {
+        // Hiç içerik yoksa kısa ve net hata mesajı göster
+        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: '❌ Bağlantı hatası veya zaman aşımı. Lütfen biraz sonra tekrar deneyin.', isStreaming: false } : msg));
+      }
     } finally {
       setIsTyping(false);
     }
