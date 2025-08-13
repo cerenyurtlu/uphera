@@ -64,9 +64,10 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origin_regex=r"https?://.*",
+    allow_credentials=False,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "Accept", "Origin", "User-Agent", "DNT", "Cache-Control", "X-Requested-With"],
 )
 
 # Pydantic Models
@@ -498,15 +499,46 @@ async def ai_chat_stream(
             try:
                 # Immediate ping to establish SSE connection and avoid proxy timeouts
                 yield f"data: {json.dumps({'type': 'info', 'content': 'connected'})}\n\n"
-                async for chunk in get_enhanced_ai_response(
-                    user_id=user_id,
-                    message=request.message,
-                    context=request.context,
-                    user_data=request.user_data,
-                    conversation_history=request.conversation_history,
-                ):
-                    # Frontend expects { type: 'content', content: '...' }
-                    yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
+                
+                # Heartbeat + queue to keep connection alive behind proxies
+                queue: asyncio.Queue = asyncio.Queue()
+
+                async def produce():
+                    try:
+                        async for chunk in get_enhanced_ai_response(
+                            user_id=user_id,
+                            message=request.message,
+                            context=request.context,
+                            user_data=request.user_data,
+                            conversation_history=request.conversation_history,
+                        ):
+                            await queue.put(chunk)
+                    except Exception as e:
+                        await queue.put(f"__ERROR__:{str(e)}")
+                    finally:
+                        await queue.put("__DONE__")
+
+                producer_task = asyncio.create_task(produce())
+
+                while True:
+                    try:
+                        item = await asyncio.wait_for(queue.get(), timeout=10)
+                    except asyncio.TimeoutError:
+                        # SSE comment as heartbeat
+                        yield ": keep-alive\n\n"
+                        continue
+
+                    if item == "__DONE__":
+                        break
+                    if isinstance(item, str) and item.startswith("__ERROR__:"):
+                        err_msg = item.split(":", 1)[1]
+                        yield f"data: {json.dumps({'type': 'content', 'content': '❌ Hata: ' + err_msg})}\n\n"
+                        break
+
+                    yield f"data: {json.dumps({'type': 'content', 'content': item})}\n\n"
+
+                await producer_task
+
                 # On completion send done with suggestions
                 suggestions = [
                     "Mülakat hazırlığı yapalım",
@@ -522,8 +554,12 @@ async def ai_chat_stream(
         
         return StreamingResponse(
             generate(), 
-            media_type="text/event-stream",
-            headers={"Cache-Control": "no-cache"}
+            media_type="text/event-stream; charset=utf-8",
+            headers={
+                "Cache-Control": "no-cache, no-transform",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no"
+            }
         )
         
     except Exception as e:

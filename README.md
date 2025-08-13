@@ -13,6 +13,11 @@ A comprehensive career platform designed specifically for women in technology, f
 - **Success Stories**: Inspiring career journeys from community members
 - **Freelance Opportunities**: Project-based work and gig economy integration
 
+## 🌐 Live Demo & Contact
+
+- **Live preview**: [uphera.vercel.app](https://uphera.vercel.app)
+- **Feedback / contributions / support**: Feel free to email me → [cerennyurtlu@gmail.com](mailto:cerennyurtlu@gmail.com)
+
 ## 🛠️ Technology Stack
 
 ### Frontend

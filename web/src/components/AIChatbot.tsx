@@ -32,7 +32,14 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [useStreaming, setUseStreaming] = useState(true);
+  const isVercelHost = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (typeof navigator !== 'undefined' && (navigator as any).platform === 'MacIntel' && (navigator as any).maxTouchPoints > 1);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  const disableStreamEnv = ((import.meta as any).env?.VITE_DISABLE_STREAM === 'true');
+  const defaultStreaming = disableStreamEnv ? false : !(isVercelHost || isIOS || isSafari || isMobile);
+  const [useStreaming, setUseStreaming] = useState(defaultStreaming);
   const [useEnhanced, setUseEnhanced] = useState(true);
   const [, setCvFile] = useState<File | null>(null);
   const [isUploadingCV, setIsUploadingCV] = useState(false);
@@ -505,7 +512,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
       // Sadece LLM akışı: local/mock hızlı yanıtları tamamen kaldırıldı
 
               // Try online API with timeout
-        const apiBases = apiService.getBaseUrls();
+        const apiBases = isVercelHost ? [apiService.getBaseUrl()] : apiService.getBaseUrls();
         let lastError: any = null;
         let success = false;
 
@@ -645,15 +652,61 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
             }
           }
         } else {
-        // Non-streaming mod devre dışı: her zaman streaming kullan
-        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: 'Lütfen streaming açık kullanın.', isStreaming: false } : msg));
+        // Non-streaming mod: tüm base URL'lerde uzun zaman aşımı ile dene
+        try {
+          const NON_STREAM_TIMEOUT_MS = 55000;
+          let nonStreamOk = false;
+          const apiBases = isVercelHost ? [apiService.getBaseUrl()] : apiService.getBaseUrls();
+          for (const base of apiBases) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), NON_STREAM_TIMEOUT_MS);
+            try {
+              const resp = await fetch(`${base}/ai-coach/chat`, {
+                method: 'POST',
+                headers: apiService.getJsonHeaders(),
+                body: JSON.stringify({
+                  message: text,
+                  context: context,
+                  user_data: userProfile ? {
+                    id: userProfile.id || 'demo_user',
+                    name: userProfile.name,
+                    upschool_batch: userProfile.upschoolProgram || userProfile.upschool_batch || 'Data Science',
+                    skills: userProfile.skills || ['Python', 'Machine Learning', 'Data Analysis'],
+                    career_goal: userProfile.career_goal || 'Data Scientist pozisyonu'
+                  } : null,
+                  conversation_history: messages.slice(-6).map(msg => ({
+                    type: msg.type,
+                    content: msg.content
+                  })),
+                  use_streaming: false
+                }),
+                signal: controller.signal
+              });
+              clearTimeout(timeoutId);
+              const data = await resp.json().catch(() => null);
+              if (resp.ok && data?.success && data?.response) {
+                setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: data.response, isStreaming: false, enhanced: true, suggestions: data.suggestions || [] } : msg));
+                nonStreamOk = true;
+                break;
+              }
+            } catch (err) {
+              clearTimeout(timeoutId);
+              continue;
+            }
+          }
+          if (!nonStreamOk) {
+            throw new Error('Bağlantı hatası');
+          }
+        } catch (e) {
+          throw e;
+        }
       }
 
     } catch (error) {
       console.error('AI Chat Error:', error);
       
-      // Offline/Local fallback devre dışı: hata durumunda direkt hata göster
-      setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: '❌ Bağlantı hatası veya zaman aşımı. Lütfen tekrar deneyin.', isStreaming: false, enhanced: false } : msg));
+      // Hata durumunda kullanıcı dostu kısa mesaj göster, "offline" etiketi kullanma
+      setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: '❌ Bağlantı hatası veya zaman aşımı. Lütfen biraz sonra tekrar deneyin.', isStreaming: false } : msg));
     } finally {
       setIsTyping(false);
     }
@@ -783,12 +836,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                           <span>Enhanced AI yanıtı</span>
                         </div>
                       )}
-                      {message.enhanced === false && message.type === 'assistant' && (
-                        <div className="mt-2 text-xs text-blue-600 flex items-center space-x-1">
-                          <Zap className="h-3 w-3" />
-                          <span>Offline AI yanıtı</span>
-                        </div>
-                      )}
+                      {/* Offline etiketi kaldırıldı */}
                       
                       {message.suggestions && message.suggestions.length > 0 && (
                         <div className="mt-3 space-y-2">
