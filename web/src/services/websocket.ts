@@ -22,7 +22,7 @@ interface ConnectionConfig {
 
 class WebSocketManager {
   private connections: Map<string, WebSocket> = new Map();
-  private reconnectTimers: Map<string, NodeJS.Timeout> = new Map();
+  private reconnectTimers: Map<string, any> = new Map();
   private reconnectAttempts: Map<string, number> = new Map();
   private messageHandlers: Map<string, Set<(message: WebSocketMessage) => void>> = new Map();
 
@@ -186,7 +186,7 @@ export class UpHeraWebSocketService {
   private token: string | null = null;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+    this.baseUrl = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:8000';
   }
 
   setAuthToken(token: string): void {

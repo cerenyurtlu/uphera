@@ -64,6 +64,24 @@ const LoginScreen: React.FC = () => {
         return;
       }
 
+      // Admin hızlı giriş (offline demo için)
+      if (email === 'admin@gmail.com' && password === '123456') {
+        localStorage.setItem('uphera_user', JSON.stringify({
+          id: 'admin-user-1',
+          name: 'Admin User',
+          email: email,
+          program: 'Administration',
+          isLoggedIn: true,
+          token: 'demo-token-admin',
+          loginAt: new Date().toISOString(),
+          userType: 'admin'
+        }));
+
+        toast.success('Admin olarak giriş yapıldı.');
+        navigate('/admin');
+        return;
+      }
+
       // Normal login API çağrısı
       const apiUrls = [
         'http://127.0.0.1:8000/api/auth/login',
@@ -116,12 +134,13 @@ const LoginScreen: React.FC = () => {
           program: data.user.program,
           isLoggedIn: true,
           token: data.token,
-          loginAt: new Date().toISOString()
+          loginAt: new Date().toISOString(),
+          userType: data.user.user_type || 'mezun'
         }));
 
         toast.success(`Hoş geldin ${data.user.name}!`);
-        // API'den gelen redirect_url'i kullan, yoksa /jobs'a git
-        const redirectPath = data.redirect_url || '/jobs';
+        // Admin ise admin dashboard'a yönlendir
+        const redirectPath = data.redirect_url || (data.user.user_type === 'admin' ? '/admin' : '/jobs');
         navigate(redirectPath);
       } else {
         toast.error(data.detail || 'E-posta veya şifre hatalı');

@@ -51,59 +51,15 @@ const ProfileScreen: React.FC = () => {
     }
   });
 
-  // Load user profile from API
+  // Load user profile from API (apiService ile)
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const userData = localStorage.getItem('uphera_user');
-        if (!userData) {
-          toast.error('Kullanıcı bilgileri bulunamadı');
-          return;
-        }
-
-        const user = JSON.parse(userData);
-        const token = user.token;
-
-        // API URL'lerini sırayla dene
-        const apiUrls = [
-          'http://127.0.0.1:8000/api/auth/profile',
-          'http://localhost:8000/api/auth/profile'
-        ];
-
-        let response = null;
-        let lastError = null;
-
-        for (const apiUrl of apiUrls) {
-          try {
-            console.log(`🔄 Profil yükleniyor: ${apiUrl}`);
-            response = await fetch(apiUrl, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-              mode: 'cors'
-            });
-            
-            if (response.ok) {
-              break;
-            }
-          } catch (error) {
-            console.error(`❌ API hatası (${apiUrl}):`, error);
-            lastError = error;
-          }
-        }
-
-        if (!response) {
-          throw lastError || new Error('Profil API\'lerine ulaşılamadı');
-        }
-
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-          const userProfile = data.user;
-          
-          setProfileData({
+        const resp = await apiService.getProfile();
+        if (resp && resp.success && resp.user) {
+          const userProfile = resp.user as any;
+          setProfileData(prev => ({
+            ...prev,
             name: `${userProfile.firstName} ${userProfile.lastName}`,
             email: userProfile.email,
             phone: userProfile.phone || "",
@@ -112,32 +68,24 @@ const ProfileScreen: React.FC = () => {
             linkedin_url: userProfile.linkedinUrl || "",
             portfolio_url: userProfile.portfolioUrl || "",
             bio: userProfile.aboutMe || "",
-            skills: userProfile.skills || [],
+            skills: Array.isArray(userProfile.skills) ? userProfile.skills : [],
             experience_level: userProfile.experienceLevel || "entry",
-            salary_expectation: 35000, // Default value
-            work_preference: "hybrid",
-            availability: "immediately",
-            languages: ["Türkçe (Ana dil)", "İngilizce (Orta seviye)"],
             education: {
               degree: userProfile.upschoolProgram || "",
               year: userProfile.graduationDate || "",
               institution: "UpSchool"
             },
-            projects: []
-          });
-          
-          console.log('✅ Profil yüklendi:', userProfile);
+          }));
         } else {
-          toast.error(data.detail || 'Profil yüklenirken hata oluştu');
+          toast.error(resp?.error || resp?.detail || 'Profil yüklenirken hata oluştu');
         }
       } catch (error: any) {
         console.error('Profil yükleme hatası:', error);
-        toast.error('Profil yüklenirken hata oluştu');
+        toast.error(error?.message || 'Profil yüklenirken hata oluştu');
       } finally {
         setIsLoading(false);
       }
     };
-
     loadProfile();
   }, []);
 
@@ -188,25 +136,7 @@ const ProfileScreen: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      setIsLoading(true); // Loading başlat
-      
-      const userData = localStorage.getItem('uphera_user');
-      if (!userData) {
-        toast.error('Kullanıcı bilgileri bulunamadı');
-        setIsLoading(false);
-        return;
-      }
-
-      const user = JSON.parse(userData);
-      const token = user.token;
-
-      if (!token) {
-        toast.error('Oturum bilgisi bulunamadı, lütfen tekrar giriş yapın');
-        setIsLoading(false);
-        return;
-      }
-
-      // API'ye gönderilecek veriyi hazırla (backend'in beklediği format)
+      setIsLoading(true);
       const updateData = {
         firstName: profileData.name.split(' ')[0] || "",
         lastName: profileData.name.split(' ').slice(1).join(' ') || "",
@@ -214,7 +144,7 @@ const ProfileScreen: React.FC = () => {
         upschoolProgram: profileData.education.degree,
         graduationDate: profileData.education.year,
         skills: profileData.skills,
-        experience: profileData.experience_level, // Backend 'experience' bekliyor
+        experience: profileData.experience_level,
         location: profileData.location,
         portfolioUrl: profileData.portfolio_url,
         githubUrl: profileData.github_url,
@@ -222,83 +152,21 @@ const ProfileScreen: React.FC = () => {
         aboutMe: profileData.bio
       };
 
-      // API URL'lerini sırayla dene
-      const apiUrls = [
-        'http://127.0.0.1:8000/api/auth/profile',
-        'http://localhost:8000/api/auth/profile'
-      ];
-
-      let response = null;
-      let lastError = null;
-
-      for (const apiUrl of apiUrls) {
-        try {
-          console.log(`🔄 Profil güncelleniyor: ${apiUrl}`);
-          console.log('📤 Gönderilen veri:', updateData);
-          
-          response = await fetch(apiUrl, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify(updateData),
-            mode: 'cors'
-          });
-          
-          if (response.ok) {
-            break;
-          } else {
-            console.error(`❌ HTTP ${response.status}: ${response.statusText}`);
-            const errorData = await response.text();
-            console.error('❌ API cevabı:', errorData);
-          }
-        } catch (error) {
-          console.error(`❌ API hatası (${apiUrl}):`, error);
-          lastError = error;
-        }
-      }
-
-      if (!response) {
-        throw lastError || new Error('Profil API\'lerine ulaşılamadı');
-      }
-
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        // Mentor bilgilerini de kaydet
+      const resp = await apiService.updateProfile(updateData);
+      if (resp && resp.success) {
         if (profileData.mentorship.isAvailable || profileData.mentorship.specialties.length > 0) {
-          try {
-            await apiService.updateMentorProfile(profileData.mentorship);
-          } catch (mentorError) {
-            console.error('Mentor profili kaydedilirken hata:', mentorError);
-            // Mentor kaydı başarısız olsa da ana profil güncellemesi başarılı
-          }
+          try { await apiService.updateMentorProfile(profileData.mentorship); } catch {}
         }
-        
         toast.success('Profil bilgilerin güncellendi!');
-        
-        // Güncellenmiş profil bilgilerini localStorage'a kaydet
-        if (data.user) {
-          const currentUser = JSON.parse(localStorage.getItem('uphera_user') || '{}');
-          const updatedUser = { ...currentUser, ...data.user };
-          localStorage.setItem('uphera_user', JSON.stringify(updatedUser));
-        }
-        
-        // Profil görüntüleme sayfasına yönlendir
-        setTimeout(() => {
-          window.location.href = '/profile/view';
-        }, 1000);
-        
-        console.log('✅ Profil güncellendi:', data);
+        setTimeout(() => { window.location.href = '/profile/view'; }, 800);
       } else {
-        toast.error(data.detail || 'Profil güncellenirken hata oluştu');
+        toast.error(resp?.error || resp?.detail || 'Profil güncellenirken hata oluştu');
       }
     } catch (error: any) {
       console.error('Profil güncelleme hatası:', error);
-      toast.error('Profil güncellenirken hata oluştu');
+      toast.error(error?.message || 'Profil güncellenirken hata oluştu');
     } finally {
-      setIsLoading(false); // Loading'i kapat
+      setIsLoading(false);
     }
   };
 
@@ -312,6 +180,11 @@ const ProfileScreen: React.FC = () => {
       </div>
     );
   }
+
+  // UI guard: profileData tutarlı mı?
+  const safeSkills = Array.isArray(profileData.skills) ? profileData.skills : [];
+  const safeEducation = profileData.education || { degree: '', year: '', institution: 'UpSchool' };
+  const safeMentorship = profileData.mentorship || { isAvailable: false, specialties: [], experience: '', menteeCount: 0, availability: '', bio: '' };
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--up-light-gray)' }}>
@@ -448,7 +321,7 @@ const ProfileScreen: React.FC = () => {
               </div>
               
               <div className="flex flex-wrap gap-2 mb-4">
-                {profileData.skills.map((skill, index) => (
+                    {safeSkills.map((skill, index) => (
                   <span
                     key={index}
                     className="px-3 py-2 rounded-lg text-sm font-medium flex items-center space-x-2"
@@ -476,7 +349,7 @@ const ProfileScreen: React.FC = () => {
                     type="text"
                     placeholder="Yeni yetenek ekle..."
                     className="up-input flex-1"
-                    onKeyPress={(e) => {
+                      onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         handleSkillAdd((e.target as HTMLInputElement).value);
                         (e.target as HTMLInputElement).value = '';
@@ -631,7 +504,7 @@ const ProfileScreen: React.FC = () => {
                   <label className="up-form-label">Program</label>
                   <input
                     type="text"
-                    value={profileData.education.degree}
+                     value={safeEducation.degree}
                     onChange={(e) => handleEducationChange('degree', e.target.value)}
                     disabled={!isEditing}
                     className="up-input"
@@ -643,7 +516,7 @@ const ProfileScreen: React.FC = () => {
                   <label className="up-form-label">Mezuniyet Tarihi</label>
                   <input
                     type="text"
-                    value={profileData.education.year}
+                     value={safeEducation.year}
                     onChange={(e) => handleEducationChange('year', e.target.value)}
                     disabled={!isEditing}
                     className="up-input"
@@ -655,7 +528,7 @@ const ProfileScreen: React.FC = () => {
                   <label className="up-form-label">Kurum</label>
                   <input
                     type="text"
-                    value={profileData.education.institution}
+                     value={safeEducation.institution}
                     onChange={(e) => handleEducationChange('institution', e.target.value)}
                     disabled={!isEditing}
                     className="up-input"
@@ -731,7 +604,7 @@ const ProfileScreen: React.FC = () => {
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={profileData.mentorship.isAvailable}
+                        checked={safeMentorship.isAvailable}
                         onChange={(e) => handleInputChange('mentorship.isAvailable', e.target.checked)}
                         disabled={!isEditing}
                         className="mr-2"
@@ -744,7 +617,7 @@ const ProfileScreen: React.FC = () => {
                 </div>
 
                 {/* Mentor detayları - sadece mentor olmak isteyenler için */}
-                {profileData.mentorship.isAvailable && (
+                {safeMentorship.isAvailable && (
                   <div className="space-y-4">
                     <div>
                       <label className="up-form-label">Hangi konularda mentorluk verebilirsin?</label>
@@ -758,11 +631,11 @@ const ProfileScreen: React.FC = () => {
                           <label key={specialty} className="flex items-center">
                             <input
                               type="checkbox"
-                              checked={profileData.mentorship.specialties.includes(specialty)}
+                             checked={safeMentorship.specialties.includes(specialty)}
                               onChange={(e) => {
                                 const specialties = e.target.checked
-                                  ? [...profileData.mentorship.specialties, specialty]
-                                  : profileData.mentorship.specialties.filter(s => s !== specialty);
+                                   ? [...safeMentorship.specialties, specialty]
+                                   : safeMentorship.specialties.filter(s => s !== specialty);
                                 handleInputChange('mentorship.specialties', specialties);
                               }}
                               disabled={!isEditing}
@@ -777,7 +650,7 @@ const ProfileScreen: React.FC = () => {
                     <div>
                       <label className="up-form-label">Deneyim seviyeni açıkla</label>
                       <select
-                        value={profileData.mentorship.experience}
+                         value={safeMentorship.experience}
                         onChange={(e) => handleInputChange('mentorship.experience', e.target.value)}
                         disabled={!isEditing}
                         className="up-input"
@@ -794,7 +667,7 @@ const ProfileScreen: React.FC = () => {
                       <label className="up-form-label">Mentee'ler için uygunluk saatlerin</label>
                       <input
                         type="text"
-                        value={profileData.mentorship.availability}
+                         value={safeMentorship.availability}
                         onChange={(e) => handleInputChange('mentorship.availability', e.target.value)}
                         disabled={!isEditing}
                         className="up-input"
@@ -805,7 +678,7 @@ const ProfileScreen: React.FC = () => {
                     <div>
                       <label className="up-form-label">Mentor bio (Mentee'lere kendini tanıt)</label>
                       <textarea
-                        value={profileData.mentorship.bio}
+                       value={safeMentorship.bio}
                         onChange={(e) => handleInputChange('mentorship.bio', e.target.value)}
                         disabled={!isEditing}
                         className="up-input"

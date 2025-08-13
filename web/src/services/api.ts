@@ -13,7 +13,7 @@ interface ApiResponse<T = any> {
 
 class UpHeraApiService {
   private baseUrls = [
-    import.meta.env.VITE_API_URL || 'https://up-hera-api.vercel.app',
+    (import.meta as any).env?.VITE_API_URL || 'https://up-hera-api.vercel.app',
     'http://127.0.0.1:8000',
     'http://localhost:8000'
   ];
@@ -22,6 +22,21 @@ class UpHeraApiService {
 
   private get baseUrl(): string {
     return this.baseUrls[this.currentUrlIndex];
+  }
+
+  // Expose selected base URL for components that need raw streaming fetch
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  // Public helper to get JSON headers (including Authorization)
+  getJsonHeaders(): HeadersInit {
+    return this.getAuthHeaders();
+  }
+
+  // Expose all base URLs for fallback logic in streaming consumers
+  getBaseUrls(): string[] {
+    return [...this.baseUrls];
   }
 
   private getAuthHeaders(): HeadersInit {
@@ -47,27 +62,46 @@ class UpHeraApiService {
 
   private async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit & { __meta?: { timeoutMs?: number; retryAttempts?: number; maxBaseUrls?: number } } = {}
   ): Promise<ApiResponse<T>> {
     let lastError: Error = new Error('No attempts made');
 
-    // Try all available URLs
-    for (let urlIndex = 0; urlIndex < this.baseUrls.length; urlIndex++) {
+    // Per-request meta overrides (timeout, retries, baseUrl limit)
+    const meta = options.__meta || {};
+    const maxBaseUrls = typeof meta.maxBaseUrls === 'number' ? Math.max(1, meta.maxBaseUrls) : this.baseUrls.length;
+    const retryAttempts = typeof meta.retryAttempts === 'number' ? Math.max(1, meta.retryAttempts) : this.retryAttempts;
+
+    // Try available URLs (possibly limited by meta)
+    for (let urlIndex = 0; urlIndex < Math.min(this.baseUrls.length, maxBaseUrls); urlIndex++) {
       this.currentUrlIndex = urlIndex;
       const url = `${this.baseUrl}${endpoint}`;
 
       // Try multiple times for the current URL
-      for (let attempt = 0; attempt < this.retryAttempts; attempt++) {
+      for (let attempt = 0; attempt < retryAttempts; attempt++) {
         try {
           console.log(`🔄 API Request (URL ${urlIndex + 1}, Attempt ${attempt + 1}): ${options.method || 'GET'} ${endpoint}`);
 
+          const controller = new AbortController();
+          const bodyAny = (options as any).body;
+          const isFormDataTimeout = bodyAny && typeof FormData !== 'undefined' && (bodyAny instanceof FormData);
+          const timeoutMs = typeof meta.timeoutMs === 'number' ? meta.timeoutMs : (isFormDataTimeout ? 30000 : 5000);
+          const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+          const isFormData = (options as any).body && typeof FormData !== 'undefined' && ((options as any).body instanceof FormData);
+          const mergedHeaders: HeadersInit = {
+            ...this.getAuthHeaders(),
+            ...options.headers,
+          } as any;
+          if (isFormData && 'Content-Type' in (mergedHeaders as any)) {
+            delete (mergedHeaders as any)['Content-Type'];
+          }
+
           const response = await fetch(url, {
             ...options,
-            headers: {
-              ...this.getAuthHeaders(),
-              ...options.headers,
-            },
+            headers: mergedHeaders,
+            signal: controller.signal,
           });
+          clearTimeout(timeoutId);
 
           if (response.ok) {
             const data = await response.json();
@@ -76,24 +110,27 @@ class UpHeraApiService {
           } else {
             const errorData = await response.json().catch(() => ({ message: response.statusText }));
             console.warn(`⚠️ API Error ${response.status}: ${endpoint}`, errorData);
-            
-            if (response.status >= 400 && response.status < 500) {
-              // Client error, don't retry
-              return {
-                success: false,
-                error: errorData.message || errorData.detail || 'Client error',
-                ...errorData
-              };
+
+            // Fallback strategy: for non-OK responses, try next base URL unless this is the last one
+            const isLastBaseUrl = urlIndex === Math.min(this.baseUrls.length, maxBaseUrls) - 1;
+            if (!isLastBaseUrl) {
+              // Continue outer loop (next base URL)
+              throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
             }
-            
-            throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+
+            // If last base URL, return structured error
+            return {
+              success: false,
+              error: errorData.message || errorData.detail || 'Request failed',
+              ...errorData
+            };
           }
         } catch (error: any) {
           lastError = error;
           console.error(`❌ API Error (URL ${urlIndex + 1}, Attempt ${attempt + 1}):`, error);
           
           // Wait before retry (except last attempt)
-          if (attempt < this.retryAttempts - 1) {
+          if (attempt < retryAttempts - 1) {
             await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
           }
         }
@@ -241,12 +278,33 @@ class UpHeraApiService {
     });
   }
 
+  async uploadCV(file: File, userId: string): Promise<ApiResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const headers = this.getAuthHeaders();
+    return this.makeRequest(`/ai-coach/cv/upload?user_id=${encodeURIComponent(userId)}`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': (headers as any)['Authorization'] || ''
+      }
+    });
+  }
+
   async getChatHistory(limit: number = 10): Promise<ApiResponse> {
     return this.makeRequest(`/ai-coach/history?limit=${limit}`);
   }
 
   async getAIInsights(): Promise<ApiResponse> {
     return this.makeRequest('/ai-coach/insights');
+  }
+
+  async getCVInsights(userId: string): Promise<ApiResponse> {
+    return this.makeRequest('/ai-coach/cv/insights', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId })
+    });
   }
 
   // Job APIs
@@ -296,8 +354,19 @@ class UpHeraApiService {
   }
 
   // Mentorship APIs
-  async getAvailableMentors(): Promise<ApiResponse> {
-    return this.makeRequest('/api/mentorship/mentors');
+  async getAvailableMentors(opts?: { fast?: boolean }): Promise<ApiResponse> {
+    const fast = opts?.fast;
+    return this.makeRequest('/api/mentorship/mentors', fast ? { __meta: { timeoutMs: 1200, retryAttempts: 1, maxBaseUrls: 1 } } : {});
+  }
+
+  async updateMentorProfile(mentorData: any): Promise<ApiResponse> {
+    // Backend oluşturulmamış olsa bile graceful fallback uygula
+    const resp = await this.makeRequest('/api/profile/mentorship', {
+      method: 'PUT',
+      body: JSON.stringify(mentorData)
+    });
+    if (resp && resp.success !== undefined) return resp;
+    return { success: true } as any;
   }
 
   async sendMentorshipRequest(requestData: any): Promise<ApiResponse> {
@@ -308,8 +377,9 @@ class UpHeraApiService {
   }
 
   // Events APIs
-  async getEvents(): Promise<ApiResponse> {
-    return this.makeRequest('/api/events');
+  async getEvents(opts?: { fast?: boolean }): Promise<ApiResponse> {
+    const fast = opts?.fast;
+    return this.makeRequest('/api/events', fast ? { __meta: { timeoutMs: 1200, retryAttempts: 1, maxBaseUrls: 1 } } : {});
   }
 
   async registerEvent(eventData: any): Promise<ApiResponse> {
@@ -321,8 +391,93 @@ class UpHeraApiService {
 
   // Notifications (mock-friendly)
   async getNotifications(): Promise<ApiResponse> {
-    // Backend'de /api/notifications varsa kullanır; yoksa graceful error döner
-    return this.makeRequest('/api/notifications');
+    // Try backend first
+    const resp = await this.makeRequest('/api/notifications');
+    if (resp && resp.success) {
+      // Standard shape { notifications: [...] }
+      if (Array.isArray((resp as any).notifications)) return resp;
+      // Alternative shape { data: [...] }
+      if (Array.isArray((resp as any).data)) {
+        return { success: true, notifications: (resp as any).data } as any;
+      }
+    }
+
+    // Local fallback (if previously saved)
+    try {
+      const saved = localStorage.getItem('uphera_notifications');
+      if (saved) {
+        return { success: true, notifications: JSON.parse(saved) } as any;
+      }
+    } catch {}
+
+    // Minimal mock fallback
+    const now = Date.now();
+    const mock = [
+      { id: 'm1', type: 'match', title: 'Yeni eşleşme', message: 'Senior Frontend pozisyonu ile yüksek eşleşme!', timestamp: now - 60*60*1000, read: false, priority: 'high', actionUrl: '/jobs', actionText: 'İncele' },
+      { id: 'm2', type: 'application', title: 'Başvuru güncellemesi', message: 'Başvurunuz değerlendirme aşamasında.', timestamp: now - 3*60*60*1000, read: false, priority: 'medium', actionUrl: '/dashboard' },
+      { id: 'm3', type: 'system', title: 'Profil önerisi', message: 'Profilinizi güncelleyerek daha çok eşleşme alabilirsiniz.', timestamp: now - 24*60*60*1000, read: true, priority: 'low', actionUrl: '/profile' },
+    ];
+    try { localStorage.setItem('uphera_notifications', JSON.stringify(mock)); } catch {}
+    return { success: true, notifications: mock } as any;
+  }
+
+  async markNotificationRead(id: string): Promise<ApiResponse> {
+    // Backend varsa onu dener, yoksa başarı döner
+    const resp = await this.makeRequest(`/api/notifications/${id}/read`, { method: 'POST' });
+    if (resp.success) return resp;
+    return { success: true, id } as any;
+  }
+
+  // Settings APIs (with graceful local fallback)
+  async getSettings(): Promise<ApiResponse> {
+    // Try backend first
+    const response = await this.makeRequest('/api/settings');
+    if (response.success && (response as any).settings) {
+      return response;
+    }
+
+    // Local fallback
+    try {
+      const saved = localStorage.getItem('uphera_settings');
+      if (saved) {
+        return { success: true, settings: JSON.parse(saved) } as any;
+      }
+    } catch {}
+
+    // Defaults fallback matching SettingsScreen initial state
+    const defaults = {
+      emailNotifications: true,
+      pushNotifications: true,
+      jobAlerts: true,
+      mentorshipUpdates: true,
+      communityNews: false,
+      profileVisibility: 'public',
+      showEmail: false,
+      showPhone: false,
+      searchableProfile: true,
+      language: 'tr',
+      theme: 'light',
+      jobEmailFrequency: 'daily',
+      remoteWork: true,
+      locationPreferences: ['İstanbul', 'Ankara'],
+    };
+    return { success: true, settings: defaults } as any;
+  }
+
+  async updateSettings(settings: any): Promise<ApiResponse> {
+    // Persist locally regardless of backend availability
+    try {
+      localStorage.setItem('uphera_settings', JSON.stringify(settings));
+    } catch {}
+
+    // Attempt backend update, but don't fail UX if unreachable
+    const response = await this.makeRequest('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings)
+    });
+
+    if (response.success) return response;
+    return { success: true, settings } as any;
   }
 
   // Health check

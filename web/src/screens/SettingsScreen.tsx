@@ -68,6 +68,117 @@ const SettingsScreen: React.FC = () => {
     return userData ? JSON.parse(userData) : { name: 'Demo Kullanıcı', email: 'demo@uphera.com' };
   });
 
+  // Basit çeviri desteği (Settings sayfası için)
+  const translations: Record<string, Record<string, string>> = {
+    tr: {
+      settings: 'Ayarlar',
+      settingsSubtitle: 'Hesabınızı ve uygulama tercihlerinizi yönetin',
+      categories: 'Ayar Kategorileri',
+      notifications: 'Bildirimler',
+      privacy: 'Gizlilik',
+      account: 'Hesap',
+      jobPrefs: 'İş Tercihleri',
+      notificationSettings: 'Bildirim Ayarları',
+      emailNotifications: 'E-posta Bildirimleri',
+      emailNotificationsDesc: 'Önemli güncellemeler e-posta ile gelsin',
+      jobAlerts: 'İş Fırsatı Uyarıları',
+      jobAlertsDesc: 'Size uygun iş ilanları bildirilsin',
+      mentorshipUpdates: 'Mentorluk Güncellemeleri',
+      mentorshipUpdatesDesc: 'Mentor eşleşmeleri ve mesajlar',
+      communityNews: 'Topluluk Haberleri',
+      communityNewsDesc: 'Etkinlikler ve topluluk duyuruları',
+      privacySettings: 'Gizlilik Ayarları',
+      profileVisibility: 'Profil Görünürlüğü',
+      public: 'Herkese Açık',
+      connections: 'Sadece Bağlantılarım',
+      private: 'Gizli',
+      showEmail: 'E-posta Adresini Göster',
+      showEmailDesc: 'Profilinde e-posta adresi görünsün',
+      searchableProfile: 'Aranabilir Profil',
+      searchableProfileDesc: 'Profilin arama sonuçlarında çıksın',
+      accountSettings: 'Hesap Ayarları',
+      language: 'Dil',
+      theme: 'Tema',
+      light: 'Açık',
+      dark: 'Koyu',
+      accountInfo: 'Hesap Bilgileri',
+      name: 'Ad',
+      email: 'E-posta',
+      accountType: 'Hesap Türü',
+      jobPreferences: 'İş Tercihleri',
+      jobEmailFrequency: 'İş İlanı E-posta Sıklığı',
+      daily: 'Günlük',
+      weekly: 'Haftalık',
+      monthly: 'Aylık',
+      never: 'Hiçbir Zaman',
+      remoteWork: 'Uzaktan Çalışma',
+      remoteWorkDesc: 'Remote iş fırsatları gösterilsin',
+      dangerZone: 'Tehlikeli Bölge',
+      deleteAccount: 'Hesabı Sil',
+      deleteWarning: 'Hesabınızı sildiğinizde tüm verileriniz kalıcı olarak silinir. Bu işlem geri alınamaz.',
+      cancel: 'İptal',
+      saveChanges: 'Değişiklikleri Kaydet',
+      saving: 'Kaydediliyor...',
+      loadingSettings: 'Ayarlar yükleniyor...'
+    },
+    en: {
+      settings: 'Settings',
+      settingsSubtitle: 'Manage your account and app preferences',
+      categories: 'Categories',
+      notifications: 'Notifications',
+      privacy: 'Privacy',
+      account: 'Account',
+      jobPrefs: 'Job Preferences',
+      notificationSettings: 'Notification Settings',
+      emailNotifications: 'Email Notifications',
+      emailNotificationsDesc: 'Get important updates via email',
+      jobAlerts: 'Job Alerts',
+      jobAlertsDesc: 'Get notified about relevant jobs',
+      mentorshipUpdates: 'Mentorship Updates',
+      mentorshipUpdatesDesc: 'Mentor matches and messages',
+      communityNews: 'Community News',
+      communityNewsDesc: 'Events and announcements',
+      privacySettings: 'Privacy Settings',
+      profileVisibility: 'Profile Visibility',
+      public: 'Public',
+      connections: 'Connections Only',
+      private: 'Private',
+      showEmail: 'Show Email Address',
+      showEmailDesc: 'Display your email on your profile',
+      searchableProfile: 'Searchable Profile',
+      searchableProfileDesc: 'Show up in search results',
+      accountSettings: 'Account Settings',
+      language: 'Language',
+      theme: 'Theme',
+      light: 'Light',
+      dark: 'Dark',
+      accountInfo: 'Account Information',
+      name: 'Name',
+      email: 'Email',
+      accountType: 'Account Type',
+      jobPreferences: 'Job Preferences',
+      jobEmailFrequency: 'Job Email Frequency',
+      daily: 'Daily',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+      never: 'Never',
+      remoteWork: 'Remote Work',
+      remoteWorkDesc: 'Show remote opportunities',
+      dangerZone: 'Danger Zone',
+      deleteAccount: 'Delete Account',
+      deleteWarning: 'Deleting your account is irreversible and removes all your data.',
+      cancel: 'Cancel',
+      saveChanges: 'Save Changes',
+      saving: 'Saving...',
+      loadingSettings: 'Loading settings...'
+    }
+  };
+
+  const t = (key: string) => {
+    const lang = settings.language === 'en' ? 'en' : 'tr';
+    return translations[lang][key] ?? translations.tr[key] ?? key;
+  };
+
   const handleSettingChange = (key: string, value: any) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
@@ -75,6 +186,10 @@ const SettingsScreen: React.FC = () => {
     // Tema değişikliği anında uygula
     if (key === 'theme') {
       document.documentElement.setAttribute('data-theme', value);
+    }
+    // Dil değişikliği anında uygula
+    if (key === 'language') {
+      document.documentElement.setAttribute('lang', value);
     }
     
     // Anında localStorage'a kaydet
@@ -119,7 +234,7 @@ const SettingsScreen: React.FC = () => {
         <div className="up-container py-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Ayarlar yükleniyor...</p>
+            <p className="mt-4 text-gray-600">{t('loadingSettings')}</p>
           </div>
         </div>
       </div>
@@ -135,10 +250,10 @@ const SettingsScreen: React.FC = () => {
           {/* Page Title */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--up-primary-dark)' }}>
-              Ayarlar
+              {t('settings')}
             </h1>
             <p className="text-gray-600">
-              Hesabınızı ve uygulama tercihlerinizi yönetin
+              {t('settingsSubtitle')}
             </p>
           </div>
 
@@ -148,24 +263,24 @@ const SettingsScreen: React.FC = () => {
               <ModernCard>
                 <div className="p-6">
                   <h3 className="font-semibold mb-4" style={{ color: 'var(--up-primary-dark)' }}>
-                    Ayar Kategorileri
+                    {t('categories')}
                   </h3>
                   <div className="space-y-2">
                     <button className="w-full text-left px-3 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium">
                       <Bell className="inline w-4 h-4 mr-2" />
-                      Bildirimler
+                      {t('notifications')}
                     </button>
                     <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-gray-700 text-sm">
                       <Shield className="inline w-4 h-4 mr-2" />
-                      Gizlilik
+                      {t('privacy')}
                     </button>
                     <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-gray-700 text-sm">
                       <User className="inline w-4 h-4 mr-2" />
-                      Hesap
+                      {t('account')}
                     </button>
                     <button className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-gray-700 text-sm">
                       <Globe className="inline w-4 h-4 mr-2" />
-                      İş Tercihleri
+                      {t('jobPrefs')}
                     </button>
                   </div>
                 </div>
@@ -181,15 +296,15 @@ const SettingsScreen: React.FC = () => {
                   <div className="flex items-center mb-4">
                     <Bell className="w-5 h-5 mr-2" style={{ color: 'var(--up-primary)' }} />
                     <h3 className="font-semibold" style={{ color: 'var(--up-primary-dark)' }}>
-                      Bildirim Ayarları
+                      {t('notificationSettings')}
                     </h3>
                   </div>
                   
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">E-posta Bildirimleri</p>
-                        <p className="text-sm text-gray-500">Önemli güncellemeler e-posta ile gelsin</p>
+                        <p className="font-medium text-gray-900">{t('emailNotifications')}</p>
+                        <p className="text-sm text-gray-500">{t('emailNotificationsDesc')}</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -204,8 +319,8 @@ const SettingsScreen: React.FC = () => {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">İş Fırsatı Uyarıları</p>
-                        <p className="text-sm text-gray-500">Size uygun iş ilanları bildirilsin</p>
+                        <p className="font-medium text-gray-900">{t('jobAlerts')}</p>
+                        <p className="text-sm text-gray-500">{t('jobAlertsDesc')}</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -220,8 +335,8 @@ const SettingsScreen: React.FC = () => {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">Mentorluk Güncellemeleri</p>
-                        <p className="text-sm text-gray-500">Mentor eşleşmeleri ve mesajlar</p>
+                        <p className="font-medium text-gray-900">{t('mentorshipUpdates')}</p>
+                        <p className="text-sm text-gray-500">{t('mentorshipUpdatesDesc')}</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -236,8 +351,8 @@ const SettingsScreen: React.FC = () => {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">Topluluk Haberleri</p>
-                        <p className="text-sm text-gray-500">Etkinlikler ve topluluk duyuruları</p>
+                        <p className="font-medium text-gray-900">{t('communityNews')}</p>
+                        <p className="text-sm text-gray-500">{t('communityNewsDesc')}</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -259,30 +374,30 @@ const SettingsScreen: React.FC = () => {
                   <div className="flex items-center mb-4">
                     <Shield className="w-5 h-5 mr-2" style={{ color: 'var(--up-primary)' }} />
                     <h3 className="font-semibold" style={{ color: 'var(--up-primary-dark)' }}>
-                      Gizlilik Ayarları
+                      {t('privacySettings')}
                     </h3>
                   </div>
                   
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-900 mb-2">
-                        Profil Görünürlüğü
+                        {t('profileVisibility')}
                       </label>
                       <select
                         value={settings.profileVisibility}
                         onChange={(e) => handleSettingChange('profileVisibility', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="public">Herkese Açık</option>
-                        <option value="connections">Sadece Bağlantılarım</option>
-                        <option value="private">Gizli</option>
+                        <option value="public">{t('public')}</option>
+                        <option value="connections">{t('connections')}</option>
+                        <option value="private">{t('private')}</option>
                       </select>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">E-posta Adresini Göster</p>
-                        <p className="text-sm text-gray-500">Profilinde e-posta adresi görünsün</p>
+                        <p className="font-medium text-gray-900">{t('showEmail')}</p>
+                        <p className="text-sm text-gray-500">{t('showEmailDesc')}</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -297,8 +412,8 @@ const SettingsScreen: React.FC = () => {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">Aranabilir Profil</p>
-                        <p className="text-sm text-gray-500">Profilin arama sonuçlarında çıksın</p>
+                        <p className="font-medium text-gray-900">{t('searchableProfile')}</p>
+                        <p className="text-sm text-gray-500">{t('searchableProfileDesc')}</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -320,14 +435,14 @@ const SettingsScreen: React.FC = () => {
                   <div className="flex items-center mb-4">
                     <User className="w-5 h-5 mr-2" style={{ color: 'var(--up-primary)' }} />
                     <h3 className="font-semibold" style={{ color: 'var(--up-primary-dark)' }}>
-                      Hesap Ayarları
+                      {t('accountSettings')}
                     </h3>
                   </div>
                   
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-900 mb-2">
-                        Dil
+                        {t('language')}
                       </label>
                       <select
                         value={settings.language}
@@ -341,7 +456,7 @@ const SettingsScreen: React.FC = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-900 mb-2">
-                        Tema
+                        {t('theme')}
                       </label>
                       <div className="flex space-x-4">
                         <button
@@ -351,7 +466,7 @@ const SettingsScreen: React.FC = () => {
                           }`}
                         >
                           <Sun className="w-4 h-4 mr-2" />
-                          Açık
+                          {t('light')}
                         </button>
                         <button
                           onClick={() => handleSettingChange('theme', 'dark')}
@@ -360,17 +475,17 @@ const SettingsScreen: React.FC = () => {
                           }`}
                         >
                           <Moon className="w-4 h-4 mr-2" />
-                          Koyu
+                          {t('dark')}
                         </button>
                       </div>
                     </div>
 
                     <div className="border-t pt-4">
-                      <h4 className="font-medium text-gray-900 mb-2">Hesap Bilgileri</h4>
+                      <h4 className="font-medium text-gray-900 mb-2">{t('accountInfo')}</h4>
                       <div className="text-sm text-gray-600 space-y-1">
-                        <p><strong>Ad:</strong> {userData.name}</p>
-                        <p><strong>E-posta:</strong> {userData.email}</p>
-                        <p><strong>Hesap Türü:</strong> UpSchool Mezunu</p>
+                        <p><strong>{t('name')}:</strong> {userData.name}</p>
+                        <p><strong>{t('email')}:</strong> {userData.email}</p>
+                        <p><strong>{t('accountType')}:</strong> UpSchool Graduate</p>
                       </div>
                     </div>
                   </div>
@@ -383,31 +498,31 @@ const SettingsScreen: React.FC = () => {
                   <div className="flex items-center mb-4">
                     <Globe className="w-5 h-5 mr-2" style={{ color: 'var(--up-primary)' }} />
                     <h3 className="font-semibold" style={{ color: 'var(--up-primary-dark)' }}>
-                      İş Tercihleri
+                      {t('jobPreferences')}
                     </h3>
                   </div>
                   
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-900 mb-2">
-                        İş İlanı E-posta Sıklığı
+                        {t('jobEmailFrequency')}
                       </label>
                       <select
                         value={settings.jobEmailFrequency}
                         onChange={(e) => handleSettingChange('jobEmailFrequency', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="daily">Günlük</option>
-                        <option value="weekly">Haftalık</option>
-                        <option value="monthly">Aylık</option>
-                        <option value="never">Hiçbir Zaman</option>
+                        <option value="daily">{t('daily')}</option>
+                        <option value="weekly">{t('weekly')}</option>
+                        <option value="monthly">{t('monthly')}</option>
+                        <option value="never">{t('never')}</option>
                       </select>
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-gray-900">Uzaktan Çalışma</p>
-                        <p className="text-sm text-gray-500">Remote iş fırsatları gösterilsin</p>
+                        <p className="font-medium text-gray-900">{t('remoteWork')}</p>
+                        <p className="text-sm text-gray-500">{t('remoteWorkDesc')}</p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -429,21 +544,21 @@ const SettingsScreen: React.FC = () => {
                   <div className="flex items-center mb-4">
                     <Trash2 className="w-5 h-5 mr-2 text-red-500" />
                     <h3 className="font-semibold text-red-600">
-                      Tehlikeli Bölge
+                      {t('dangerZone')}
                     </h3>
                   </div>
                   
                   <div className="space-y-4">
                     <div className="border border-red-200 rounded-lg p-4 bg-red-50">
-                      <h4 className="font-medium text-red-800 mb-2">Hesabı Sil</h4>
+                      <h4 className="font-medium text-red-800 mb-2">{t('deleteAccount')}</h4>
                       <p className="text-sm text-red-600 mb-3">
-                        Hesabınızı sildiğinizde tüm verileriniz kalıcı olarak silinir. Bu işlem geri alınamaz.
+                        {t('deleteWarning')}
                       </p>
                       <button
                         onClick={handleDeleteAccount}
                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
                       >
-                        Hesabı Sil
+                        {t('deleteAccount')}
                       </button>
                     </div>
                   </div>
@@ -456,7 +571,7 @@ const SettingsScreen: React.FC = () => {
                   onClick={() => navigate('/dashboard')}
                   variant="secondary"
                 >
-                  İptal
+                  {t('cancel')}
                 </ModernButton>
                 <ModernButton
                   onClick={handleSaveSettings}
@@ -465,7 +580,7 @@ const SettingsScreen: React.FC = () => {
                   disabled={saving}
                 >
                   <Save className="w-4 h-4 mr-2" />
-                  {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+                  {saving ? t('saving') : t('saveChanges')}
                 </ModernButton>
               </div>
             </div>

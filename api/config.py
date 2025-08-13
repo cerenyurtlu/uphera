@@ -12,6 +12,9 @@ class Settings:
     # OpenAI
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     
+    # Google Gemini
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    
     # Ollama
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     
@@ -30,9 +33,11 @@ class Settings:
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
+        "http://localhost:5174",
         "http://localhost:8080",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
         "http://127.0.0.1:8080",
         "https://up-hera-web.vercel.app",
         "https://up-hera-api.vercel.app",

@@ -23,18 +23,33 @@ const DashboardScreen: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  // Kullanıcı bilgilerini al
+  // Kullanıcı bilgilerini al ve normalize et
   const [userData] = useState(() => {
-    const userData = localStorage.getItem('uphera_user');
-    return userData ? JSON.parse(userData) : { 
-      name: 'Demo Kullanıcı', 
-      program: 'Frontend Development',
-      upschoolProgram: 'Frontend Development'
+    const stored = localStorage.getItem('uphera_user');
+    const raw = stored ? JSON.parse(stored) : null;
+    const nestedUser = raw?.user || raw;
+
+    // İsimleri birleştir (öncelik: API user, ardından düz alanlar)
+    const fullName = [nestedUser?.firstName, nestedUser?.lastName]
+      .filter(Boolean)
+      .join(' ')
+      || nestedUser?.name
+      || (nestedUser?.email ? nestedUser.email.split('@')[0] : 'Misafir');
+
+    // Program/bootcamp adı
+    const program = nestedUser?.upschoolProgram
+      || nestedUser?.program
+      || nestedUser?.bootcamp
+      || 'UpSchool';
+
+    return {
+      name: fullName,
+      upschoolProgram: program,
     };
   });
 
-  const firstName = userData.name?.split(' ')[0] || userData.firstName || 'Misafir';
-  const bootcampName = userData.upschoolProgram || userData.program || 'UpSchool';
+  const firstName = (userData.name || 'Misafir').split(' ')[0];
+  const bootcampName = userData.upschoolProgram || 'UpSchool';
 
   const getBootcampDisplayName = (program: string) => {
     const programLower = program.toLowerCase();

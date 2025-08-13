@@ -43,7 +43,7 @@ const EventsScreen: React.FC = () => {
     const loadEvents = async () => {
       try {
         setLoading(true);
-        const response = await apiService.getEvents();
+        const response = await apiService.getEvents({ fast: true });
         if (response.success) {
           setEvents(response.events);
         } else {
@@ -339,7 +339,7 @@ const EventsScreen: React.FC = () => {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getEvents();
+       const response = await apiService.getEvents({ fast: true });
       if (response.success) {
         setEvents(response.events);
       } else {

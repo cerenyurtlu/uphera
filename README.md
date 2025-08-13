@@ -1,40 +1,40 @@
-# UpHera - AI-Powered Career Platform
+# UpHera - Women in Tech Community Platform
 
-UpHera is a comprehensive career platform designed specifically for women in tech, built with modern web technologies and AI-powered features.
+A comprehensive career platform designed specifically for women in technology, featuring AI-powered job matching, mentorship programs, and professional networking.
 
-## 🚀 Features
+## ✨ Key Features
 
-- **AI-Powered Job Matching**: Advanced algorithm matches candidates with suitable positions
-- **Real-time AI Chatbot**: Ada AI assistant powered by Google Gemini API for instant responses
-- **CV Analysis**: AI-powered CV optimization and feedback
-- **Interview Preparation**: Personalized interview coaching and mock interviews
-- **Network Building**: Connect with other women in tech
+- **AI-Powered Job Matching**: Intelligent algorithm matching candidates with suitable positions
+- **Real-time AI Assistant**: Ada AI chatbot powered by Google Gemini for instant career guidance
+- **CV Analysis & Optimization**: AI-driven CV review and improvement suggestions
+- **Interview Preparation**: Personalized coaching and mock interview sessions
+- **Professional Networking**: Connect with women in tech community
 - **Mentorship Program**: Find and connect with experienced mentors
-- **Success Stories**: Inspiring stories from UpSchool graduates
-- **Freelance Opportunities**: Project-based work opportunities
+- **Success Stories**: Inspiring career journeys from community members
+- **Freelance Opportunities**: Project-based work and gig economy integration
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
 ### Frontend
 - **React 18** with TypeScript
-- **Vite** for fast development
-- **Tailwind CSS** for styling
+- **Vite** for fast development and building
+- **Tailwind CSS** for modern styling
 - **React Router** for navigation
-- **React Hot Toast** for notifications
+- **React Hot Toast** for user notifications
 
 ### Backend
 - **FastAPI** with Python
 - **SQLite** database (production-ready)
-- **Google Gemini API** for AI responses
-- **ChromaDB** for vector storage
+- **Google Gemini API** for AI capabilities
+- **ChromaDB** for vector storage and retrieval
 - **LangChain** for AI orchestration
-- **WebSocket** for real-time features
+- **WebSocket** for real-time communication
 
-### AI & ML
-- **Google Gemini 2.5 Flash Lite** - Fast, reliable AI responses
+### AI & Machine Learning
+- **Google Gemini 2.5 Flash Lite** for fast, reliable AI responses
 - **Sentence Transformers** for text embeddings
-- **ChromaDB** for document storage and retrieval
-- **CV Analysis** with AI-powered insights
+- **ChromaDB** for document storage and semantic search
+- **AI-powered CV analysis** with actionable insights
 
 ## 🚀 Quick Start
 
@@ -57,52 +57,28 @@ npm install
 npm run dev
 ```
 
-### Environment Variables
+### Environment Configuration
 Create `.env` file in the `api` directory:
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
 SECRET_KEY=your_secret_key_here
 ```
 
-## 🎯 Key Improvements
-
-### AI Performance Enhancements
-- **Google Gemini Integration**: Replaced Ollama with Google's Gemini 2.5 Flash Lite for faster responses
-- **Response Time**: Reduced from 3-5 seconds to 0.5-1 second
-- **Cache System**: 30-40% cache hit rate for common questions
-- **Timeout Management**: 15-second timeout with graceful fallbacks
-- **Quick Responses**: Instant replies for common greetings
-
-### Technical Optimizations
-- **ThreadPoolExecutor**: Parallel processing capabilities
-- **ChromaDB Optimization**: Performance-focused configuration
-- **Memory Management**: User-specific conversation memory
-- **Error Handling**: Robust error handling with offline fallbacks
-
-## 📊 Performance Metrics
-
-| Feature | Before | After | Improvement |
-|---------|--------|-------|-------------|
-| First Response Time | 3-5 seconds | 0.5-1 second | 80% faster |
-| Cache Hit Rate | 0% | 30-40% | New feature |
-| Timeout Rate | 15% | 5% | 67% reduction |
-| Offline Capability | No | Yes | New feature |
-
-## 🏗️ Architecture
+## 🏗️ Project Structure
 
 ```
 UpHera/
 ├── api/                    # FastAPI backend
-│   ├── services/          # AI services
-│   │   ├── enhanced_ai_coach.py  # Gemini-powered AI coach
+│   ├── services/          # AI and business services
+│   │   ├── enhanced_ai_coach.py  # AI career coach
 │   │   └── ai_matching_service.py # Job matching algorithm
-│   ├── main.py            # FastAPI app
+│   ├── main.py            # FastAPI application
 │   └── requirements.txt   # Python dependencies
 ├── web/                   # React frontend
 │   ├── src/
-│   │   ├── components/    # React components
+│   │   ├── components/    # Reusable UI components
 │   │   ├── screens/       # Page components
-│   │   └── services/      # API services
+│   │   └── services/      # API integration
 │   └── package.json       # Node dependencies
 └── README.md
 ```
@@ -110,37 +86,39 @@ UpHera/
 ## 🤖 AI Features
 
 ### Ada AI Assistant
-- **Context-Aware**: Remembers conversation history
+- **Context-Aware Conversations**: Maintains conversation history
 - **CV Analysis**: Upload and analyze CVs for optimization
-- **Interview Prep**: Personalized interview coaching
-- **Career Guidance**: Kariyer planlama ve öneriler
-- **Offline Mode**: Works without backend connection
+- **Interview Coaching**: Personalized interview preparation
+- **Career Guidance**: Professional development advice
+- **Offline Capability**: Works without backend connection
 
-### Job Matching Algorithm
-- **Skill-Based Matching**: Matches skills with job requirements
-- **Experience Level**: Considers experience and seniority
+### Smart Job Matching
+- **Skill-Based Matching**: Aligns skills with job requirements
+- **Experience Level**: Considers seniority and expertise
 - **Location Preferences**: Geographic matching
-- **Salary Expectations**: Compensation alignment
+- **Salary Alignment**: Compensation expectation matching
 
 ## 🔧 Development
 
 ### Running Tests
 ```bash
+# Backend tests
 cd api
 pytest
 
+# Frontend tests
 cd web
 npm test
 ```
 
 ### Code Quality
 ```bash
-# Backend
+# Backend formatting
 cd api
 black .
 flake8 .
 
-# Frontend
+# Frontend linting
 cd web
 npm run lint
 npm run format
@@ -149,31 +127,31 @@ npm run format
 ## 📈 Roadmap
 
 - [ ] **Real-time Collaboration**: Live coding sessions
-- [ ] **Advanced Analytics**: Detailed career insights
-- [ ] **Mobile App**: React Native mobile application
+- [ ] **Advanced Analytics**: Career insights and trends
+- [ ] **Mobile Application**: React Native mobile app
 - [ ] **AI Video Interviews**: Automated interview practice
 - [ ] **Skill Assessment**: AI-powered skill evaluation
-- [ ] **Job Application Tracking**: Integrated application management
+- [ ] **Application Tracking**: Integrated job application management
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- **UpSchool** for the educational foundation
+- **UpSchool** for educational foundation
 - **Google Gemini** for AI capabilities
 - **FastAPI** and **React** communities
 - **Women in Tech** community for inspiration
 
 ---
 
-**Built with ❤️ for women in tech**
+**Built with ❤️ for women in technology**

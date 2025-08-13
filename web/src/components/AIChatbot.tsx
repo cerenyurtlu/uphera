@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Send, X, Minimize2, Maximize2, Sparkles, Brain, Upload, FileText, Zap } from 'lucide-react';
 import { FiSmile, FiZap, FiBriefcase, FiBarChart2, FiTarget, FiGlobe, FiUserCheck, FiFileText, FiMessageCircle } from 'react-icons/fi';
+import { apiService } from '../services/api';
 
 interface ChatMessage {
   id: string;
@@ -159,21 +160,15 @@ Birlikte yapabileceklerimiz:
   const handleCVUpload = async (file: File) => {
     setIsUploadingCV(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const userId = userProfile?.id || 'demo_user';
-      
-      const response = await fetch(`http://localhost:8000/ai-coach/cv/upload?user_id=${userId}`, {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // 10MB istemci tarafı boyut kontrolü
+      const maxSize = 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error('Dosya boyutu 10MB sınırını aşıyor');
+        return;
       }
-      
-      const result = await response.json();
+
+      const userId = userProfile?.id || 'demo_user';
+      const result = await apiService.uploadCV(file, userId);
       
       if (result.success) {
         toast.success('CV başarıyla yüklendi ve analiz edildi!');
@@ -204,12 +199,15 @@ Artık sana CV'ne özel tavsiyeler verebilirim! "CV analizi yap" diyerek detayl�
         
         setMessages(prev => [...prev, uploadMessage]);
       } else {
-        throw new Error(result.message || 'CV yükleme başarısız');
+        const msg = (result as any).message || (result as any).detail || (result as any).error || 'CV yükleme başarısız';
+        toast.error(msg);
+        return;
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('CV Upload Error:', error);
-      toast.error('CV yüklenirken hata oluştu');
+      const msg = error?.message || 'CV yüklenirken hata oluştu';
+      toast.error(msg);
     } finally {
       setIsUploadingCV(false);
       setCvFile(null);
@@ -219,13 +217,8 @@ Artık sana CV'ne özel tavsiyeler verebilirim! "CV analizi yap" diyerek detayl�
   const getCVInsights = async () => {
     try {
       const userId = userProfile?.id || 'demo_user';
-      const response = await fetch('http://localhost:8000/ai-coach/cv/insights', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId })
-      });
-      
-      const insights = await response.json();
+      const resp = await apiService.getCVInsights(userId);
+      const insights = resp.success ? resp : resp; // shape uyumu için direkt kullan
       
       const insightsMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -247,9 +240,9 @@ ${insights.has_cv ? `📈 **Analiz Tarihi:** ${new Date(insights.analyzed_at).to
       
       setMessages(prev => [...prev, insightsMessage]);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('CV Insights Error:', error);
-      toast.error('CV analizi alınırken hata oluştu');
+      toast.error(error?.message || 'CV analizi alınırken hata oluştu');
     }
   };
 
@@ -509,122 +502,65 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
     setMessages(prev => [...prev, assistantMessage]);
 
     try {
-              // Performance optimization: Check for quick responses first
-        const quickResponses: { [key: string]: string } = {
-          'merhaba': 'Merhaba! 👋 Ben Ada AI - Up Hera topluluğunun AI mentoru! Size nasıl yardım edebilirim?',
-          'selam': 'Selam! 🚀 Ada AI burada! Hangi konuda sohbet etmek istiyorsun?',
-          'nasılsın': 'Harika! Seninle sohbet etmek beni mutlu ediyor. 💪',
-          'yardım': 'Tabii! Size şu konularda yardım edebilirim:\n• 🎯 Mülakat hazırlığı\n• 📄 CV optimizasyonu\n• 💼 İş arama stratejileri\n• 🚀 Kariyer planlama\n• 💻 Teknik beceri geliştirme',
-          'teşekkür': 'Rica ederim! 😊 Başka bir sorunuz var mı?',
-          'görüşürüz': 'Görüşmek üzere! 👋 Başarılar dilerim!',
-          'mülakat': '🎯 **Mülakat Hazırlık Rehberi**\n\n**Teknik Mülakat İçin:**\n• STAR tekniği ile projelerini anlat\n• Kod yazarken düşüncelerini sesli ifade et\n• Time complexity ve space complexity'yi belirt\n• Test case'ler düşün\n\n**Behavioral Sorular İçin:**\n• "En zor proje" sorusu için UpSchool projelerini kullan\n• "Takım çalışması" için grup projelerini anlat\n• "Hata yönetimi" için debugging deneyimlerini paylaş',
-          'cv': '📄 **CV Optimizasyon Rehberi**\n\n**Güçlü CV İçin:**\n• Action verbs kullan (Geliştirdim, Yönettim, Optimize ettim)\n• Sayısal sonuçlar ekle (Kullanıcı deneyimini %40 artırdım)\n• UpSchool projelerini öne çıkar\n• GitHub linkini ekle',
-          'react': '⚛️ **Frontend Development Rehberi**\n\n**Öğrenme Yolu:**\n1. HTML/CSS (2-3 hafta)\n2. JavaScript (4-6 hafta)\n3. React (6-8 hafta)\n4. TypeScript (2-3 hafta)\n5. State Management (Redux/Zustand)',
-          'javascript': '🟨 **JavaScript Rehberi**\n\n**Temel Konular:**\n• Variables, Functions, Objects\n• ES6+ Features (Arrow functions, Destructuring)\n• Async/Await ve Promises\n• DOM Manipulation\n• Event Handling',
-          'typescript': '🔷 **TypeScript Rehberi**\n\n**Temel Konular:**\n• Type Annotations\n• Interfaces ve Types\n• Generics\n• Enums\n• Union Types',
-          'node': '🟢 **Node.js Rehberi**\n\n**Temel Konular:**\n• Event Loop\n• Streams ve Buffers\n• File System\n• HTTP Module\n• NPM ve Package Management',
-          'kariyer': '💼 **Kariyer Rehberi**\n\n**İş Arama Stratejileri:**\n• LinkedIn profilini güncelle ve aktif ol\n• GitHub'da projelerini paylaş\n• Networking etkinliklerine katıl\n• UpSchool topluluğunu kullan',
-          'network': '👥 **Network Kurma Rehberi**\n\n**LinkedIn Optimizasyonu:**\n• Profil fotoğrafı ve banner\n• Güçlü headline yaz\n• Deneyim ve eğitim detayları\n• Skills ve endorsements',
-          'proje': '🚀 **Proje Geliştirme Rehberi**\n\n**Portfolio Projeleri:**\n• E-commerce Platform\n• Task Management App\n• Social Media Clone\n• Data Visualization Dashboard'
-        };
-
-      const textLower = text.toLowerCase().trim();
-      if (quickResponses[textLower]) {
-        // Instant response for common greetings
-        const quickResponse = quickResponses[textLower];
-        let accumulatedContent = '';
-        const words = quickResponse.split(' ');
-        
-        for (let i = 0; i < words.length; i++) {
-          accumulatedContent += words[i] + ' ';
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === assistantMessage.id 
-                ? { ...msg, content: accumulatedContent.trim() }
-                : msg
-            )
-          );
-          await new Promise(resolve => setTimeout(resolve, 30)); // Faster for quick responses
-        }
-        
-        setMessages(prev => 
-          prev.map(msg => 
-            msg.id === assistantMessage.id 
-              ? { 
-                  ...msg, 
-                  content: quickResponse,
-                  isStreaming: false,
-                  enhanced: false,
-                  suggestions: [
-                    "Mülakat hazırlığı yapalım",
-                    "CV optimizasyonu",
-                    "Kariyer planlama",
-                    "Teknik beceri geliştirme"
-                  ]
-                }
-              : msg
-          )
-        );
-        setIsTyping(false);
-        return;
-      }
+      // Sadece LLM akışı: local/mock hızlı yanıtları tamamen kaldırıldı
 
               // Try online API with timeout
-        const apiEndpoint = useEnhanced ? 
-          'http://localhost:8000/ai-coach/chat/stream' : 
-          'http://localhost:8000/ai-coach/chat/stream';
+        const apiBases = apiService.getBaseUrls();
+        let lastError: any = null;
+        let success = false;
 
         if (useStreaming) {
           // Streaming API call with timeout
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for faster Gemini
 
-        try {
-          const response = await fetch(apiEndpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              message: text,
-              context: context,
-              user_data: userProfile ? {
-                id: userProfile.id || 'demo_user',
-                name: userProfile.name,
-                upschool_batch: userProfile.upschoolProgram || userProfile.upschool_batch || 'Data Science',
-                skills: userProfile.skills || ['Python', 'Machine Learning', 'Data Analysis'],
-                career_goal: userProfile.career_goal || 'Data Scientist pozisyonu'
-              } : null,
-              conversation_history: messages.slice(-6).map(msg => ({
-                type: msg.type,
-                content: msg.content
-              })),
-              stream: true,
-              use_enhanced: useEnhanced
-            }),
-            signal: controller.signal
-          });
+        for (const base of apiBases) {
+          const apiEndpoint = `${base}/ai-coach/chat/stream`;
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          try {
+            const response = await fetch(apiEndpoint, {
+              method: 'POST',
+              headers: apiService.getJsonHeaders(),
+              body: JSON.stringify({
+                message: text,
+                context: context,
+                user_data: userProfile ? {
+                  id: userProfile.id || 'demo_user',
+                  name: userProfile.name,
+                  upschool_batch: userProfile.upschoolProgram || userProfile.upschool_batch || 'Data Science',
+                  skills: userProfile.skills || ['Python', 'Machine Learning', 'Data Analysis'],
+                  career_goal: userProfile.career_goal || 'Data Scientist pozisyonu'
+                } : null,
+                conversation_history: messages.slice(-6).map(msg => ({
+                  type: msg.type,
+                  content: msg.content
+                })),
+                stream: true,
+                use_enhanced: useEnhanced
+              }),
+              signal: controller.signal
+            });
 
-          clearTimeout(timeoutId);
+            clearTimeout(timeoutId);
 
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
+            if (!response.ok || !response.body) {
+              lastError = new Error(`HTTP ${response.status}`);
+              continue;
+            }
 
-          const reader = response.body?.getReader();
-          const decoder = new TextDecoder();
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
 
-          if (reader) {
             let accumulatedContent = '';
             let suggestions: string[] = [];
-            
+
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
 
               const chunk = decoder.decode(value);
               const lines = chunk.split('\n');
-              
               for (const line of lines) {
                 if (line.startsWith('data: ')) {
                   const data = line.slice(6);
@@ -633,29 +569,12 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                       const parsed = JSON.parse(data);
                       if (parsed.type === 'content') {
                         accumulatedContent += parsed.content;
-                        setMessages(prev => 
-                          prev.map(msg => 
-                            msg.id === assistantMessage.id 
-                              ? { ...msg, content: accumulatedContent }
-                              : msg
-                          )
-                        );
+                        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: accumulatedContent } : msg));
                       } else if (parsed.type === 'suggestions') {
                         suggestions = parsed.suggestions || [];
                       } else if (parsed.type === 'done') {
-                        // Finalize message with suggestions
-                        setMessages(prev => 
-                          prev.map(msg => 
-                            msg.id === assistantMessage.id 
-                              ? { 
-                                  ...msg, 
-                                  isStreaming: false,
-                                  suggestions: suggestions,
-                                  enhanced: parsed.enhanced
-                                }
-                              : msg
-                          )
-                        );
+                        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, isStreaming: false, suggestions, enhanced: parsed.enhanced } : msg));
+                        success = true;
                         break;
                       }
                     } catch (e) {
@@ -665,121 +584,27 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                 }
               }
             }
+
+            if (success) break;
+          } catch (error: any) {
+            clearTimeout(timeoutId);
+            lastError = error;
+            continue;
           }
-        } catch (error) {
-          clearTimeout(timeoutId);
-          if (error.name === 'AbortError') {
-            throw new Error('Request timeout');
-          }
-          throw error;
         }
-              } else {
-          // Non-streaming fallback with timeout
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout for faster Gemini
-
-        try {
-          const response = await fetch('http://localhost:8000/ai-coach/chat', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              message: text,
-              context: context,
-              user_data: userProfile ? {
-                id: userProfile.id || 'demo_user',
-                name: userProfile.name,
-                upschool_batch: userProfile.upschoolProgram || userProfile.upschool_batch || 'Data Science',
-                skills: userProfile.skills || ['Python', 'Machine Learning', 'Data Analysis'],
-                career_goal: userProfile.career_goal || 'Data Scientist pozisyonu'
-              } : null,
-              conversation_history: messages.slice(-6).map(msg => ({
-                type: msg.type,
-                content: msg.content
-              }))
-            }),
-            signal: controller.signal
-          });
-
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-
-          const data = await response.json();
-          
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === assistantMessage.id 
-                ? { 
-                    ...msg, 
-                    content: data.response,
-                    suggestions: data.suggestions,
-                    isStreaming: false
-                  }
-                : msg
-            )
-          );
-        } catch (error) {
-          clearTimeout(timeoutId);
-          if (error.name === 'AbortError') {
-            throw new Error('Request timeout');
-          }
-          throw error;
+        if (!success) {
+          throw lastError || new Error('Bağlantı hatası');
         }
+      } else {
+        // Non-streaming mod devre dışı: her zaman streaming kullan
+        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: 'Lütfen streaming açık kullanın.', isStreaming: false } : msg));
       }
 
     } catch (error) {
       console.error('AI Chat Error:', error);
       
-      // Enhanced offline responses with better error handling
-      let offlineResponse;
-      if (error.message === 'Request timeout') {
-        offlineResponse = {
-          content: "⏱️ Yanıt biraz uzun sürüyor... Lütfen bekleyin veya sorunuzu daha kısa tutun. Şimdilik size hızlı bir yanıt vereyim:",
-          suggestions: [
-            "Mülakat hazırlığı yapalım",
-            "CV optimizasyonu",
-            "Kariyer planlama",
-            "Teknik beceri geliştirme"
-          ]
-        };
-      } else {
-        offlineResponse = getOfflineResponse(text, context);
-      }
-      
-              // Simulate streaming for offline response
-        let accumulatedContent = '';
-        const words = offlineResponse.content.split(' ');
-        
-        for (let i = 0; i < words.length; i++) {
-          accumulatedContent += words[i] + ' ';
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === assistantMessage.id 
-                ? { ...msg, content: accumulatedContent.trim() }
-                : msg
-            )
-          );
-          await new Promise(resolve => setTimeout(resolve, 25)); // Much faster
-        }
-      
-      // Finalize message
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === assistantMessage.id 
-            ? { 
-                ...msg, 
-                content: offlineResponse.content,
-                suggestions: offlineResponse.suggestions,
-                isStreaming: false,
-                enhanced: false // Mark as offline response
-              }
-            : msg
-        )
-      );
+      // Offline/Local fallback devre dışı: hata durumunda direkt hata göster
+      setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: '❌ Bağlantı hatası veya zaman aşımı. Lütfen tekrar deneyin.', isStreaming: false, enhanced: false } : msg));
     } finally {
       setIsTyping(false);
     }

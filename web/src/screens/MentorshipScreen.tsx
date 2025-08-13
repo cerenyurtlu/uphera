@@ -59,7 +59,7 @@ const MentorshipScreen: React.FC = () => {
         }
 
         // API'den mentor verilerini yükle
-        const mentorsResponse = await apiService.getAvailableMentors();
+        const mentorsResponse = await apiService.getAvailableMentors({ fast: true });
 
         if (mentorsResponse.success) {
           setMentors(mentorsResponse.mentors);

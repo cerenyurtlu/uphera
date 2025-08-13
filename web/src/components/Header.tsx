@@ -2,17 +2,32 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Settings, Bell, LogOut } from 'lucide-react';
 import BrandLogo from './BrandLogo';
+import { useI18n } from '../i18n/I18nProvider';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
   
-  // Kullanıcı bilgilerini al
-  const userData = (() => {
-    const userData = localStorage.getItem('uphera_user');
-    return userData ? JSON.parse(userData) : { name: 'Demo Kullanıcı' };
-  })();
+  // Kullanıcı bilgilerini al (güvenli parse ve normalize)
+  const { firstName } = (() => {
+    try {
+      const raw = localStorage.getItem('uphera_user');
+      const parsed = raw ? JSON.parse(raw) : null;
+      const u = parsed?.user || parsed || {};
 
-  const firstName = userData.name?.split(' ')[0] || 'Misafir';
+      const fullName = [u.firstName, u.lastName]
+        .filter(Boolean)
+        .join(' ')
+        || u.name
+        || (typeof u.email === 'string' ? u.email.split('@')[0] : 'Misafir');
+
+      const safeFirst = (fullName || 'Misafir').split(' ')[0] || 'Misafir';
+      return { firstName: safeFirst };
+    } catch {
+      try { localStorage.removeItem('uphera_user'); } catch {}
+      return { firstName: 'Misafir' };
+    }
+  })();
 
   return (
     <div className="up-page-header">
@@ -32,28 +47,28 @@ const Header: React.FC = () => {
               className="text-sm font-medium transition-colors hover:text-blue-600"
               style={{ color: 'var(--up-dark-gray)' }}
             >
-              Topluluk
+              {t('nav.community')}
             </button>
             <button 
               onClick={() => navigate('/events')}
               className="text-sm font-medium transition-colors hover:text-blue-600"
               style={{ color: 'var(--up-dark-gray)' }}
             >
-              Etkinlikler
+              {t('nav.events')}
             </button>
             <button 
               onClick={() => navigate('/mentorship')}
               className="text-sm font-medium transition-colors hover:text-blue-600"
               style={{ color: 'var(--up-dark-gray)' }}
             >
-              Mentorluk
+              {t('nav.mentorship')}
             </button>
             <button 
               onClick={() => navigate('/interview-prep')}
               className="text-sm font-medium transition-colors hover:text-blue-600"
               style={{ color: 'var(--up-dark-gray)' }}
             >
-              Ada AI
+              {t('nav.adaAI')}
             </button>
           </div>
 
@@ -61,7 +76,7 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-4">
             <div className="hidden md:block text-right">
               <h1 className="text-xs font-medium" style={{ color: 'var(--up-dark-gray)' }}>
-                {firstName} Hoş Geldin! 👋
+                {firstName} {t('nav.welcome')}
               </h1>
             </div>
             
@@ -74,7 +89,7 @@ const Header: React.FC = () => {
                     color: 'white'
                   }}
                 >
-                  Profil ▼
+                  {t('nav.profile')} ▼
                 </summary>
                 <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg z-50">
                   <button 
@@ -82,21 +97,21 @@ const Header: React.FC = () => {
                     className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm border-b flex items-center"
                   >
                     <User className="w-4 h-4 mr-2" />
-                    Profilim
+                    {t('nav.myProfile')}
                   </button>
                   <button 
                     onClick={() => navigate('/settings')}
                     className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm border-b flex items-center"
                   >
                     <Settings className="w-4 h-4 mr-2" />
-                    Ayarlar
+                    {t('nav.settings')}
                   </button>
                   <button 
                     onClick={() => navigate('/notifications')}
                     className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm border-b flex items-center"
                   >
                     <Bell className="w-4 h-4 mr-2" />
-                    Bildirimler
+                    {t('nav.notifications')}
                   </button>
                   <button 
                     onClick={() => {
@@ -107,7 +122,7 @@ const Header: React.FC = () => {
                     className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600 flex items-center"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Çıkış Yap
+                    {t('nav.logout')}
                   </button>
                 </div>
               </details>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiBarChart2, FiBriefcase, FiUser, FiBell, FiUsers, FiLogOut, FiCpu } from 'react-icons/fi';
+import { useI18n } from '../i18n/I18nProvider';
 
 interface UserMenuProps {
   userName: string;
@@ -14,6 +15,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
   currentPage = '',
   onAIAssistantClick
 }) => {
+  const { t } = useI18n();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Close menu when clicking outside
@@ -32,7 +34,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
   const handleLogout = () => {
     setShowUserMenu(false);
-    if (confirm('Çıkış yapmak istediğinizden emin misiniz?')) {
+    if (confirm(t('menu.confirmLogout'))) {
       window.location.href = '/login';
     }
   };
@@ -47,31 +49,31 @@ const UserMenu: React.FC<UserMenuProps> = ({
   const menuItems = [
     { 
       icon: <FiBarChart2 />, 
-      label: 'Dashboard', 
+      label: t('menu.dashboard'), 
       href: '/dashboard',
       active: currentPage === 'dashboard'
     },
     { 
       icon: <FiBriefcase />, 
-      label: 'İş İlanları', 
+      label: t('menu.jobs'), 
       href: '/jobs',
       active: currentPage === 'jobs'
     },
     { 
       icon: <FiUser />, 
-      label: 'Profil Düzenle', 
+      label: t('menu.profileEdit'), 
       href: '/profile',
       active: currentPage === 'profile'
     },
     { 
       icon: <FiBell />, 
-      label: 'Bildirimler', 
+      label: t('menu.notifications'), 
       href: '/notifications',
       active: currentPage === 'notifications'
     },
     { 
       icon: <FiUsers />, 
-      label: 'UpSchool Network', 
+      label: t('menu.network'), 
       href: '/network',
       active: currentPage === 'network'
     }
@@ -140,7 +142,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors flex items-center space-x-3"
             >
               <span className="text-lg"><FiCpu /></span>
-              <span>AI Asistan</span>
+              <span>{t('menu.aiAssistant')}</span>
             </button>
 
             <div className="border-t border-gray-200 my-2"></div>
@@ -151,7 +153,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors flex items-center space-x-3"
             >
               <span className="text-lg"><FiLogOut /></span>
-              <span>Çıkış Yap</span>
+              <span>{t('menu.logout')}</span>
             </button>
           </div>
         </div>

@@ -12,15 +12,17 @@ API ve Web uygulaması ayrı Vercel projeleri olarak deploy edilecek:
 
 Vercel'in disk alanı sınırlaması nedeniyle AI servisleri (chat, document upload, insights) geçici olarak devre dışı bırakılmıştır. Bu servisler daha sonra ayrı bir AI servisi olarak deploy edilebilir.
 
+### ✅ ÇÖZÜLEN SORUNLAR:
+- Disk alanı hatası çözüldü (minimal requirements)
+- Import hataları düzeltildi
+- Local test başarılı
+
 ### 1. API Deploy (Backend)
 
 #### Gerekli Environment Variables:
 ```bash
 # Database
 DATABASE_URL=postgresql://username:password@host:port/database
-
-# OpenAI (opsiyonel - AI servisleri devre dışı)
-OPENAI_API_KEY=your_openai_api_key
 
 # SendGrid (Email)
 SENDGRID_API_KEY=your_sendgrid_api_key
@@ -51,6 +53,13 @@ vercel --prod --name up-hera-api
    - Vercel'de yeni proje oluşturun: `up-hera-api`
    - GitHub repo'nuzu bağlayın
    - Environment variables'ları ayarlayın
+
+#### Vercel Ayarları:
+- **Framework Preset**: Other
+- **Root Directory**: ./
+- **Build Command**: (boş bırakın)
+- **Output Directory**: (boş bırakın)
+- **Install Command**: (boş bırakın)
 
 ### 2. Web Deploy (Frontend)
 
@@ -126,11 +135,12 @@ vercel env add VITE_API_URL
 ### 6. Önemli Notlar
 
 #### API için:
-- `requirements-vercel.txt` kullanılıyor (minimal paketler)
+- `requirements.txt` kullanılıyor (minimal paketler)
 - PostgreSQL desteği eklendi
 - CORS ayarları production için güncellendi
 - AI servisleri geçici olarak devre dışı
 - Temel CRUD işlemleri çalışıyor
+- Local test başarılı ✅
 
 #### Web için:
 - Vite build sistemi kullanılıyor
@@ -174,15 +184,14 @@ vercel env ls --scope up-hera-web
 #### Yaygın Sorunlar:
 1. **CORS Hatası**: CORS_ORIGINS'te frontend URL'inin olduğundan emin olun
 2. **Database Bağlantı Hatası**: DATABASE_URL'in doğru formatta olduğunu kontrol edin
-3. **Build Hatası**: requirements-vercel.txt'deki paketlerin uyumlu olduğunu kontrol edin
+3. **Build Hatası**: requirements.txt'deki paketlerin uyumlu olduğunu kontrol edin
 4. **API URL Hatası**: Web projesinde VITE_API_URL'in doğru olduğunu kontrol edin
 
 #### Debug Komutları:
 ```bash
 # API build test
 cd api
-python -m pip install -r requirements-vercel.txt
-python main.py
+python -c "import main; print('✅ Import başarılı')"
 
 # Web build test
 cd web

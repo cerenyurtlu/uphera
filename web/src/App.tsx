@@ -3,6 +3,10 @@ import { Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import LoginScreen from './screens/LoginScreen'
 import DashboardScreen from './screens/DashboardScreen'
+import AdminDashboardScreen from './screens/AdminDashboardScreen'
+import AdminUsersScreen from './screens/AdminUsersScreen'
+import AdminJobsScreen from './screens/AdminJobsScreen'
+import AdminSettingsScreen from './screens/AdminSettingsScreen'
 import JobsScreen from './screens/JobsScreen'
 import JobDetailScreen from './screens/JobDetailScreen'
 import NotificationListScreen from './screens/NotificationListScreen'
@@ -28,17 +32,33 @@ function App() {
       if (settings.theme) {
         document.documentElement.setAttribute('data-theme', settings.theme);
       }
+      // Dil ayarını uygula
+      if (settings.language) {
+        document.documentElement.setAttribute('lang', settings.language);
+      }
+    } else {
+      // Varsayılanlar
+      if (!document.documentElement.getAttribute('data-theme')) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+      if (!document.documentElement.getAttribute('lang')) {
+        document.documentElement.setAttribute('lang', 'tr');
+      }
     }
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--up-bg)', color: 'var(--up-text)' }}>
       <Routes>
         <Route path="/" element={<LoginScreen />} />
         <Route path="/login" element={<LoginScreen />} />
                 <Route path="/auth/verify" element={<AuthVerifyScreen />} />
 
         <Route path="/dashboard" element={<DashboardScreen />} />
+        <Route path="/admin" element={<AdminDashboardScreen />} />
+        <Route path="/admin/users" element={<AdminUsersScreen />} />
+        <Route path="/admin/jobs" element={<AdminJobsScreen />} />
+        <Route path="/admin/settings" element={<AdminSettingsScreen />} />
         {/* Jobs page with dedicated functionality */}
         <Route path="/jobs" element={<JobsScreen />} />
         <Route path="/freelance-projects" element={<FreelanceProjectsScreen />} />
