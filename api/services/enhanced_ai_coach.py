@@ -360,14 +360,14 @@ class EnhancedAICoach:
 
     async def analyze_document(self, prompt: str) -> str:
         try:
-                response = await asyncio.to_thread(
-                    enhanced_ada_ai.gemini_model.generate_content,
-                    prompt,
-                    generation_config={
-                        "max_output_tokens": 2048,
-                        "temperature": 0.5,
-                    }
-                )
+            response = await asyncio.to_thread(
+                enhanced_ada_ai.gemini_model.generate_content,
+                prompt,
+                generation_config={
+                    "max_output_tokens": 2048,
+                    "temperature": 0.5,
+                }
+            )
             return getattr(response, 'text', '') or ''
         except Exception as e:
             logger.error(f"analyze_document error: {e}")

@@ -522,7 +522,66 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
           // Streaming API call with extended timeout and SSE accept header
           const STREAM_TIMEOUT_MS = 55000;
 
-          for (const base of apiBases) {
+          // iOS/Safari/Mobil için EventSource + GET SSE kullan
+          if (isVercelHost || isMobile || isSafari) {
+            try {
+              const base = apiService.getBaseUrl();
+              const params = new URLSearchParams({
+                message: text,
+                context,
+                response_mode: 'auto'
+              });
+              const esUrl = `${base}/ai-coach/chat/stream-get?${params.toString()}`;
+              await new Promise<void>((resolve, reject) => {
+                try {
+                  const es = new EventSource(esUrl);
+                  eventSourceRef.current = es;
+                  let accumulatedContent = '';
+                  let suggestions: string[] = [];
+
+                  const timeoutId = setTimeout(() => {
+                    try { es.close(); } catch {}
+                    reject(new Error('EventSource timeout'));
+                  }, STREAM_TIMEOUT_MS);
+
+                  es.onmessage = (ev) => {
+                    try {
+                      const parsed = JSON.parse(ev.data);
+                      if (parsed.type === 'content') {
+                        accumulatedContent += parsed.content || '';
+                        assistantContentRef.current = accumulatedContent;
+                        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: accumulatedContent } : msg));
+                      } else if (parsed.type === 'done') {
+                        suggestions = parsed.suggestions || [];
+                        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, isStreaming: false, suggestions, enhanced: parsed.enhanced } : msg));
+                        clearTimeout(timeoutId);
+                        try { es.close(); } catch {}
+                        resolve();
+                      }
+                    } catch {}
+                  };
+
+                  es.onerror = () => {
+                    clearTimeout(timeoutId);
+                    try { es.close(); } catch {}
+                    // Kısmi içerik varsa bunu başarı sayalım
+                    if (assistantContentRef.current && assistantContentRef.current.trim()) {
+                      setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, isStreaming: false } : msg));
+                      resolve();
+                    } else {
+                      reject(new Error('EventSource error'));
+                    }
+                  };
+                } catch (e) {
+                  reject(e as any);
+                }
+              });
+              success = true;
+            } catch (err) {
+              lastError = err;
+            }
+          } else {
+            for (const base of apiBases) {
             const apiEndpoint = `${base}/ai-coach/chat/stream`;
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
@@ -602,6 +661,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
               clearTimeout(timeoutId);
               lastError = error;
               continue;
+            }
             }
           }
           // Non-streaming fallback if streaming failed on all bases
