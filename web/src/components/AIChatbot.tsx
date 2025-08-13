@@ -518,7 +518,8 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
         let lastError: any = null;
         let success = false;
 
-        if (useStreaming) {
+        const shouldStream = false;
+        if (shouldStream) {
           // Streaming API call with extended timeout and SSE accept header
           const STREAM_TIMEOUT_MS = 55000;
 

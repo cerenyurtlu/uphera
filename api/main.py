@@ -448,35 +448,40 @@ async def ai_chat(
         if request.max_tokens is not None:
             merged_user_data["max_tokens"] = request.max_tokens
 
-        # Consume the streaming generator to build a single response string
+        # Consume the streaming generator with a strict timeout to avoid client aborts
         chunks: List[str] = []
-        start_time = datetime.now()
-        max_seconds = 45  # Keep under Vercel 60s limit
-        async for chunk in get_enhanced_ai_response(
-            user_id=user_id,
-            message=request.message,
-            context=request.context,
-            user_data=merged_user_data,
-            conversation_history=request.conversation_history,
-        ):
-            chunks.append(chunk)
-            # Safety limit to avoid function timeout; return partial content if needed
-            if (datetime.now() - start_time).total_seconds() > max_seconds:
-                break
-        response = "".join(chunks)
+        async def _consume():
+            async for chunk in get_enhanced_ai_response(
+                user_id=user_id,
+                message=request.message,
+                context=request.context,
+                user_data=merged_user_data,
+                conversation_history=request.conversation_history,
+            ):
+                chunks.append(chunk)
+
+        try:
+            # Hard timeout (seconds) — respond early with partial/fallback
+            await asyncio.wait_for(_consume(), timeout=18)
+        except Exception:
+            pass
+
+        response = "".join(chunks).strip()
+        if not response:
+            response = "Şu anda yoğunluk olabilir. Mesajını aldım; kısa bir süre sonra tekrar dener misin?"
         
-        # Generate multiple suggestions for maximum engagement
+        # Generate multiple suggestions (Turkish)
         suggestions = [
-            "Tell me more about your technical background and experience",
-            "What are your long-term career goals in technology?",
-            "How can I help you prepare for technical interviews?",
-            "What specific skills would you like to develop further?",
-            "Would you like to discuss networking strategies for women in tech?",
-            "How can I help you build confidence in male-dominated environments?",
-            "What challenges are you currently facing in your tech career?",
-            "Would you like to explore mentorship opportunities?",
-            "How can I help you optimize your CV and LinkedIn profile?",
-            "What are your thoughts on work-life balance in tech?"
+            "Teknik geçmişin ve deneyimlerinden biraz daha bahsetmek ister misin?",
+            "Uzun vadeli kariyer hedeflerin neler?",
+            "Teknik mülakatlara hazırlanmanda nasıl yardımcı olabilirim?",
+            "Hangi becerilerini daha fazla geliştirmek istersin?",
+            "Network geliştirme stratejileri hakkında konuşmak ister misin?",
+            "CV ve LinkedIn profilini nasıl optimize edebiliriz?",
+            "Şu anda kariyerinde karşılaştığın en büyük zorluk nedir?",
+            "Mentorluk fırsatlarını birlikte değerlendirelim mi?",
+            "Portföyünü güçlendirmek için neler ekleyebiliriz?",
+            "İş-yaşam dengeni geliştirmek için nasıl bir plan yapabiliriz?"
         ]
         
         return {
