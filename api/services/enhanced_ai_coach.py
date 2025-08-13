@@ -58,16 +58,45 @@ class EnhancedAdaAI:
             )
             
             # Generate response with maximum token usage and streaming
+            # Dynamic token control
+            user_max_tokens = 0
+            try:
+                if user_data and isinstance(user_data, dict) and user_data.get('max_tokens') is not None:
+                    user_max_tokens = int(user_data.get('max_tokens') or 0)
+            except Exception:
+                user_max_tokens = 0
+
+            # Auto length selection based on message intent length and mode
+            response_mode = (user_data or {}).get('response_mode', 'auto')
+            approx_input_len = len(message or '')
+            if user_max_tokens > 0:
+                max_tokens = user_max_tokens
+            else:
+                if response_mode == 'short':
+                    max_tokens = 220
+                elif response_mode == 'long':
+                    max_tokens = 512
+                else:  # auto
+                    # Heuristik: kısa soruya kısa, kapsamlı soruya daha uzun yanıt
+                    if approx_input_len < 80:
+                        max_tokens = 220
+                    elif approx_input_len < 240:
+                        max_tokens = 350
+                    else:
+                        max_tokens = 512
+
+            gen_config = {
+                "max_output_tokens": max_tokens,
+                "temperature": 0.7,
+                "top_p": 0.95,
+                "top_k": 40
+            }
+
             response = await asyncio.to_thread(
                 self.gemini_model.generate_content,
                 enhanced_prompt,
                 stream=True,
-                generation_config={
-                    "max_output_tokens": 220,   # Kısa ve net yanıtlar
-                    "temperature": 0.8,
-                    "top_p": 0.9,
-                    "top_k": 40
-                }
+                generation_config=gen_config
             )
             
             # Stream response with optimized token delivery
@@ -77,7 +106,7 @@ class EnhancedAdaAI:
                     full_response += chunk.text
                     yield chunk.text
                     # Fast streaming for better user experience
-                    await asyncio.sleep(0.005)  # 5ms delay for smooth streaming
+                    await asyncio.sleep(0.0)
             
             logger.info(f"✅ Generated response for user {user_id} with {len(full_response)} characters")
                 
@@ -132,12 +161,11 @@ class EnhancedAdaAI:
         KULLANICI MESAJI: {message}
         
         YANIT TALİMATLARI:
-        • 2-4 cümleyle kısa ve öz yanıt ver (maksimum ~500 karakter).
-        • Gerekliyse en fazla 3 maddelik net bir liste kullan.
-        • Soruyu tekrar etme, gereksiz girizgah yapma, aynı kalıpları kullanma.
-        • Yalnızca konuya odaklan; tekrar ve dolgu metinden kaçın.
-        • Türkçe teknik terimleri kullan ve uygulanabilir tek bir öneriyle bitir.
-        • Başlıklar (###) ve uzun formatlardan kaçın; basit düz metin ver.
+        • Kısa soruya kısa, kapsamlı soruya yeterli uzunlukta (gerektiği kadar) yanıt ver.
+        • Gereksiz girizgah ve tekrar yapma; konuya odaklan, dolgu metinden kaçın.
+        • En fazla 3 maddelik net liste kullan; tablo/başlık (###) kullanma.
+        • Türkçe teknik terimler kullan ve mümkünse uygulanabilir tek öneri ile bitir.
+        • Aşırı uzun veya aşırı kısa olma; sorunun kapsamı kadar açık ve net ol.
         """
         
         return base_prompt
@@ -332,14 +360,14 @@ class EnhancedAICoach:
 
     async def analyze_document(self, prompt: str) -> str:
         try:
-            response = await asyncio.to_thread(
-                enhanced_ada_ai.gemini_model.generate_content,
-                prompt,
-                generation_config={
-                    "max_output_tokens": 1024,
-                    "temperature": 0.5,
-                }
-            )
+                response = await asyncio.to_thread(
+                    enhanced_ada_ai.gemini_model.generate_content,
+                    prompt,
+                    generation_config={
+                        "max_output_tokens": 2048,
+                        "temperature": 0.5,
+                    }
+                )
             return getattr(response, 'text', '') or ''
         except Exception as e:
             logger.error(f"analyze_document error: {e}")

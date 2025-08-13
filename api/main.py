@@ -110,6 +110,8 @@ class ChatRequest(BaseModel):
     conversation_history: Optional[List[Dict]] = []
     stream: Optional[bool] = True
     use_enhanced: Optional[bool] = True
+    response_mode: Optional[str] = "auto"  # "auto" | "short" | "long"
+    max_tokens: Optional[int] = None
 
 class JobApplicationRequest(BaseModel):
     cover_letter: str = ""
@@ -439,16 +441,28 @@ async def ai_chat(
         
         user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
         
+        # Merge user_data with response preferences
+        merged_user_data = dict(request.user_data or {})
+        if request.response_mode:
+            merged_user_data["response_mode"] = request.response_mode
+        if request.max_tokens is not None:
+            merged_user_data["max_tokens"] = request.max_tokens
+
         # Consume the streaming generator to build a single response string
         chunks: List[str] = []
+        start_time = datetime.now()
+        max_seconds = 45  # Keep under Vercel 60s limit
         async for chunk in get_enhanced_ai_response(
             user_id=user_id,
             message=request.message,
             context=request.context,
-            user_data=request.user_data,
+            user_data=merged_user_data,
             conversation_history=request.conversation_history,
         ):
             chunks.append(chunk)
+            # Safety limit to avoid function timeout; return partial content if needed
+            if (datetime.now() - start_time).total_seconds() > max_seconds:
+                break
         response = "".join(chunks)
         
         # Generate multiple suggestions for maximum engagement
@@ -505,11 +519,16 @@ async def ai_chat_stream(
 
                 async def produce():
                     try:
+                        merged_user_data = dict(request.user_data or {})
+                        if request.response_mode:
+                            merged_user_data["response_mode"] = request.response_mode
+                        if request.max_tokens is not None:
+                            merged_user_data["max_tokens"] = request.max_tokens
                         async for chunk in get_enhanced_ai_response(
                             user_id=user_id,
                             message=request.message,
                             context=request.context,
-                            user_data=request.user_data,
+                            user_data=merged_user_data,
                             conversation_history=request.conversation_history,
                         ):
                             await queue.put(chunk)
