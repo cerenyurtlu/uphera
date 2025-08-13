@@ -510,92 +510,125 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
         let success = false;
 
         if (useStreaming) {
-          // Streaming API call with timeout
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout for faster Gemini
+          // Streaming API call with extended timeout and SSE accept header
+          const STREAM_TIMEOUT_MS = 25000;
 
-        for (const base of apiBases) {
-          const apiEndpoint = `${base}/ai-coach/chat/stream`;
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
-          try {
-            const response = await fetch(apiEndpoint, {
-              method: 'POST',
-              headers: apiService.getJsonHeaders(),
-              body: JSON.stringify({
-                message: text,
-                context: context,
-                user_data: userProfile ? {
-                  id: userProfile.id || 'demo_user',
-                  name: userProfile.name,
-                  upschool_batch: userProfile.upschoolProgram || userProfile.upschool_batch || 'Data Science',
-                  skills: userProfile.skills || ['Python', 'Machine Learning', 'Data Analysis'],
-                  career_goal: userProfile.career_goal || 'Data Scientist pozisyonu'
-                } : null,
-                conversation_history: messages.slice(-6).map(msg => ({
-                  type: msg.type,
-                  content: msg.content
-                })),
-                stream: true,
-                use_enhanced: useEnhanced
-              }),
-              signal: controller.signal
-            });
+          for (const base of apiBases) {
+            const apiEndpoint = `${base}/ai-coach/chat/stream`;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
+            try {
+              const response = await fetch(apiEndpoint, {
+                method: 'POST',
+                headers: {
+                  ...apiService.getJsonHeaders(),
+                  'Accept': 'text/event-stream'
+                },
+                body: JSON.stringify({
+                  message: text,
+                  context: context,
+                  user_data: userProfile ? {
+                    id: userProfile.id || 'demo_user',
+                    name: userProfile.name,
+                    upschool_batch: userProfile.upschoolProgram || userProfile.upschool_batch || 'Data Science',
+                    skills: userProfile.skills || ['Python', 'Machine Learning', 'Data Analysis'],
+                    career_goal: userProfile.career_goal || 'Data Scientist pozisyonu'
+                  } : null,
+                  conversation_history: messages.slice(-6).map(msg => ({
+                    type: msg.type,
+                    content: msg.content
+                  })),
+                  stream: true,
+                  use_enhanced: useEnhanced
+                }),
+                signal: controller.signal
+              });
 
-            clearTimeout(timeoutId);
+              clearTimeout(timeoutId);
 
-            if (!response.ok || !response.body) {
-              lastError = new Error(`HTTP ${response.status}`);
-              continue;
-            }
+              if (!response.ok || !response.body) {
+                lastError = new Error(`HTTP ${response.status}`);
+                continue;
+              }
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
+              const reader = response.body.getReader();
+              const decoder = new TextDecoder();
 
-            let accumulatedContent = '';
-            let suggestions: string[] = [];
+              let accumulatedContent = '';
+              let suggestions: string[] = [];
 
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-              const chunk = decoder.decode(value);
-              const lines = chunk.split('\n');
-              for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                  const data = line.slice(6);
-                  if (data.trim()) {
-                    try {
-                      const parsed = JSON.parse(data);
-                      if (parsed.type === 'content') {
-                        accumulatedContent += parsed.content;
-                        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: accumulatedContent } : msg));
-                      } else if (parsed.type === 'suggestions') {
-                        suggestions = parsed.suggestions || [];
-                      } else if (parsed.type === 'done') {
-                        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, isStreaming: false, suggestions, enhanced: parsed.enhanced } : msg));
-                        success = true;
-                        break;
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+                for (const line of lines) {
+                  if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data.trim()) {
+                      try {
+                        const parsed = JSON.parse(data);
+                        if (parsed.type === 'content') {
+                          accumulatedContent += parsed.content;
+                          setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: accumulatedContent } : msg));
+                        } else if (parsed.type === 'suggestions') {
+                          suggestions = parsed.suggestions || [];
+                        } else if (parsed.type === 'done') {
+                          setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, isStreaming: false, suggestions, enhanced: parsed.enhanced } : msg));
+                          success = true;
+                          break;
+                        }
+                      } catch (e) {
+                        console.log('Parse error:', e);
                       }
-                    } catch (e) {
-                      console.log('Parse error:', e);
                     }
                   }
                 }
               }
-            }
 
-            if (success) break;
-          } catch (error: any) {
-            clearTimeout(timeoutId);
-            lastError = error;
-            continue;
+              if (success) break;
+            } catch (error: any) {
+              clearTimeout(timeoutId);
+              lastError = error;
+              continue;
+            }
           }
-        }
-        if (!success) {
-          throw lastError || new Error('Bağlantı hatası');
-        }
-      } else {
+          // Non-streaming fallback if streaming failed on all bases
+          if (!success) {
+            try {
+              const fallbackResp = await fetch(`${apiService.getBaseUrl()}/ai-coach/chat`, {
+                method: 'POST',
+                headers: apiService.getJsonHeaders(),
+                body: JSON.stringify({
+                  message: text,
+                  context: context,
+                  user_data: userProfile ? {
+                    id: userProfile.id || 'demo_user',
+                    name: userProfile.name,
+                    upschool_batch: userProfile.upschoolProgram || userProfile.upschool_batch || 'Data Science',
+                    skills: userProfile.skills || ['Python', 'Machine Learning', 'Data Analysis'],
+                    career_goal: userProfile.career_goal || 'Data Scientist pozisyonu'
+                  } : null,
+                  conversation_history: messages.slice(-6).map(msg => ({
+                    type: msg.type,
+                    content: msg.content
+                  })),
+                  use_streaming: false
+                })
+              });
+              const data = await fallbackResp.json().catch(() => null);
+              if (fallbackResp.ok && data?.success && data?.response) {
+                setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: data.response, isStreaming: false, enhanced: true, suggestions: data.suggestions || [] } : msg));
+                success = true;
+              } else {
+                throw new Error(data?.response || 'İstek başarısız');
+              }
+            } catch (e) {
+              throw lastError || e || new Error('Bağlantı hatası');
+            }
+          }
+        } else {
         // Non-streaming mod devre dışı: her zaman streaming kullan
         setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: 'Lütfen streaming açık kullanın.', isStreaming: false } : msg));
       }

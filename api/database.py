@@ -16,7 +16,9 @@ from sqlalchemy import create_engine
 from config import settings
 
 # Database file path
-DB_PATH = "uphera.db"
+# Vercel Serverless ortamında sadece /tmp yazılabilir.
+# Kalıcı DB kullanmıyorsanız en azından /tmp altında çalışalım (ephemeral).
+DB_PATH = os.getenv("DB_PATH", "/tmp/uphera.db")
 
 # Database lock for thread safety
 _db_lock = threading.Lock()
@@ -26,6 +28,12 @@ DATABASE_URL = settings.DATABASE_URL
 
 def get_db_connection():
     """Get database connection with proper settings"""
+    # Ensure directory exists (especially for /tmp)
+    try:
+        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    except Exception:
+        pass
+
     conn = sqlite3.connect(DB_PATH, timeout=60.0, check_same_thread=False)
     cursor = conn.cursor()
     

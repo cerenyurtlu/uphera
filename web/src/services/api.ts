@@ -18,7 +18,7 @@ class UpHeraApiService {
     'http://localhost:8000'
   ];
   private currentUrlIndex = 0;
-  private retryAttempts = 3;
+  private retryAttempts = 2;
 
   private get baseUrl(): string {
     return this.baseUrls[this.currentUrlIndex];
@@ -84,7 +84,7 @@ class UpHeraApiService {
           const controller = new AbortController();
           const bodyAny = (options as any).body;
           const isFormDataTimeout = bodyAny && typeof FormData !== 'undefined' && (bodyAny instanceof FormData);
-          const timeoutMs = typeof meta.timeoutMs === 'number' ? meta.timeoutMs : (isFormDataTimeout ? 30000 : 5000);
+          const timeoutMs = typeof meta.timeoutMs === 'number' ? meta.timeoutMs : (isFormDataTimeout ? 30000 : 3500);
           const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
           const isFormData = (options as any).body && typeof FormData !== 'undefined' && ((options as any).body instanceof FormData);
@@ -355,7 +355,7 @@ class UpHeraApiService {
 
   // Mentorship APIs
   async getAvailableMentors(opts?: { fast?: boolean }): Promise<ApiResponse> {
-    const fast = opts?.fast;
+    const fast = opts?.fast ?? true;
     return this.makeRequest('/api/mentorship/mentors', fast ? { __meta: { timeoutMs: 1200, retryAttempts: 1, maxBaseUrls: 1 } } : {});
   }
 
@@ -378,7 +378,7 @@ class UpHeraApiService {
 
   // Events APIs
   async getEvents(opts?: { fast?: boolean }): Promise<ApiResponse> {
-    const fast = opts?.fast;
+    const fast = opts?.fast ?? true;
     return this.makeRequest('/api/events', fast ? { __meta: { timeoutMs: 1200, retryAttempts: 1, maxBaseUrls: 1 } } : {});
   }
 
@@ -392,7 +392,7 @@ class UpHeraApiService {
   // Notifications (mock-friendly)
   async getNotifications(): Promise<ApiResponse> {
     // Try backend first
-    const resp = await this.makeRequest('/api/notifications');
+    const resp = await this.makeRequest('/api/notifications', { __meta: { timeoutMs: 1200, retryAttempts: 1, maxBaseUrls: 1 } });
     if (resp && resp.success) {
       // Standard shape { notifications: [...] }
       if (Array.isArray((resp as any).notifications)) return resp;
@@ -431,7 +431,7 @@ class UpHeraApiService {
   // Settings APIs (with graceful local fallback)
   async getSettings(): Promise<ApiResponse> {
     // Try backend first
-    const response = await this.makeRequest('/api/settings');
+    const response = await this.makeRequest('/api/settings', { __meta: { timeoutMs: 1500, retryAttempts: 1, maxBaseUrls: 1 } });
     if (response.success && (response as any).settings) {
       return response;
     }

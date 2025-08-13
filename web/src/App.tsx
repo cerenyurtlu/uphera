@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { Toaster } from 'react-hot-toast'
+import { Toaster, ToastBar } from 'react-hot-toast'
 import LoginScreen from './screens/LoginScreen'
 import DashboardScreen from './screens/DashboardScreen'
 import AdminDashboardScreen from './screens/AdminDashboardScreen'
@@ -74,7 +74,9 @@ function App() {
         <Route path="/events" element={<EventsScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
       </Routes>
-      <Toaster position="top-right" />
+      <Toaster position="top-right">
+        {(t) => (t.type === 'error' ? null : <ToastBar toast={t} />)}
+      </Toaster>
     </div>
   )
 }
