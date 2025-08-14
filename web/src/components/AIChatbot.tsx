@@ -561,10 +561,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                 context,
                 response_mode: 'auto'
               });
-              const isLocalBase = base.includes('localhost') || base.includes('127.0.0.1');
-              const esUrl = isLocalBase
-                ? `${base}/ai-coach/chat/stream-get?${params.toString()}`
-                : `/api/ai-coach/chat/stream-get?${params.toString()}`;
+              const esUrl = `${base}/ai-coach/chat/stream-get?${params.toString()}`;
               await new Promise<void>((resolve, reject) => {
                 try {
                   const es = new EventSource(esUrl);
@@ -615,8 +612,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
             }
           } else {
             for (const base of apiBases) {
-            const isLocalBase = base.includes('localhost') || base.includes('127.0.0.1');
-            const apiEndpoint = isLocalBase ? `${base}/ai-coach/chat/stream` : `/api/ai-coach/chat/stream`;
+            const apiEndpoint = `${base}/ai-coach/chat/stream`;
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
             try {
@@ -704,13 +700,11 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
               // Try non-streaming on all bases with extended timeout
               const NON_STREAM_TIMEOUT_MS = 55000;
               let nonStreamOk = false;
-              for (const base of apiBases) {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), NON_STREAM_TIMEOUT_MS);
-                try {
-                  const isLocalBase = base.includes('localhost') || base.includes('127.0.0.1');
-                  const targetUrl = isLocalBase ? `${base}/ai-coach/chat` : `/api/ai-coach/chat`;
-                  const fallbackResp = await fetch(targetUrl, {
+                             for (const base of apiBases) {
+                 const controller = new AbortController();
+                 const timeoutId = setTimeout(() => controller.abort(), NON_STREAM_TIMEOUT_MS);
+                 try {
+                   const fallbackResp = await fetch(`${base}/ai-coach/chat`, {
                     method: 'POST',
                     headers: apiService.getJsonHeaders(),
                     body: JSON.stringify({
