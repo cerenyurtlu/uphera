@@ -210,11 +210,9 @@ class UpHeraApiService {
   // AI Chat APIs
   async chatWithAI(message: string, context: string = 'general'): Promise<ApiResponse> {
     // Prod: local Edge function kullan, local dev: backend
-    const base = (typeof window !== 'undefined' && (window as any).location?.origin && !this.baseUrl.includes('localhost') && !this.baseUrl.includes('127.0.0.1'))
-      ? ''
-      : this.baseUrl;
-    const endpoint = `${base}/api/ai-coach/chat`.replace(/\/+/, '/');
-    return this.makeRequest(endpoint.replace(this.baseUrl, ''), {
+    const isLocal = this.baseUrl.includes('localhost') || this.baseUrl.includes('127.0.0.1');
+    const endpoint = isLocal ? '/ai-coach/chat' : '/api/ai-coach/chat';
+    return this.makeRequest(endpoint, {
       method: 'POST',
       body: JSON.stringify({
         message,

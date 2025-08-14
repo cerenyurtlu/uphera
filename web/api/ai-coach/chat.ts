@@ -1,4 +1,4 @@
-export const config = { runtime: 'edge' };
+// Remove explicit Edge runtime to use default Node.js runtime and avoid runtime version errors
 
 type ChatRequestBody = {
   message?: string;
