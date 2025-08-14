@@ -118,7 +118,7 @@ const InterviewPrepScreen: React.FC = () => {
             variant="primary"
           >
             <Brain className="h-4 w-4 mr-2" />
-            AI Koç ile Konuş
+            Ada AI ile Konuş
           </ModernButton>
         </div>
 
@@ -257,11 +257,11 @@ const InterviewPrepScreen: React.FC = () => {
             </div>
             <div className="flex-1">
               <h3 className="font-bold text-lg mb-2" style={{ color: 'var(--up-primary-dark)' }}>
-                AI Koçunuz Her Adımda Yanınızda! 🚀
+                Ada AI Her Adımda Yanınızda! 🚀
               </h3>
               <p className="text-sm mb-4" style={{ color: 'var(--up-dark-gray)' }}>
                 UpSchool'da aldığın eğitim seni buraya getirdi, şimdi o güçlü kadın enerjinle mülakatı da başarıyla geçeceksin! 
-                AI koçun her sorunla birlikte düşünüyor, her cevabını geliştiriyorsun.
+                Ada AI her sorunla birlikte düşünüyor, her cevabını geliştiriyorsun.
               </p>
               <button
                 onClick={() => setShowAICoach(true)}
@@ -271,7 +271,7 @@ const InterviewPrepScreen: React.FC = () => {
                   color: 'white' 
                 }}
               >
-                AI Koç ile Konuş
+                Ada AI ile Konuş
               </button>
             </div>
           </div>

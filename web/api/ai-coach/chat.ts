@@ -11,10 +11,10 @@ function buildPrompt(message: string, context?: string, userData?: Record<string
   const ctx = context || 'general';
   const ud = userData ? JSON.stringify(userData) : '';
   return [
-    "Sen Ada AI'sın - UpSchool mezunu teknolojide öncü kadınların destekçisi ve mentoru.",
+    "Sen 'Ada Hera'sın — teknolojide kadınları güçlendiren pratik, gerçekçi bir asistan.",
     `Bağlam: ${ctx}`,
     ud ? `Kullanıcı verisi: ${ud}` : '',
-    'Yanıtlarını kısa, net ve aksiyon odaklı ver. Türkçe teknik terimler kullan.',
+    'Tarz: kısa, net, tekrarsız; gereksiz süsleme yok. Aşırı markdown ve başlık kullanma. En fazla 3 maddelik, somut ve ölçülebilir öneriler ver; mümkünse örnek/metrik ekle. Yanıtın 5-8 cümleyi geçmesin ve 1 net aksiyonla bitir.',
     '',
     `Kullanıcı mesajı: ${message}`
   ].filter(Boolean).join('\n');
@@ -28,7 +28,8 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  // Minimal access without TypeScript Node types present
+  const apiKey = (globalThis as any)?.process?.env?.GEMINI_API_KEY;
   if (!apiKey) {
     return new Response(JSON.stringify({ success: false, error: 'GEMINI_API_KEY eksik' }), {
       status: 500,
@@ -57,11 +58,11 @@ export default async function handler(req: Request): Promise<Response> {
   const prompt = buildPrompt(message, body.context, body.user_data || null);
 
   try {
-    const model = 'gemini-1.5-flash';
+    const model = 'gemini-1.5-flash-8b';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
     const genResp = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-client': 'uphera-chat/1.0' },
       body: JSON.stringify({
         contents: [
           {
@@ -70,8 +71,8 @@ export default async function handler(req: Request): Promise<Response> {
           }
         ],
         generationConfig: {
-          maxOutputTokens: 160,
-          temperature: 0.6,
+          maxOutputTokens: 640,
+          temperature: 0.5,
           topP: 0.9,
           topK: 32
         }

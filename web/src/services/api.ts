@@ -92,7 +92,7 @@ class UpHeraApiService {
           const controller = new AbortController();
           const bodyAny = (options as any).body;
           const isFormDataTimeout = bodyAny && typeof FormData !== 'undefined' && (bodyAny instanceof FormData);
-          const timeoutMs = typeof meta.timeoutMs === 'number' ? meta.timeoutMs : (isFormDataTimeout ? 20000 : 2000);
+          const timeoutMs = typeof meta.timeoutMs === 'number' ? meta.timeoutMs : (isFormDataTimeout ? 15000 : 1500);
           const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
           const isFormData = (options as any).body && typeof FormData !== 'undefined' && ((options as any).body instanceof FormData);
@@ -290,17 +290,53 @@ class UpHeraApiService {
   }
 
   async uploadCV(file: File, userId: string): Promise<ApiResponse> {
+    // Prod: Node function kullan, dev: backend
+    const isLocal = this.baseUrl.includes('localhost') || this.baseUrl.includes('127.0.0.1');
+    const endpoint = isLocal ? `/ai-coach/cv/upload?user_id=${encodeURIComponent(userId)}` : '/api/ai-coach/cv/upload';
+
+    // Node function için base64 içerik gönderiyoruz (form-data yerine)
+    if (!isLocal) {
+      const arrayBuffer = await file.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const resp = await this.makeRequest(endpoint, {
+        method: 'POST',
+        body: JSON.stringify({ userId, fileName: file.name, fileBase64: base64 }),
+        __meta: { timeoutMs: 60000, retryAttempts: 1, maxBaseUrls: 1 }
+      });
+      try {
+        if (resp && (resp as any).success && (resp as any).analysis) {
+          const payload = {
+            analysis: (resp as any).analysis?.analysis || '',
+            analyzed_at: new Date().toISOString(),
+            filename: (resp as any).filename || file.name,
+          };
+          localStorage.setItem('uphera_last_cv_analysis', JSON.stringify(payload));
+        }
+      } catch {}
+      return resp;
+    }
+
+    // Local backend için mevcut form-data yolu
     const formData = new FormData();
     formData.append('file', file);
-
     const headers = this.getAuthHeaders();
-    return this.makeRequest(`/ai-coach/cv/upload?user_id=${encodeURIComponent(userId)}`, {
+    const resp = await this.makeRequest(endpoint, {
       method: 'POST',
       body: formData,
-      headers: {
-        'Authorization': (headers as any)['Authorization'] || ''
-      }
+      headers: { 'Authorization': (headers as any)['Authorization'] || '' },
+      __meta: { timeoutMs: 45000, retryAttempts: 1, maxBaseUrls: 1 }
     });
+    try {
+      if (resp && (resp as any).success && (resp as any).analysis) {
+        const payload = {
+          analysis: (resp as any).analysis?.analysis || '',
+          analyzed_at: new Date().toISOString(),
+          filename: (resp as any).filename || file.name,
+        };
+        localStorage.setItem('uphera_last_cv_analysis', JSON.stringify(payload));
+      }
+    } catch {}
+    return resp;
   }
 
   async getChatHistory(limit: number = 10): Promise<ApiResponse> {
@@ -312,10 +348,37 @@ class UpHeraApiService {
   }
 
   async getCVInsights(userId: string): Promise<ApiResponse> {
-    return this.makeRequest('/ai-coach/cv/insights', {
-      method: 'POST',
-      body: JSON.stringify({ user_id: userId })
-    });
+    // Önce local stored analiz varsa onu döndür
+    try {
+      const saved = localStorage.getItem('uphera_last_cv_analysis');
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data && data.analysis) {
+          return {
+            success: true,
+            insights: data.analysis,
+            analyzed_at: data.analyzed_at,
+            has_cv: true,
+            filename: data.filename,
+          } as any;
+        }
+      }
+    } catch {}
+
+    // Local dev için backend'e dene; prod'da kullanıcıya yönlendirici mesaj dön
+    const isLocal = this.baseUrl.includes('localhost') || this.baseUrl.includes('127.0.0.1');
+    if (isLocal) {
+      return this.makeRequest('/ai-coach/cv/insights', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: userId })
+      });
+    }
+    return {
+      success: false,
+      insights: '',
+      has_cv: false,
+      message: 'Henüz analiz bulunamadı. Lütfen CV yükleyin.'
+    } as any;
   }
 
   // Job APIs

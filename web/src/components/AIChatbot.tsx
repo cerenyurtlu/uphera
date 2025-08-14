@@ -49,45 +49,44 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const assistantContentRef = useRef<string>("");
 
-  // Context-specific welcome messages
+  // Context-specific welcome messages (daha geniş kapsam: Ada AI = Kariyer Yoldaşı)
   const getWelcomeMessage = () => {
     let baseMessage: { content: string | JSX.Element; suggestions: string[] } = {
       content: '',
       suggestions: [
-        "Kariyerimde nasıl ilerleyebilirim?",
-        "Hangi teknolojileri öğrenmeliyim?",
-        "İş arama sürecim için tavsiye ver",
-        "CV'mi yükleyip analiz et"
+        "Kariyer planımı birlikte çıkaralım",
+        "Öğrenme yol haritası öner",
+        "CV'imi değerlendir ve iyileştir",
+        "Mülakat hazırlığı için pratik yapalım"
       ]
     };
     if (context === 'general') {
       baseMessage.content = (
         <span>
-          Merhaba! <FiSmile style={{ display: 'inline', verticalAlign: 'middle' }} /> Ben Ada AI - Up Hera topluluğunun yapay zeka mentoru!
+          Merhaba! <FiSmile style={{ display: 'inline', verticalAlign: 'middle' }} /> Ben Ada AI — <b>Teknolojide Öncü Kadınları Güçlendirme Asistanı</b>
           <br /><br />
-           Ada Lovelace'den ilham alarak, senin teknoloji yolculuğunda yanındayım. Up Hera'da başlayan hikayeni şimdi kariyer seviyesine taşıyalım! <FiZap style={{ display: 'inline', verticalAlign: 'middle' }} />
+          Up Hera deneyimini baştan sona kolaylaştırmak için buradayım: <b>profilini optimize etmekten</b>, <b>CV ve LinkedIn iyileştirmeye</b>, <b>iş arama ve başvuru stratejilerinden</b>, <b>mülakat pratiği</b> ve <b>öğrenme planına</b> kadar.
           <br /><br />
-          {useEnhanced ? <><FiBarChart2 style={{ display: 'inline', verticalAlign: 'middle' }} /> <b>Enhanced Mode Aktif!</b> - ChromaDB + LangChain ile güçlendirilmiş yanıtlar</> : <><FiZap style={{ display: 'inline', verticalAlign: 'middle' }} /> <b>Basic Mode</b> - Hızlı yanıtlar</>}
+          {useEnhanced ? <><FiBarChart2 style={{ display: 'inline', verticalAlign: 'middle' }} /> <b>Gelişmiş Mod</b>: İçgörü odaklı, kapsamlı yanıtlar</> : <><FiZap style={{ display: 'inline', verticalAlign: 'middle' }} /> <b>Hızlı Mod</b>: Kısa ve net yanıtlar</>}
           <br /><br />
           <b>Sana nasıl yardım edebilirim:</b>
           <ul style={{ marginLeft: 16 }}>
             <li><FiBriefcase style={{ display: 'inline', verticalAlign: 'middle' }} /> Kariyer planlama ve iş arama stratejileri</li>
-            <li><FiBarChart2 style={{ display: 'inline', verticalAlign: 'middle' }} /> Beceri geliştirme ve öğrenme yol haritaları</li>
-            <li><FiTarget style={{ display: 'inline', verticalAlign: 'middle' }} /> Mülakat hazırlığı ve özgüven artırma</li>
-            <li><FiGlobe style={{ display: 'inline', verticalAlign: 'middle' }} /> Network kurma ve topluluk içinde yer alma</li>
-            <li><FiUserCheck style={{ display: 'inline', verticalAlign: 'middle' }} /> Teknoloji sektöründe kadın olarak güçlenme</li>
-            <li><FiFileText style={{ display: 'inline', verticalAlign: 'middle' }} /> CV yükleme ve analiz (Enhanced Mode)</li>
+            <li><FiBarChart2 style={{ display: 'inline', verticalAlign: 'middle' }} /> Öğrenme yol haritası ve beceri gelişimi</li>
+            <li><FiFileText style={{ display: 'inline', verticalAlign: 'middle' }} /> CV/LinkedIn inceleme ve iyileştirme</li>
+            <li><FiTarget style={{ display: 'inline', verticalAlign: 'middle' }} /> Mülakat pratiği ve özgüven artırma</li>
+            <li><FiGlobe style={{ display: 'inline', verticalAlign: 'middle' }} /> Network ve topluluk içinde görünürlük</li>
           </ul>
           <br />
           <div style={{ background: '#f0f9ff', padding: '8px', borderRadius: '6px', marginTop: '8px' }}>
-            <FiZap style={{ display: 'inline', verticalAlign: 'middle', color: '#3b82f6' }} /> <b>Offline Mode:</b> Backend bağlantısı olmasa bile size yardım edebilirim!
+            <FiZap style={{ display: 'inline', verticalAlign: 'middle', color: '#3b82f6' }} /> <b>Hızlı Destek:</b> Bağlantı yavaşsa kısa, aksiyon odaklı öneriler sunarım.
           </div>
           <br />
-          Bugün hangi konuda sohbet edelim? <FiMessageCircle style={{ display: 'inline', verticalAlign: 'middle' }} />
+          Bugün hangi konuda ilerleyelim? <FiMessageCircle style={{ display: 'inline', verticalAlign: 'middle' }} />
         </span>
       );
     } else if (context === 'profile') {
-      baseMessage.content = `Merhaba! Ben Ada AI - senin Up Hera AI mentor'un!\n\nUp Hera'daki topluluk desteğiyle, şimdi asıl yolculuk başlıyor!\n\n${useEnhanced ? 'Enhanced Mode: CV yükle, kişiselleştirilmiş analiz al!' : ''}\n\nBirlikte yapabileceklerimiz:\n• Deneyimlerini güçlü bir hikayeye dönüştürmek\n• Eksik olan yetenekleri belirleyip öğrenme planı yapmak\n• Profilini doğru şekilde optimize etmek\n• Portfolio projelerini geliştirecek fikirler üretmek\n• Özgüvenini artıracak başarı stratejileri\n\nCV'ni yükleyerek kişiselleştirilmiş analiz alabilirsin!`;
+      baseMessage.content = `Merhaba! Ben Ada AI — kariyer yolculuğunun her adımında yanındayım.\n\n${useEnhanced ? 'Enhanced Mode: CV yükle, içeriğini inceleyip somut öneriler sunayım.' : 'Hızlı Mod: Kısa ve net öneriler sunarım.'}\n\nBirlikte yapabileceklerimiz:\n• Profilini ve özetini daha etkili hâle getirmek\n• Eksik becerileri tespit edip öğrenme planı hazırlamak\n• Portföy/proje önerileri geliştirmek\n• CV ve LinkedIn için metin iyileştirmek`;
       baseMessage.suggestions = [
         "CV'mi yükleyip analiz et",
         "GitHub profilimi nasıl güçlendirebilirim?",
@@ -95,18 +94,7 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
         "Profilimi hangi alanlarda güçlendirebilirim?"
       ];
     } else if (context === 'interview') {
-      baseMessage.content = `Selam! Ben Ada AI 💪 Mülakat hazırlığı zamanı geldi!
-
-Up Hera topluluğunun desteğiyle şimdi o güçlü kadın enerjinle mülakatı başarıyla geçeceksin! 
-
-${useEnhanced ? '🧠 **CV bazlı mülakat hazırlığı**: CV\'ni yükle, kişiselleştirilmiş sorular al!' : ''}
-
-**Mülakat hazırlık planın:**
-• 🎯 Teknik sorulara stratejik hazırlık
-• 💭 Behavioral sorular için STAR tekniği
-• 🏢 Şirket araştırması ve kültür uyumu
-• 💪 Özgüven artırma teknikleri
-• 💰 Maaş müzakeresi stratejileri`;
+      baseMessage.content = `Selam! Ben Ada AI 💪 Sadece mülakat koçu değilim; başvuru öncesinden teklif aşamasına kadar seninle beraberim.\n\n${useEnhanced ? '🧠 CV bazlı hazırlık: CV\'ni yükle, kişiselleştirilmiş soru ve cevap stratejileri üretelim.' : ''}\n\n**Birlikte odaklanabileceklerimiz:**\n• Teknik ve behavioral soru pratiği\n• STAR tekniği ile güçlü hikâyeler\n• Şirket/pozisyon araştırması\n• Teklif değerlendirme ve müzakere`;
       baseMessage.suggestions = [
         "Bu önerileri nasıl uygularım?",
         "Hangi projeleri eklemeliyim?",
@@ -114,17 +102,7 @@ ${useEnhanced ? '🧠 **CV bazlı mülakat hazırlığı**: CV\'ni yükle, kişi
         "LinkedIn profilimi güncelle"
       ];
     } else if (context === 'network') {
-      baseMessage.content = `Merhaba! Ben Ada AI - senin Up Hera Network mentor'un!
-
-Topluluk desteğiyle network'ünü büyütme zamanı!
-
-${useEnhanced ? 'Enhanced Mode: Network kurma ve kişiselleştirilmiş öneriler al!' : ''}
-
-Birlikte yapabileceklerimiz:
-• Network kurma ve topluluk içinde yer alma
-• LinkedIn profilini güçlendirme
-• Teknoloji sektöründe kadın olarak güçlenme
-• Özgüvenini artıracak başarı stratejileri`;
+      baseMessage.content = `Merhaba! Ben Ada AI — topluluk ve network tarafında da yanındayım.\n\n${useEnhanced ? 'Enhanced Mode: Profilini ve bağlantılarını analiz edip kişiselleştirilmiş öneriler sunarım.' : ''}\n\nBeraber şunlara odaklanabiliriz:\n• Doğru kişilerle bağlantı kurma\n• Etkileşim ve görünürlük artırma\n• Güçlü LinkedIn profili oluşturma`;
       baseMessage.suggestions = [
         "LinkedIn profilimi nasıl güçlendirebilirim?",
         "Hangi topluluklarla etkileşime girebilirim?",
@@ -158,6 +136,55 @@ Birlikte yapabileceklerimiz:
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Basit markdown -> JSX dönüştürücü (bold ve listeleri destekler)
+  const renderInline = (text: string): (string | JSX.Element)[] => {
+    const parts: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    const boldRegex = /\*\*(.+?)\*\*/g; // **bold**
+    let match: RegExpExecArray | null;
+    while ((match = boldRegex.exec(text)) !== null) {
+      const [full, inner] = match;
+      const start = match.index;
+      if (start > lastIndex) parts.push(text.slice(lastIndex, start));
+      parts.push(<strong key={`b-${start}`}>{inner}</strong>);
+      lastIndex = start + full.length;
+    }
+    if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+    return parts;
+  };
+
+  const renderMessageContent = (content: string): JSX.Element => {
+    if (!content) return <></>;
+    const blocks = content.split(/\n\n+/);
+    return (
+      <div className="space-y-2">
+        {blocks.map((block, idx) => {
+          const lines = block.split(/\n/);
+          const bulletLines = lines.filter(l => /^\s*[-•]\s+/.test(l));
+          if (bulletLines.length === lines.length && lines.length > 0) {
+            return (
+              <ul key={`ul-${idx}`} className="list-disc pl-5">
+                {lines.map((l, i) => (
+                  <li key={`li-${idx}-${i}`}>{renderInline(l.replace(/^\s*[-•]\s+/, ''))}</li>
+                ))}
+              </ul>
+            );
+          }
+          // Basit başlık desteği: satır tamamen kalınsa strong uygula
+          if (/^\s*#{1,3}\s+/.test(block)) {
+            const headingText = block.replace(/^\s*#{1,3}\s+/, '');
+            return (
+              <p key={`p-${idx}`} className="font-semibold">{renderInline(headingText)}</p>
+            );
+          }
+          return (
+            <p key={`p-${idx}`}>{renderInline(block)}</p>
+          );
+        })}
+      </div>
+    );
+  };
+
   const closeStreaming = () => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -188,13 +215,14 @@ Birlikte yapabileceklerimiz:
           type: 'assistant',
           content: `✅ **CV Başarıyla Yüklendi!**
 
-📄 **Dosya:** ${result.filename}
-📊 **İşlenen chunks:** ${result.chunks_processed}
+📄 **Dosya:** ${result.filename || file.name}
 
-**🔍 Hızlı Analiz:**
-${result.analysis?.analysis || 'CV analizi tamamlandı!'}
+**🔍 Analiz (Özet):**
+${result.analysis?.analysis || 'Analiz üretilemedi.'}
 
-Artık sana CV'ne özel tavsiyeler verebilirim! "CV analizi yap" diyerek detaylı insights alabilirsin.`,
+${result.cv_excerpt ? `**📄 İncelenen Metin Örneği:**\n${(result.cv_excerpt as string).slice(0, 500)}...\n` : ''}
+
+"CV analizi yap" yazarak detaylı raporu alabilirsin.`,
           timestamp: new Date(),
           suggestions: [
             "CV analizi yap",
@@ -718,7 +746,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
         } else {
         // Non-streaming mod: tüm base URL'lerde uzun zaman aşımı ile dene
         try {
-          const NON_STREAM_TIMEOUT_MS = 14000;
+          const NON_STREAM_TIMEOUT_MS = 9000;
           let nonStreamOk = false;
           const apiBases = isVercelHost ? [apiService.getBaseUrl()] : apiService.getBaseUrls();
           for (const base of apiBases) {
@@ -796,34 +824,39 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
     if (file) {
       setCvFile(file);
       handleCVUpload(file);
+      // Aynı dosyayı peş peşe seçebilmek için temizle
+      try { input.value = ''; } catch {}
+    } else {
+      toast.error('Dosya seçilemedi. Lütfen tekrar deneyin.');
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className={`bg-white rounded-xl shadow-2xl ${isMinimized ? 'w-80 h-16' : 'w-full max-w-2xl h-[600px]'} transition-all duration-300`}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className={`bg-white rounded-2xl shadow-xl ring-1 ring-black/5 border border-gray-100 overflow-hidden ${isMinimized ? 'w-80 h-16' : 'w-full max-w-2xl h-[640px]'} transition-all duration-300`}>
         
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b" style={{
+          background: 'linear-gradient(90deg, rgba(59,130,246,0.10) 0%, rgba(14,165,233,0.08) 100%)',
+          backdropFilter: 'blur(6px)'
+        }}>
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500">
               <Brain className="h-5 w-5 text-white" />
             </div>
             <div>
               <h3 className="font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-                Ada AI 🤖
+                Ada AI
               </h3>
               <p className="text-xs" style={{ color: 'var(--up-dark-gray)' }}>
-                {context === 'profile' && 'Profil Optimizasyon Uzmanı'}
-                {context === 'interview' && 'Mülakat Hazırlık Koçu'}
-                {context === 'network' && 'Network Geliştirme Rehberi'}
-                {context === 'general' && 'UpSchool AI Mentoru'}
+                Teknolojide öncü kadınları güçlendirmek için burada.
               </p>
             </div>
             <div className="flex items-center space-x-1">
@@ -834,7 +867,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                 </div>
               )}
               {useEnhanced && (
-                <div className="flex items-center space-x-1 text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">
+                <div className="flex items-center space-x-1 text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
                   <Zap className="h-3 w-3" />
                   <span>Enhanced</span>
                 </div>
@@ -886,24 +919,24 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
               <div className="space-y-4">
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] p-3 rounded-lg ${
-                      message.type === 'user' 
-                        ? 'bg-blue-500 text-white' 
-                        : message.enhanced 
-                          ? 'bg-purple-50 border border-purple-200 text-gray-800'
+                    <div className={`max-w-[80%] p-3 rounded-2xl ${
+                      message.type === 'user'
+                        ? 'text-white'
+                        : message.enhanced
+                          ? 'bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 text-gray-800'
                           : message.enhanced === false
                             ? 'bg-blue-50 border border-blue-200 text-gray-800'
                             : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      <div className="whitespace-pre-wrap text-sm">
-                        {message.content}
+                    }`} style={message.type === 'user' ? { background: 'var(--up-primary)' } : {}}>
+                      <div className="text-sm">
+                        {renderMessageContent(message.content)}
                         {message.isStreaming && (
                           <span className="inline-block w-2 h-4 bg-gray-400 ml-1 animate-pulse">|</span>
                         )}
                       </div>
                       
                       {message.enhanced && message.type === 'assistant' && (
-                        <div className="mt-2 text-xs text-purple-600 flex items-center space-x-1">
+                        <div className="mt-2 text-xs text-blue-600 flex items-center space-x-1">
                           <Zap className="h-3 w-3" />
                           <span>Enhanced AI yanıtı</span>
                         </div>
@@ -911,18 +944,20 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                       {/* Offline etiketi kaldırıldı */}
                       
                       {message.suggestions && message.suggestions.length > 0 && (
-                        <div className="mt-3 space-y-2">
-                          <div className="text-xs text-gray-600 font-medium flex items-center gap-1"><FiZap /> Öneriler:</div>
-                          {message.suggestions.map((suggestion, index) => (
-                            <button
-                              key={index}
-                              onClick={() => handleSuggestionClick(suggestion)}
-                              className="block w-full text-left text-xs p-2 bg-white rounded border hover:bg-gray-50 transition-colors"
-                              style={{ color: 'var(--up-primary)' }}
-                            >
-                              {suggestion}
-                            </button>
-                          ))}
+                        <div className="mt-3">
+                          <div className="text-xs text-gray-600 font-medium flex items-center gap-1 mb-1"><FiZap /> Öneriler:</div>
+                          <div className="flex flex-wrap gap-2">
+                            {message.suggestions.map((suggestion, index) => (
+                              <button
+                                key={index}
+                                onClick={() => handleSuggestionClick(suggestion)}
+                                className="inline-flex items-center text-xs px-3 py-1 rounded-full bg-white border hover:bg-gray-50 transition-colors"
+                                style={{ color: 'var(--up-primary)' }}
+                              >
+                                {suggestion}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -946,29 +981,40 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
 
             {/* Input */}
             <div className="border-t p-4">
-              {/* CV Upload Section */}
-              {useEnhanced && context === 'profile' && (
-                <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              {/* CV Upload Section (her bağlamda göster) */}
+              {useEnhanced && (
+                <div className="mb-3 p-3 rounded-lg border" style={{ background: 'rgba(59,130,246,0.06)', borderColor: 'rgba(59,130,246,0.3)' }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <FileText className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-700">CV Yükle & Analiz Et</span>
+                      <span className="text-sm font-medium" style={{ color: '#1d4ed8' }}>CV Yükle & Analiz Et</span>
                     </div>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploadingCV}
-                      className="flex items-center space-x-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                    <label
+                      htmlFor="ai-cv-file-input"
+                      className={`flex items-center space-x-2 px-3 py-1 rounded text-sm text-white ${isUploadingCV ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-blue-700'}`}
+                      style={{ background: '#2563eb' }}
+                      onClick={(e) => {
+                        if (isUploadingCV) {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          return;
+                        }
+                        // Bazı tarayıcılarda htmlFor tetiklenmezse programatik tetikle
+                        try { fileInputRef.current?.click(); } catch {}
+                      }}
                     >
                       <Upload className="h-3 w-3" />
                       <span>{isUploadingCV ? 'Yükleniyor...' : 'CV Seç'}</span>
-                    </button>
+                    </label>
                   </div>
-                  <input
+                  <p className="mt-2 text-xs" style={{ color: '#1d4ed8' }}>PDF/DOCX/TXT desteklenir. İçerik gerçek analiz için işlenecektir.</p>
+                   <input
+                    id="ai-cv-file-input"
                     ref={fileInputRef}
                     type="file"
-                    accept=".pdf,.txt,.doc,.docx"
+                    accept=".pdf,.doc,.docx,.txt"
                     onChange={handleFileSelect}
-                    className="hidden"
+                    style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
                   />
                 </div>
               )}
@@ -979,7 +1025,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ada AI ile sohbet et... (Enter ile gönder)"
-                  className="flex-1 p-3 border rounded-lg resize-none focus:outline-none focus:ring-2"
+                  className="flex-1 p-3 border rounded-xl resize-none focus:outline-none focus:ring-2"
                   style={{ borderColor: 'var(--up-primary)' }}
                   rows={2}
                   disabled={isTyping}
@@ -987,7 +1033,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                 <button
                   onClick={() => sendMessage()}
                   disabled={!inputValue.trim() || isTyping}
-                  className="p-3 rounded-lg text-white transition-colors disabled:opacity-50"
+                  className="p-3 rounded-xl text-white transition-colors disabled:opacity-50 shadow"
                   style={{ background: 'var(--up-primary)' }}
                 >
                   <Send className="h-4 w-4" />
