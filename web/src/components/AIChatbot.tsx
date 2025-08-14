@@ -726,7 +726,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
             const timeoutId = setTimeout(() => controller.abort(), NON_STREAM_TIMEOUT_MS);
             try {
                const localEdge = '/api/ai-coach/chat';
-               const targetUrl = base.includes('localhost') || base.includes('127.0.0.1') ? `${base}/ai-coach/chat` : localEdge;
+               const targetUrl = (base.includes('localhost') || base.includes('127.0.0.1')) ? `${base}/ai-coach/chat` : localEdge;
                const resp = await fetch(targetUrl, {
                 method: 'POST',
                 headers: apiService.getJsonHeaders(),
@@ -775,8 +775,9 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
       if (assistantContentRef.current && assistantContentRef.current.trim().length > 0) {
         setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, isStreaming: false } : msg));
       } else {
-        // Hiç içerik yoksa kısa ve net hata mesajı göster
-        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: '❌ Bağlantı hatası veya zaman aşımı. Lütfen biraz sonra tekrar deneyin.', isStreaming: false } : msg));
+        // Hiç içerik yoksa offline fallback yanıtı göster
+        const fallback = getOfflineResponse(text, context);
+        setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? { ...msg, content: fallback.content, isStreaming: false, suggestions: fallback.suggestions, enhanced: false } : msg));
       }
     } finally {
       setIsTyping(false);
