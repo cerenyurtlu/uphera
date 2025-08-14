@@ -718,7 +718,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
         } else {
         // Non-streaming mod: tüm base URL'lerde uzun zaman aşımı ile dene
         try {
-          const NON_STREAM_TIMEOUT_MS = 25000;
+          const NON_STREAM_TIMEOUT_MS = 14000;
           let nonStreamOk = false;
           const apiBases = isVercelHost ? [apiService.getBaseUrl()] : apiService.getBaseUrls();
           for (const base of apiBases) {

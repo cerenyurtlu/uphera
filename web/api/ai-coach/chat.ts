@@ -68,7 +68,13 @@ export default async function handler(req: Request): Promise<Response> {
             role: 'user',
             parts: [{ text: prompt }]
           }
-        ]
+        ],
+        generationConfig: {
+          maxOutputTokens: 160,
+          temperature: 0.6,
+          topP: 0.9,
+          topK: 32
+        }
       })
     });
 

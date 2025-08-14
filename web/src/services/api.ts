@@ -26,7 +26,7 @@ class UpHeraApiService {
     return urls;
   })();
   private currentUrlIndex = 0;
-  private retryAttempts = 2;
+  private retryAttempts = 1;
 
   private get baseUrl(): string {
     return this.baseUrls[this.currentUrlIndex];
@@ -92,7 +92,7 @@ class UpHeraApiService {
           const controller = new AbortController();
           const bodyAny = (options as any).body;
           const isFormDataTimeout = bodyAny && typeof FormData !== 'undefined' && (bodyAny instanceof FormData);
-          const timeoutMs = typeof meta.timeoutMs === 'number' ? meta.timeoutMs : (isFormDataTimeout ? 30000 : 3500);
+          const timeoutMs = typeof meta.timeoutMs === 'number' ? meta.timeoutMs : (isFormDataTimeout ? 20000 : 2000);
           const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
           const isFormData = (options as any).body && typeof FormData !== 'undefined' && ((options as any).body instanceof FormData);
