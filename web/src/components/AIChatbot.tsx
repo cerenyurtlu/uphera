@@ -195,10 +195,11 @@ const AIChatbot: React.FC<AIChatbotProps> = ({
   const handleCVUpload = async (file: File) => {
     setIsUploadingCV(true);
     try {
-      // 10MB istemci tarafı boyut kontrolü
-      const maxSize = 10 * 1024 * 1024;
+      // Prod (Vercel) için gövde limiti nedeniyle daha küçük limit uygula
+      const isProdVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+      const maxSize = isProdVercel ? Math.floor(2.5 * 1024 * 1024) : 10 * 1024 * 1024;
       if (file.size > maxSize) {
-        toast.error('Dosya boyutu 10MB sınırını aşıyor');
+        toast.error(isProdVercel ? 'Prod ortamda dosya boyutu 2.5MB sınırını aşıyor' : 'Dosya boyutu 10MB sınırını aşıyor');
         return;
       }
 
@@ -546,7 +547,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
         let lastError: any = null;
         let success = false;
 
-        const shouldStream = false;
+        const shouldStream = useStreaming;
         if (shouldStream) {
           // Streaming API call with extended timeout and SSE accept header
           const STREAM_TIMEOUT_MS = 55000;
@@ -560,7 +561,10 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                 context,
                 response_mode: 'auto'
               });
-              const esUrl = `${base}/ai-coach/chat/stream-get?${params.toString()}`;
+              const isLocalBase = base.includes('localhost') || base.includes('127.0.0.1');
+              const esUrl = isLocalBase
+                ? `${base}/ai-coach/chat/stream-get?${params.toString()}`
+                : `/api/ai-coach/chat/stream-get?${params.toString()}`;
               await new Promise<void>((resolve, reject) => {
                 try {
                   const es = new EventSource(esUrl);
@@ -611,7 +615,8 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
             }
           } else {
             for (const base of apiBases) {
-            const apiEndpoint = `${base}/ai-coach/chat/stream`;
+            const isLocalBase = base.includes('localhost') || base.includes('127.0.0.1');
+            const apiEndpoint = isLocalBase ? `${base}/ai-coach/chat/stream` : `/api/ai-coach/chat/stream`;
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
             try {
@@ -703,7 +708,9 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), NON_STREAM_TIMEOUT_MS);
                 try {
-                  const fallbackResp = await fetch(`${base}/ai-coach/chat`, {
+                  const isLocalBase = base.includes('localhost') || base.includes('127.0.0.1');
+                  const targetUrl = isLocalBase ? `${base}/ai-coach/chat` : `/api/ai-coach/chat`;
+                  const fallbackResp = await fetch(targetUrl, {
                     method: 'POST',
                     headers: apiService.getJsonHeaders(),
                     body: JSON.stringify({
@@ -746,7 +753,7 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
         } else {
         // Non-streaming mod: tüm base URL'lerde uzun zaman aşımı ile dene
         try {
-          const NON_STREAM_TIMEOUT_MS = 9000;
+          const NON_STREAM_TIMEOUT_MS = 45000;
           let nonStreamOk = false;
           const apiBases = isVercelHost ? [apiService.getBaseUrl()] : apiService.getBaseUrls();
           for (const base of apiBases) {

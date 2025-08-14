@@ -298,10 +298,12 @@ class UpHeraApiService {
     if (!isLocal) {
       const arrayBuffer = await file.arrayBuffer();
       const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const payload = { userId, fileName: file.name, fileBase64: base64 };
       const resp = await this.makeRequest(endpoint, {
         method: 'POST',
-        body: JSON.stringify({ userId, fileName: file.name, fileBase64: base64 }),
-        __meta: { timeoutMs: 60000, retryAttempts: 1, maxBaseUrls: 1 }
+        // Not: Vercel Edge function'larında gövde boyutu kısıtı olabilir; JSON + base64 daha güvenli
+        body: JSON.stringify(payload),
+        __meta: { timeoutMs: 90000, retryAttempts: 1, maxBaseUrls: 1 }
       });
       try {
         if (resp && (resp as any).success && (resp as any).analysis) {
