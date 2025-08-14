@@ -361,6 +361,39 @@ class UpHeraApiService {
     return this.makeRequest('/api/network/success-stories');
   }
 
+  // Network Members (graceful fallback to success stories or mock)
+  async getNetworkMembers(): Promise<ApiResponse> {
+    // Try real endpoint if exists
+    const primary = await this.makeRequest('/api/network/members', { __meta: { timeoutMs: 1500, retryAttempts: 1, maxBaseUrls: 1 } });
+    if (primary && primary.success && Array.isArray((primary as any).members)) {
+      return primary;
+    }
+
+    // Fallback: derive from success stories if available
+    const stories = await this.getSuccessStories().catch(() => ({ success: false } as any));
+    if (stories && stories.success && Array.isArray((stories as any).stories)) {
+      const members = (stories as any).stories.map((s: any, idx: number) => ({
+        id: s.id || `story-${idx + 1}`,
+        name: s.name || 'Topluluk Üyesi',
+        role: s.title || 'Üye',
+        company: (s.title || '').split(' at ')[1] || 'Topluluk',
+        location: s.location || 'Türkiye',
+        skills: [],
+        experience: '',
+        bootcamp: s.program || '',
+        graduationYear: (s.graduation_date || '').slice(0, 4) || '',
+        profileImage: null,
+        isOnline: false,
+        mentorAvailable: false,
+        commonSkills: 0,
+      }));
+      return { success: true, members } as any;
+    }
+
+    // Final fallback: signal failure so UI can use its mock
+    return { success: false, error: 'Network members not available' } as any;
+  }
+
   // Mentorship APIs
   async getAvailableMentors(opts?: { fast?: boolean }): Promise<ApiResponse> {
     const fast = opts?.fast ?? true;
