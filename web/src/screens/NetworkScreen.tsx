@@ -299,7 +299,7 @@ const NetworkScreen: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-bold" style={{ color: 'var(--up-primary-dark)' }}>
-              Teknoloji Kadınları Network'ü 👥
+              Teknolojide Öncü Kadınlar Network'ü 👥
             </h2>
             <p className="text-lg" style={{ color: 'var(--up-dark-gray)' }}>
               {networkMembers.length} UpSchool mezunu ile bağlantı kur, mentor bul, deneyim paylaş

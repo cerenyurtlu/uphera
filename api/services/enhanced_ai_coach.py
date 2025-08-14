@@ -132,7 +132,7 @@ class EnhancedAdaAI:
         """Create comprehensive prompt with maximum context"""
         
         base_prompt = f"""
-        Sen Ada AI'sın - UpSchool mezunu teknoloji kadınlarının AI mentoru.
+        Sen Ada AI'sın - UpSchool mezunu teknolojide öncü kadınların AI mentoru.
         
         KİŞİLİĞİN:
         • Destekleyici, empatik ama profesyonel
@@ -176,7 +176,7 @@ class EnhancedAdaAI:
         try:
             # Create comprehensive CV analysis prompt
             insights_prompt = f"""
-            UpSchool mezunu teknoloji kadınının CV analizi için kapsamlı bir rehber hazırla:
+            UpSchool mezunu teknolojide öncü kadınların CV analizi için kapsamlı bir rehber hazırla:
 
             Lütfen şu kategorilerde detaylı analiz yap:
 

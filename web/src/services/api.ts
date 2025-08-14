@@ -12,11 +12,19 @@ interface ApiResponse<T = any> {
 }
 
 class UpHeraApiService {
-  private baseUrls = [
-    (import.meta as any).env?.VITE_API_URL || 'https://up-hera-api.vercel.app',
-    'http://127.0.0.1:8000',
-    'http://localhost:8000'
-  ];
+  private baseUrls = (() => {
+    const urls: string[] = [];
+    try {
+      const origin = (typeof window !== 'undefined' && (window as any).location?.origin) ? (window as any).location.origin : '';
+      if (origin) {
+        urls.push(origin);
+      }
+    } catch {}
+    urls.push((import.meta as any).env?.VITE_API_URL || 'https://uphera.vercel.app');
+    urls.push('http://127.0.0.1:8000');
+    urls.push('http://localhost:8000');
+    return urls;
+  })();
   private currentUrlIndex = 0;
   private retryAttempts = 2;
 

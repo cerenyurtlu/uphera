@@ -1,6 +1,6 @@
 """
 Up Hera API - Production Ready
-UpSchool Mezunu Teknoloji Kadınları İçin Tam Çalışan İş Platformu
+UpSchool Mezunu Teknolojide Öncü Kadınlar İçin Tam Çalışan İş Platformu
 """
 
 import asyncio
@@ -27,6 +27,10 @@ from database import (
     validate_session, hash_password
 )
 
+"""Configure logging early so it's available during imports below"""
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Services
 try:
     from services.enhanced_ai_service import enhanced_ai_service
@@ -47,14 +51,10 @@ except ImportError:
     manager = None
     logger.warning("WebSocket service not available")
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # Initialize FastAPI app
 app = FastAPI(
     title="Up Hera API",
-    description="UpSchool Mezunu Teknoloji Kadınları İçin AI Destekli İş Platformu",
+    description="UpSchool Mezunu Teknolojide Öncü Kadınlar İçin AI Destekli İş Platformu",
     version="3.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
@@ -235,7 +235,7 @@ async def startup_event():
 async def root():
     """Root endpoint"""
     return {
-        "message": "Up Hera API v3.0 - UpSchool Mezunu Teknoloji Kadınları İçin AI Destekli İş Platformu",
+        "message": "Up Hera API v3.0 - UpSchool Mezunu Teknolojide Öncü Kadınlar İçin AI Destekli İş Platformu",
         "status": "running",
         "features": [
             "AI Destekli Kariyer Koçu",

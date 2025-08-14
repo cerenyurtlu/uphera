@@ -163,7 +163,7 @@ class EnhancedAIService:
     
     def get_system_prompt(self, context: str) -> str:
         """Get context-specific system prompt"""
-        base_prompt = """Sen Ada AI'sın, UpSchool mezunu teknoloji kadınlarının kariyer koçu ve mentorüsün. 
+        base_prompt = """Sen Ada AI'sın, UpSchool mezunu teknolojide öncü kadınların kariyer koçu ve mentorüsün. 
         Empati dolu, destekleyici ve motive edici bir yaklaşımla yanıtlar ver. 
         Türkçe konuş ve kadınları güçlendirici bir dil kullan."""
         

@@ -51,7 +51,7 @@ class EmailService:
                 <div class="container">
                     <div class="header">
                         <h1>Up Hera</h1>
-                        <p>UpSchool mezunu teknoloji kadınları için AI destekli platform</p>
+                        <p>UpSchool mezunu teknolojide öncü kadınlar için AI destekli platform</p>
                     </div>
                     <div class="content">
                         <h2>Hoş Geldin!</h2>
@@ -80,7 +80,7 @@ class EmailService:
                         </p>
                     </div>
                     <div class="footer">
-                         <p>Up Hera - Teknoloji kadınlarının gücüyle iş dünyasını değiştiriyoruz</p>
+                         <p>Up Hera - Teknolojide öncü kadınların gücüyle iş dünyasını değiştiriyoruz</p>
                         <p>#WomenInTech #UpSchool #DiversityInTech</p>
                     </div>
                 </div>

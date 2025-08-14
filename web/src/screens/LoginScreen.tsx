@@ -729,7 +729,7 @@ const LoginScreen: React.FC = () => {
               Sayılarla UP School
             </h3>
             <p className="text-lg" style={{ color: 'var(--up-dark-gray)' }}>
-              Teknoloji kadınlarının başarı hikayesi
+              Teknolojide öncü kadınların başarı hikayesi
             </p>
           </div>
           

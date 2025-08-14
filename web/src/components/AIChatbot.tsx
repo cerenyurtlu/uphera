@@ -718,14 +718,16 @@ Merhaba! Senin sorunla ilgili yardım etmek istiyorum. UpSchool mezunu olarak te
         } else {
         // Non-streaming mod: tüm base URL'lerde uzun zaman aşımı ile dene
         try {
-          const NON_STREAM_TIMEOUT_MS = 55000;
+          const NON_STREAM_TIMEOUT_MS = 25000;
           let nonStreamOk = false;
           const apiBases = isVercelHost ? [apiService.getBaseUrl()] : apiService.getBaseUrls();
           for (const base of apiBases) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), NON_STREAM_TIMEOUT_MS);
             try {
-              const resp = await fetch(`${base}/ai-coach/chat`, {
+               const localEdge = '/api/ai-coach/chat';
+               const targetUrl = base.includes('localhost') || base.includes('127.0.0.1') ? `${base}/ai-coach/chat` : localEdge;
+               const resp = await fetch(targetUrl, {
                 method: 'POST',
                 headers: apiService.getJsonHeaders(),
                 body: JSON.stringify({

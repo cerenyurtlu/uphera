@@ -1,10 +1,10 @@
 # UpHera - Women in Tech Community Platform
 
-A comprehensive career platform designed specifically for women in technology, featuring AI-powered job matching, mentorship programs, and professional networking.
+A comprehensive career platform designed specifically for women in technology, featuring sisterhood community, mentorship programs, and professional networking.
 
 ## ✨ Key Features
 
-- **AI-Powered Job Matching**: Intelligent algorithm matching candidates with suitable positions
+- **sisterhood community**: Intelligent algorithm matching candidates with suitable positions
 - **Real-time AI Assistant**: Ada AI chatbot powered by Google Gemini for instant career guidance
 - **CV Analysis & Optimization**: AI-driven CV review and improvement suggestions
 - **Interview Preparation**: Personalized coaching and mock interview sessions

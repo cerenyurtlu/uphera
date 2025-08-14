@@ -146,7 +146,7 @@ const DashboardScreen: React.FC = () => {
             <p className="text-base md:text-lg mb-4" style={{ color: 'var(--up-dark-gray)' }}>
               <span className="font-semibold" style={{ color: 'var(--up-primary)' }}>
                 {getBootcampDisplayName(bootcampName)}
-              </span> bootcamp'ini tamamladın, ama UpSchool'daki yolculuğumuz daha yeni başlıyor!
+              </span> bootcamp'ini tamamladın ama UpSchool'daki yolculuğumuz daha yeni başlıyor!
             </p>
 
             {/* Günün İlhamı */}
@@ -171,7 +171,7 @@ const DashboardScreen: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-lg text-slate-700">Sana Özel İş Fırsatları</h3>
-                <p className="text-sm text-slate-500">AI algoritması ile eşleşen işler aşağıda</p>
+                <p className="text-sm text-slate-500">AI algoritması ile eşleşen işler burada</p>
               </div>
             </div>
           </ModernCard>
@@ -183,7 +183,7 @@ const DashboardScreen: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-lg text-gray-700">Toplulukta Güçlen</h3>
-                <p className="text-sm text-gray-500">Diğer teknoloji kadınları ile network kur, deneyim paylaş</p>
+                <p className="text-sm text-gray-500">Diğer teknolojide öncü kadınlar ile network kur, deneyim paylaş</p>
               </div>
             </div>
           </ModernCard>
