@@ -10,9 +10,9 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 
 # Import test dependencies
-from ..main import app
-from ..services.websocket_service import manager, websocket_service
-from ..services.notification_service import notification_service, NotificationType, NotificationPriority
+from api.main import app
+from api.services.websocket_service import manager, websocket_service
+from api.services.notification_service import notification_service, NotificationType, NotificationPriority
 
 # Test client for HTTP requests
 client = TestClient(app)

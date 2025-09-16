@@ -16,11 +16,11 @@ from unittest.mock import patch, MagicMock
 from fastapi.testclient import TestClient
 
 # Import test dependencies
-from ..main import app
-from ..database import init_db
-from ..services.enhanced_ai_service import enhanced_ai_service
-from ..services.websocket_service import manager
-from ..services.notification_service import notification_service, NotificationType
+from api.main import app
+from api.database import init_db
+from api.services.enhanced_ai_service import enhanced_ai_service
+from api.services.websocket_service import manager
+from api.services.notification_service import notification_service, NotificationType
 
 # Test client
 client = TestClient(app)
@@ -378,7 +378,7 @@ class TestWebSocketIntegrationFlow:
         manager.join_room(user_id, "general_chat")
         
         # Simulate sending chat message
-        from ..services.websocket_service import websocket_service
+        from api.services.websocket_service import websocket_service
         
         chat_message = {
             "type": "chat_message",

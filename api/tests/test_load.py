@@ -15,10 +15,10 @@ import psutil
 import os
 
 # Import test dependencies
-from ..main import app
-from ..services.enhanced_ai_service import enhanced_ai_service
-from ..services.websocket_service import manager
-from ..services.notification_service import notification_service
+from api.main import app
+from api.services.enhanced_ai_service import enhanced_ai_service
+from api.services.websocket_service import manager
+from api.services.notification_service import notification_service
 
 # Test client
 client = TestClient(app)

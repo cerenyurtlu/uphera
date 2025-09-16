@@ -43,7 +43,7 @@ def setup_test_db():
         "userType": "mezun"
     }
     
-    from ..database_optimized import create_user_optimized
+    from api.database_optimized import create_user_optimized
     create_user_optimized(test_user_data)
 
 class TestHealthChecks:

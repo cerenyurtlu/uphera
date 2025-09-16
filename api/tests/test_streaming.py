@@ -9,8 +9,8 @@ from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi.testclient import TestClient
 
 # Import test dependencies  
-from ..main import app
-from ..services.enhanced_ai_service import enhanced_ai_service
+from api.main import app
+from api.services.enhanced_ai_service import enhanced_ai_service
 
 # Test client
 client = TestClient(app)
