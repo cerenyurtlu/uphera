@@ -111,8 +111,9 @@ npm run dev
 
 ### Smoke Test
 1. Visit `http://localhost:5173` and log in with a demo token or newly created account.
-2. Open the Ada AI assistant, send a prompt, and confirm a Gemini-generated response.
+2. Open the Ada AI assistant, send a prompt, and confirm a Gemini-generated response streaming without errors.
 3. Navigate to the Jobs area and verify job cards render with live data from the FastAPI backend.
+4. Optionally, open two browser tabs and ensure notifications propagate in real time via WebSocket.
 
 ## Environment Configuration
 Prepare runtime secrets before launching either service layer. The API loads variables via `pydantic-settings`, while the web client relies on standard Vite `.env` files.
