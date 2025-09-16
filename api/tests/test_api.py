@@ -8,13 +8,9 @@ from unittest.mock import patch, MagicMock
 import json
 
 # Import the app
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from main import app
-from config import settings
-from database import init_db, create_user, authenticate_user, hash_password
+from api.main import app
+from api.config import settings
+from api.database import init_db, create_user
 
 # Test client
 client = TestClient(app)
@@ -29,22 +25,24 @@ def event_loop():
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_db():
     """Setup test database"""
-    # Use in-memory database for tests
-    settings.DATABASE_URL = "sqlite:///:memory:"
-    init_optimized_db()
-    
+    # Ensure database tables exist for this session
+    init_db()
+
     # Create test user
     test_user_data = {
         "email": "test@uphera.com",
-        "password_hash": hash_password("TestPass123!"),
+        "password": "TestPass123!",
         "firstName": "Test",
         "lastName": "User",
         "upschoolProgram": "Full Stack Development",
         "userType": "mezun"
     }
-    
-    from api.database_optimized import create_user_optimized
-    create_user_optimized(test_user_data)
+
+    try:
+        create_user(test_user_data)
+    except Exception:
+        # Ignore if user already exists (re-run tolerance)
+        pass
 
 class TestHealthChecks:
     """Test health check endpoints"""

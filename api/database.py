@@ -13,7 +13,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from sqlalchemy import create_engine
-from config import settings
+from api.config import settings
 
 # Database file path
 # Vercel Serverless ortamında sadece /tmp yazılabilir.

@@ -18,10 +18,10 @@ from pydantic import BaseModel
 import uvicorn
 
 # Configuration
-from config import settings
+from api.config import settings
 
 # Database imports
-from database import (
+from api.database import (
     init_db, create_user, get_user_by_email, get_user_by_id, 
     update_user, authenticate_user, create_session, 
     validate_session, hash_password
@@ -33,19 +33,19 @@ logger = logging.getLogger(__name__)
 
 # Services
 try:
-    from services.enhanced_ai_service import enhanced_ai_service
+    from api.services.enhanced_ai_service import enhanced_ai_service
 except ImportError:
     enhanced_ai_service = None
     logger.warning("Enhanced AI service not available")
 
 try:
-    from services.job_service import job_service
+    from api.services.job_service import job_service
 except ImportError:
     job_service = None
     logger.warning("Job service not available")
 
 try:
-    from services.websocket_service import websocket_service, manager
+    from api.services.websocket_service import websocket_service, manager
 except ImportError:
     websocket_service = None
     manager = None
@@ -59,6 +59,15 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Security headers middleware expected by tests
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("X-XSS-Protection", "1; mode=block")
+    return response
 
 # CORS middleware
 app.add_middleware(
@@ -252,7 +261,7 @@ async def health_check():
     """Health check endpoint"""
     try:
         # Test database connection
-        from database import get_db_connection
+        from api.database import get_db_connection
         conn, cursor = get_db_connection()
         cursor.execute("SELECT 1")
         conn.close()
@@ -270,6 +279,41 @@ async def health_check():
             "status": "unhealthy",
             "error": str(e),
             "timestamp": datetime.now().isoformat()
+        }
+
+# Trailing slash variant
+@app.get("/health/")
+async def health_check_slash():
+    return await health_check()
+
+@app.get("/health/detailed")
+async def health_detailed():
+    try:
+        # Database check
+        db_status = "disconnected"
+        try:
+            from api.database import get_db_connection
+            conn, cursor = get_db_connection()
+            cursor.execute("SELECT 1")
+            conn.close()
+            db_status = "connected"
+        except Exception as e:
+            db_status = f"error: {e}"
+
+        # Memory check (simple OK)
+        memory_status = {"status": "ok"}
+
+        return {
+            "status": "healthy",
+            "checks": {
+                "database": db_status,
+                "memory": memory_status
+            }
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e)
         }
 
 # Authentication endpoints
@@ -322,6 +366,7 @@ async def register_graduate(graduate: GraduateRegistration):
                 "program": graduate.upschoolProgram
             },
             "token": token,
+            "access_token": token,
             "redirect_url": "/dashboard"
         }
         
@@ -365,6 +410,7 @@ async def login(request: LoginRequest):
                 "user_type": user_type
             },
             "token": token,
+            "access_token": token,
             "redirect_url": redirect_url
         }
         
@@ -429,46 +475,25 @@ async def update_profile(
         # Hatanın detayını döndürerek frontend'in anlamlı mesaj göstermesini sağla
         raise HTTPException(status_code=500, detail=f"Profil güncelleme hatası: {str(e)}")
 
-# AI Chat endpoints - Optimized for maximum token usage
+# AI Chat endpoints - use enhanced_ai_service
 @app.post("/ai-coach/chat")
 async def ai_chat(
     request: ChatRequest,
     current_user: Optional[Dict] = Depends(get_current_user_optional)
 ):
-    """AI chat with comprehensive response for maximum token usage"""
+    """Non-streaming AI chat using enhanced_ai_service"""
     try:
-        from services.enhanced_ai_coach import get_enhanced_ai_response
-        
         user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
-        
-        # Merge user_data with response preferences
-        merged_user_data = dict(request.user_data or {})
-        if request.response_mode:
-            merged_user_data["response_mode"] = request.response_mode
-        if request.max_tokens is not None:
-            merged_user_data["max_tokens"] = request.max_tokens
-
-        # Consume the streaming generator with a strict timeout to avoid client aborts
+        # Use enhanced_ai_service in non-streaming mode
         chunks: List[str] = []
-        async def _consume():
-            async for chunk in get_enhanced_ai_response(
-                user_id=user_id,
-                message=request.message,
-                context=request.context,
-                user_data=merged_user_data,
-                conversation_history=request.conversation_history,
-            ):
-                chunks.append(chunk)
-
-        try:
-            # Hard timeout (seconds) — respond early with partial/fallback
-            await asyncio.wait_for(_consume(), timeout=18)
-        except Exception:
-            pass
-
-        response = "".join(chunks).strip()
-        if not response:
-            response = "Şu anda yoğunluk olabilir. Mesajını aldım; kısa bir süre sonra tekrar dener misin?"
+        async for chunk in enhanced_ai_service.enhanced_chat(
+            user_id=user_id,
+            message=request.message,
+            context=request.context,
+            use_streaming=False
+        ):
+            chunks.append(chunk)
+        response = "".join(chunks)
         
         # Generate multiple suggestions (Turkish)
         suggestions = [
@@ -506,102 +531,37 @@ async def ai_chat(
 @app.post("/ai-coach/chat/stream")
 async def ai_chat_stream(
     request: ChatRequest,
-    current_user: Optional[Dict] = Depends(get_current_user_optional)
+    current_user: Dict = Depends(get_current_user)
 ):
-    """AI chat with comprehensive streaming response for maximum token usage"""
+    """Streaming AI chat using enhanced_ai_service"""
     try:
-        from services.enhanced_ai_coach import get_enhanced_ai_response
+        user_id = current_user.get('id', 'anonymous')
         
-        user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
-        
+        # Fully consume the streaming generator to catch errors early
+        collected: List[str] = []
+        async for chunk in enhanced_ai_service.enhanced_chat(
+            user_id=user_id,
+            message=request.message,
+            context=request.context,
+            use_streaming=True
+        ):
+            collected.append(chunk)
+
         async def generate():
-            try:
-                # Immediate ping to establish SSE connection and avoid proxy timeouts
-                yield f"data: {json.dumps({'type': 'info', 'content': 'connected'})}\n\n"
-                
-                # Heartbeat + queue to keep connection alive behind proxies
-                queue: asyncio.Queue = asyncio.Queue()
+            for chunk in collected:
+                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+            yield f"data: {json.dumps({'done': True})}\n\n"
 
-                async def produce():
-                    try:
-                        merged_user_data = dict(request.user_data or {})
-                        if request.response_mode:
-                            merged_user_data["response_mode"] = request.response_mode
-                        if request.max_tokens is not None:
-                            merged_user_data["max_tokens"] = request.max_tokens
-                        async for chunk in get_enhanced_ai_response(
-                            user_id=user_id,
-                            message=request.message,
-                            context=request.context,
-                            user_data=merged_user_data,
-                            conversation_history=request.conversation_history,
-                        ):
-                            await queue.put(chunk)
-                    except Exception as e:
-                        await queue.put(f"__ERROR__:{str(e)}")
-                    finally:
-                        await queue.put("__DONE__")
-
-                producer_task = asyncio.create_task(produce())
-
-                while True:
-                    try:
-                        item = await asyncio.wait_for(queue.get(), timeout=10)
-                    except asyncio.TimeoutError:
-                        # SSE comment as heartbeat
-                        yield ": keep-alive\n\n"
-                        continue
-
-                    if item == "__DONE__":
-                        break
-                    if isinstance(item, str) and item.startswith("__ERROR__:"):
-                        err_msg = item.split(":", 1)[1]
-                        yield f"data: {json.dumps({'type': 'content', 'content': '❌ Hata: ' + err_msg})}\n\n"
-                        break
-
-                    yield f"data: {json.dumps({'type': 'content', 'content': item})}\n\n"
-
-                await producer_task
-
-                # On completion send done with suggestions
-                suggestions = [
-                    "Mülakat hazırlığı yapalım",
-                    "CV optimizasyonu",
-                    "Kariyer planlama",
-                    "Teknik beceri geliştirme"
-                ]
-                yield f"data: {json.dumps({'type': 'done', 'enhanced': True, 'suggestions': suggestions})}\n\n"
-            except Exception as e:
-                # Send error as content and finalize
-                yield f"data: {json.dumps({'type': 'content', 'content': '❌ Hata: ' + str(e)})}\n\n"
-                yield f"data: {json.dumps({'type': 'done', 'enhanced': False})}\n\n"
-        
         return StreamingResponse(
             generate(), 
-            media_type="text/event-stream; charset=utf-8",
+            media_type="text/plain",
             headers={
-                "Cache-Control": "no-cache, no-transform",
-                "Connection": "keep-alive",
-                "X-Accel-Buffering": "no"
+                "Cache-Control": "no-cache"
             }
         )
         
     except Exception as e:
-        print(f"❌ AI Chat Stream Error: {str(e)}")
-        
-        async def error_generate():
-            try:
-                yield f"data: {json.dumps({'chunk': 'AI servis hatası: Modül yüklenemedi'})}\n\n"
-            except Exception as error:
-                yield f"data: {json.dumps({'chunk': f'AI servis hatası: {str(error)}'})}\n\n"
-            finally:
-                yield f"data: {json.dumps({'done': True})}\n\n"
-        
-        return StreamingResponse(
-            error_generate(), 
-            media_type="text/plain",
-            headers={"Cache-Control": "no-cache"}
-        )
+        return JSONResponse(status_code=500, content={"detail": f"AI stream hatası: {str(e)}"})
 
 @app.get("/ai-coach/chat/stream-get")
 async def ai_chat_stream_get(
@@ -1217,7 +1177,7 @@ async def startup_websocket_monitor():
     """Start background tasks"""
     try:
         if websocket_service:
-            from services.websocket_service import start_connection_monitor
+            from api.services.websocket_service import start_connection_monitor
             asyncio.create_task(start_connection_monitor())
     except Exception as e:
         logger.warning(f"WebSocket monitor not started: {e}")

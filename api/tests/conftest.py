@@ -8,13 +8,9 @@ import os
 import tempfile
 from unittest.mock import patch
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from database import init_db
-from services.notification_service import notification_service
-from services.websocket_service import manager
+from api.database import init_db
+from api.services.notification_service import notification_service
+from api.services.websocket_service import manager
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -31,7 +27,7 @@ def setup_test_database():
         test_db_path = tmp.name
     
     # Patch database path
-    with patch('database.DB_PATH', test_db_path):
+    with patch('api.database.DB_PATH', test_db_path):
         init_db()
         yield
     
@@ -59,7 +55,7 @@ def setup_test_services():
 @pytest.fixture
 def mock_ai_service():
     """Mock AI service for testing"""
-    with patch('services.enhanced_ai_service.enhanced_ai_service') as mock:
+    with patch('api.services.enhanced_ai_service.enhanced_ai_service') as mock:
         async def mock_chat_response(*args, **kwargs):
             yield "Mocked AI response"
         

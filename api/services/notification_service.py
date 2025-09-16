@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from enum import Enum
 
-from services.websocket_service import websocket_service
+from api.services.websocket_service import websocket_service
 
 logger = logging.getLogger(__name__)
 

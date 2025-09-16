@@ -10,10 +10,7 @@ from pathlib import Path
 import sqlite3
 from datetime import datetime
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import settings
+from api.config import settings
 
 logger = logging.getLogger(__name__)
 
