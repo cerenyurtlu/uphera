@@ -11,7 +11,7 @@ import os
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any
 
-from fastapi import FastAPI, HTTPException, Depends, Header, File, UploadFile, Query, Request, BackgroundTasks, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Depends, Header, File, UploadFile, Query, Request, BackgroundTasks, WebSocket, WebSocketDisconnect, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse, Response
 from pydantic import BaseModel
@@ -478,18 +478,24 @@ async def update_profile(
 # AI Chat endpoints - use enhanced_ai_service
 @app.post("/ai-coach/chat")
 async def ai_chat(
-    request: ChatRequest,
-    current_user: Optional[Dict] = Depends(get_current_user_optional)
+    data: Optional[Dict[str, Any]] = Body(None),
+    current_user: Dict = Depends(get_current_user)
 ):
-    """Non-streaming AI chat using enhanced_ai_service"""
+    """Non-streaming AI chat using enhanced_ai_service (auth before validation)"""
     try:
-        user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
+        user_id = current_user.get('id', 'anonymous')
+
+        if not data or not isinstance(data, dict) or not data.get("message"):
+            raise HTTPException(status_code=422, detail="'message' field is required")
+
+        message = str(data.get("message", ""))
+        context = str(data.get("context", "general"))
         # Use enhanced_ai_service in non-streaming mode
         chunks: List[str] = []
         async for chunk in enhanced_ai_service.enhanced_chat(
             user_id=user_id,
-            message=request.message,
-            context=request.context,
+            message=message,
+            context=context,
             use_streaming=False
         ):
             chunks.append(chunk)
@@ -530,19 +536,25 @@ async def ai_chat(
 
 @app.post("/ai-coach/chat/stream")
 async def ai_chat_stream(
-    request: ChatRequest,
+    data: Optional[Dict[str, Any]] = Body(None),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Streaming AI chat using enhanced_ai_service"""
+    """Streaming AI chat using enhanced_ai_service (auth before validation)"""
     try:
         user_id = current_user.get('id', 'anonymous')
+
+        if not data or not isinstance(data, dict) or not data.get("message"):
+            raise HTTPException(status_code=422, detail="'message' field is required")
+
+        message = str(data.get("message", ""))
+        context = str(data.get("context", "general"))
         
         # Fully consume the streaming generator to catch errors early
         collected: List[str] = []
         async for chunk in enhanced_ai_service.enhanced_chat(
             user_id=user_id,
-            message=request.message,
-            context=request.context,
+            message=message,
+            context=context,
             use_streaming=True
         ):
             collected.append(chunk)
@@ -996,6 +1008,11 @@ async def apply_to_job(
 ):
     """Apply to a job"""
     try:
+        # Validate job exists
+        job = job_service.get_job_by_id(job_id)
+        if not job:
+            raise HTTPException(status_code=404, detail="Invalid or non-existent job ID")
+
         result = job_service.apply_to_job(
             user_id=current_user["id"],
             job_id=job_id,

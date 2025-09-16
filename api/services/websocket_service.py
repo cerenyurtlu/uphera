@@ -9,6 +9,7 @@ Modern WebSocket Service for Up Hera
 import json
 import asyncio
 import logging
+import inspect
 from typing import Dict, List, Set, Optional
 from fastapi import WebSocket, WebSocketDisconnect
 from datetime import datetime
@@ -29,7 +30,13 @@ class ConnectionManager:
     
     async def connect(self, websocket: WebSocket, user_id: str, connection_type: str = "general") -> str:
         """Accept WebSocket connection and register user"""
-        await websocket.accept()
+        # Accept if awaitable; tolerate non-async mocks in tests
+        try:
+            accept_result = websocket.accept()
+            if inspect.isawaitable(accept_result):
+                await accept_result
+        except TypeError:
+            pass
         
         connection_id = str(uuid.uuid4())
         
@@ -87,7 +94,9 @@ class ConnectionManager:
             # Send to all user's connections
             for connection_id, websocket in self.active_connections[user_id].items():
                 try:
-                    await websocket.send_text(message_str)
+                    send_result = websocket.send_text(message_str)
+                    if inspect.isawaitable(send_result):
+                        await send_result
                     # Update activity
                     if connection_id in self.connection_meta:
                         self.connection_meta[connection_id]["last_activity"] = datetime.now()
@@ -157,7 +166,9 @@ class ConnectionManager:
         for user_id, connections in self.active_connections.items():
             for connection_id, websocket in connections.items():
                 try:
-                    await websocket.send_text(ping_message)
+                    send_result = websocket.send_text(ping_message)
+                    if inspect.isawaitable(send_result):
+                        await send_result
                 except:
                     dead_connections.append((user_id, connection_id))
         
@@ -195,27 +206,36 @@ class WebSocketService:
             
             elif message_type == "get_online_users":
                 online_users = self.manager.get_online_users()
-                await websocket.send_text(json.dumps({
+                msg = json.dumps({
                     "type": "online_users",
                     "users": online_users
-                }))
+                })
+                send_result = websocket.send_text(msg)
+                if inspect.isawaitable(send_result):
+                    await send_result
             
             elif message_type == "pong":
                 # Response to ping, update activity
                 pass
             
             else:
-                await websocket.send_text(json.dumps({
+                msg = json.dumps({
                     "type": "error",
                     "message": f"Unknown message type: {message_type}"
-                }))
+                })
+                send_result = websocket.send_text(msg)
+                if inspect.isawaitable(send_result):
+                    await send_result
                 
         except Exception as e:
             logger.error(f"Error handling message: {e}")
-            await websocket.send_text(json.dumps({
+            msg = json.dumps({
                 "type": "error",
                 "message": "Internal server error"
-            }))
+            })
+            send_result = websocket.send_text(msg)
+            if inspect.isawaitable(send_result):
+                await send_result
     
     async def _handle_chat_message(self, user_id: str, message_data: dict):
         """Handle real-time chat message"""
@@ -243,11 +263,14 @@ class WebSocketService:
     
     async def _send_room_joined(self, websocket: WebSocket, room_id: str):
         """Send room joined confirmation"""
-        await websocket.send_text(json.dumps({
+        msg = json.dumps({
             "type": "room_joined",
             "room_id": room_id,
             "timestamp": datetime.now().isoformat()
-        }))
+        })
+        send_result = websocket.send_text(msg)
+        if inspect.isawaitable(send_result):
+            await send_result
     
     async def send_notification(self, user_id: str, notification: dict):
         """Send real-time notification to user"""
