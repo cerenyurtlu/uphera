@@ -501,18 +501,15 @@ async def update_profile(
 # AI Chat endpoints - use enhanced_ai_service
 @app.post("/ai-coach/chat")
 async def ai_chat(
-    data: Optional[Dict[str, Any]] = Body(None),
+    data: ChatRequest,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Non-streaming AI chat using enhanced_ai_service (auth before validation)"""
+    """Non-streaming AI chat using enhanced_ai_service with model-based validation"""
     try:
         user_id = current_user.get('id', 'anonymous')
 
-        if not data or not isinstance(data, dict) or not data.get("message"):
-            raise HTTPException(status_code=422, detail="'message' field is required")
-
-        message = str(data.get("message", ""))
-        context = str(data.get("context", "general"))
+        message = data.message
+        context = data.context
         # Use enhanced_ai_service in non-streaming mode
         chunks: List[str] = []
         async for chunk in enhanced_ai_service.enhanced_chat(
@@ -545,6 +542,9 @@ async def ai_chat(
             "token_usage": "optimized_for_maximum_engagement"
         }
         
+    except HTTPException:
+        # Do not mask HTTP exceptions (e.g., 422 validation)
+        raise
     except Exception as e:
         print(f"❌ AI Chat Error: {str(e)}")
         return {
@@ -559,18 +559,16 @@ async def ai_chat(
 
 @app.post("/ai-coach/chat/stream")
 async def ai_chat_stream(
-    data: Optional[Dict[str, Any]] = Body(None),
+    data: ChatRequest,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Streaming AI chat using enhanced_ai_service (auth before validation)"""
+    """Streaming AI chat using enhanced_ai_service with model-based validation."""
     try:
         user_id = current_user.get('id', 'anonymous')
 
-        if not data or not isinstance(data, dict) or not data.get("message"):
-            raise HTTPException(status_code=422, detail="'message' field is required")
-
-        message = str(data.get("message", ""))
-        context = str(data.get("context", "general"))
+        # Pydantic validated input
+        message = data.message
+        context = data.context
         
         # Fully consume the streaming generator to catch errors early
         collected: List[str] = []
