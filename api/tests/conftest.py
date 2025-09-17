@@ -36,10 +36,11 @@ def setup_test_database():
         os.unlink(test_db_path)
 
 @pytest.fixture(scope="function", autouse=True)
-def setup_test_services():
+def setup_test_services(setup_test_database):
     """Setup services for each test"""
-    # Use in-memory database for notifications
-    notification_service.db_path = ":memory:"
+    # notification_service.db_path ana test veritabanı dosyasına eşitleniyor
+    from api.database import DB_PATH
+    notification_service.db_path = DB_PATH
     notification_service.init_notifications_db()
     
     yield

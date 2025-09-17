@@ -469,8 +469,9 @@ class TestWebSocketPerformance:
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():
     """Setup test environment"""
-    # Use in-memory database for tests
-    notification_service.db_path = ":memory:"
+    # Ana test veritabanı dosyasını kullan
+    from api.database import DB_PATH
+    notification_service.db_path = DB_PATH
     notification_service.init_notifications_db()
     
     yield

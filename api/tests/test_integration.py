@@ -643,10 +643,11 @@ class TestErrorHandlingIntegration:
 def setup_integration_tests():
     """Setup for integration tests"""
     # Initialize database
+    from api.database import init_db, DB_PATH
     init_db()
     
-    # Setup notification service with test DB
-    notification_service.db_path = ":memory:"
+    # Setup notification service with test DB (ana test veritabanı dosyası)
+    notification_service.db_path = DB_PATH
     notification_service.init_notifications_db()
     
     yield
