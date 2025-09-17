@@ -184,9 +184,31 @@ export const wsManager = new WebSocketManager();
 export class UpHeraWebSocketService {
   private baseUrl: string;
   private token: string | null = null;
+  private enabled: boolean = false;
 
   constructor() {
-    this.baseUrl = (import.meta as any).env?.VITE_WS_URL || 'ws://localhost:8000';
+    // Prefer explicit env in all environments
+    const envUrl = ((import.meta as any).env?.VITE_WS_URL || '').toString().trim();
+    const isBrowser = typeof window !== 'undefined';
+    const isHttps = isBrowser && typeof window.location !== 'undefined' && window.location.protocol === 'https:';
+
+    // Default local dev URL only when NOT on https (avoids prod on vercel.app trying localhost)
+    const localFallback = 'ws://localhost:8000';
+
+    if (envUrl) {
+      this.baseUrl = envUrl;
+    } else if (!isHttps) {
+      // Dev (http): allow local fallback
+      this.baseUrl = localFallback;
+    } else {
+      // Prod (https) with no explicit WS URL → disable WS to avoid connection resets
+      this.baseUrl = '';
+    }
+
+    this.enabled = !!this.baseUrl && (this.baseUrl.startsWith('ws://') || this.baseUrl.startsWith('wss://'));
+    if (!this.enabled) {
+      console.info('[WS] Disabled: no VITE_WS_URL set for production.');
+    }
   }
 
   setAuthToken(token: string): void {
@@ -194,6 +216,10 @@ export class UpHeraWebSocketService {
   }
 
   connectGeneral(userId: string, onMessage?: (message: WebSocketMessage) => void): void {
+    if (!this.enabled) {
+      console.info('[WS] Skipping general connection (disabled).');
+      return;
+    }
     const url = `${this.baseUrl}/ws/general/${userId}`;
     
     wsManager.connect('general', {
@@ -207,6 +233,10 @@ export class UpHeraWebSocketService {
   }
 
   connectChat(userId: string, onMessage?: (message: WebSocketMessage) => void): void {
+    if (!this.enabled) {
+      console.info('[WS] Skipping chat connection (disabled).');
+      return;
+    }
     const url = `${this.baseUrl}/ws/chat/${userId}`;
     
     wsManager.connect('chat', {
@@ -224,6 +254,10 @@ export class UpHeraWebSocketService {
   }
 
   connectNotifications(userId: string, onMessage?: (message: WebSocketMessage) => void): void {
+    if (!this.enabled) {
+      console.info('[WS] Skipping notifications connection (disabled).');
+      return;
+    }
     const url = `${this.baseUrl}/ws/notifications/${userId}`;
     
     wsManager.connect('notifications', {
