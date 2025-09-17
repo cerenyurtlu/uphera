@@ -15,40 +15,56 @@ from fastapi import FastAPI, HTTPException, Depends, Header, File, UploadFile, Q
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse, Response
 from pydantic import BaseModel
+try:
+    # Pydantic v2
+    from pydantic import ConfigDict  # type: ignore
+except Exception:
+    ConfigDict = None  # type: ignore
 import uvicorn
 
 # Configuration
-from api.config import settings
-
-# Database imports
-from api.database import (
-    init_db, create_user, get_user_by_email, get_user_by_id, 
-    update_user, authenticate_user, create_session, 
-    validate_session, hash_password
-)
+try:
+    # Running as package (e.g., pytest, uvicorn with repo root)
+    from api.config import settings
+    from api.database import (
+        init_db, create_user, get_user_by_email, get_user_by_id,
+        update_user, authenticate_user, create_session,
+        validate_session, hash_password, get_db_connection,
+    )
+    from api.services.enhanced_ai_service import enhanced_ai_service
+    from api.services.job_service import job_service
+    from api.services.websocket_service import websocket_service, manager
+except ImportError:
+    # Running as script from api/ (e.g., CI integration step)
+    from config import settings
+    from database import (
+        init_db, create_user, get_user_by_email, get_user_by_id,
+        update_user, authenticate_user, create_session,
+        validate_session, hash_password, get_db_connection,
+    )
+    try:
+        from services.enhanced_ai_service import enhanced_ai_service
+    except ImportError:
+        enhanced_ai_service = None
+    try:
+        from services.job_service import job_service
+    except ImportError:
+        job_service = None
+    try:
+        from services.websocket_service import websocket_service, manager
+    except ImportError:
+        websocket_service = None
+        manager = None
 
 """Configure logging early so it's available during imports below"""
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Services
-try:
-    from api.services.enhanced_ai_service import enhanced_ai_service
-except ImportError:
-    enhanced_ai_service = None
+if enhanced_ai_service is None:
     logger.warning("Enhanced AI service not available")
-
-try:
-    from api.services.job_service import job_service
-except ImportError:
-    job_service = None
+if job_service is None:
     logger.warning("Job service not available")
-
-try:
-    from api.services.websocket_service import websocket_service, manager
-except ImportError:
-    websocket_service = None
-    manager = None
+if websocket_service is None:
     logger.warning("WebSocket service not available")
 
 # Initialize FastAPI app
@@ -110,6 +126,9 @@ class ProfileUpdateRequest(BaseModel):
     githubUrl: Optional[str] = None
     linkedinUrl: Optional[str] = None
     aboutMe: Optional[str] = None
+    # Forbid unknown fields so invalid payloads raise 422 in tests
+    if ConfigDict is not None:
+        model_config = ConfigDict(extra="forbid")
 
 class ChatRequest(BaseModel):
     message: str
@@ -261,7 +280,6 @@ async def health_check():
     """Health check endpoint"""
     try:
         # Test database connection
-        from api.database import get_db_connection
         conn, cursor = get_db_connection()
         cursor.execute("SELECT 1")
         conn.close()
@@ -292,7 +310,6 @@ async def health_detailed():
         # Database check
         db_status = "disconnected"
         try:
-            from api.database import get_db_connection
             conn, cursor = get_db_connection()
             cursor.execute("SELECT 1")
             conn.close()
@@ -328,12 +345,16 @@ async def register_graduate(graduate: GraduateRegistration):
         
         # Validate password strength
         if len(graduate.password) < 6:
-            raise HTTPException(status_code=400, detail="Şifre en az 6 karakter olmalı")
+            return JSONResponse(status_code=400, content={
+                "detail": {"error": "Weak password"}
+            })
         
         # Check if user already exists
         existing_user = get_user_by_email(email)
         if existing_user:
-            raise HTTPException(status_code=409, detail="Bu e-posta adresi zaten kayıtlı")
+            return JSONResponse(status_code=409, content={
+                "message": "Email already exists"
+            })
         
         # Create user
         user_data = {
@@ -389,7 +410,9 @@ async def login(request: LoginRequest):
         user = authenticate_user(email, request.password)
         
         if not user:
-            raise HTTPException(status_code=401, detail="E-posta veya şifre hatalı")
+            return JSONResponse(status_code=401, content={
+                "message": "Invalid email or password"
+            })
         
         # Create session
         token = create_session(user["id"])
