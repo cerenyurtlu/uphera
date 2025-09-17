@@ -1,0 +1,287 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* UpSchool color variables */
+:root {
+  --up-primary: #3A4EFF;
+  --up-primary-dark: #202B7C;
+  --up-secondary: #202B7C;
+  --up-accent: #FFFFFF;
+  --up-light-gray: #F2F4F7;
+  --up-dark-gray: #64748B;
+
+  /* Theme-aware tokens */
+  --up-bg: #F2F4F7;          /* page background */
+  --up-surface: #FFFFFF;     /* card/background surfaces */
+  --up-text: #0f172a;        /* primary text */
+  --up-text-muted: #475569;  /* secondary text */
+  --up-border: #e5e7eb;      /* borders */
+}
+
+[data-theme='light'] {
+  --up-bg: #F2F4F7;
+  --up-surface: #FFFFFF;
+  --up-text: #0f172a;
+  --up-text-muted: #475569;
+  --up-border: #e5e7eb;
+  /* keep light gray same */
+  --up-light-gray: #F2F4F7;
+}
+
+[data-theme='dark'] {
+  --up-primary: #7c8bff;
+  --up-primary-dark: #aeb8ff;
+  --up-secondary: #aeb8ff;
+  --up-accent: #111827;
+  --up-light-gray: #0b1220; /* used across layouts */
+  --up-dark-gray: #94a3b8;
+
+  --up-bg: #0b1220;
+  --up-surface: #0f172a;
+  --up-text: #e5e7eb;
+  --up-text-muted: #94a3b8;
+  --up-border: #1f2937;
+}
+
+/* Base theming */
+html, body {
+  background-color: var(--up-bg);
+  color: var(--up-text);
+}
+
+/* Logo optimizations */
+.uphera-logo {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.uphera-logo img {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.uphera-logo:hover {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Logo container fixes */
+[title="Up Hera"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Modern components */
+.up-card {
+  @apply rounded-lg shadow-sm p-6;
+  background-color: var(--up-surface);
+  border: 1px solid var(--up-border);
+  color: var(--up-text);
+}
+
+.up-card:hover {
+  @apply shadow-md;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.up-button-primary {
+  background: linear-gradient(135deg, var(--up-primary) 0%, var(--up-primary-dark) 100%);
+  @apply text-white px-6 py-3 rounded-md font-medium hover:shadow-lg transition-all duration-200;
+  border: none;
+}
+
+.up-button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(58, 78, 255, 0.3);
+}
+
+.up-button-primary:disabled {
+  @apply opacity-50 cursor-not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.up-button-secondary {
+  @apply bg-gray-100 text-gray-700 px-6 py-3 rounded-md font-medium hover:bg-gray-200 transition-colors duration-200;
+  border: 1px solid #e5e7eb;
+}
+
+.up-input {
+  @apply w-full px-4 py-3 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+  font-family: inherit;
+}
+
+.up-input:focus {
+  outline: none;
+  border-color: var(--up-primary);
+  box-shadow: 0 0 0 3px rgba(58, 78, 255, 0.1);
+}
+
+.up-form-select {
+  @apply w-full px-4 py-3 border border-gray-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all duration-200;
+  font-family: inherit;
+}
+
+.up-form-select:focus {
+  outline: none;
+  border-color: var(--up-primary);
+  box-shadow: 0 0 0 3px rgba(58, 78, 255, 0.1);
+}
+
+.up-form-label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.up-form-group {
+  @apply mb-6;
+}
+
+.up-page-header {
+  @apply py-4;
+  background-color: var(--up-surface);
+  border-bottom: 1px solid var(--up-border);
+}
+
+.up-page-title {
+  @apply text-2xl font-bold;
+  color: var(--up-primary-dark);
+}
+
+.up-page-subtitle {
+  @apply text-gray-600 mt-2;
+}
+
+.up-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.up-nav {
+  @apply border-b;
+  background-color: var(--up-surface);
+  border-color: var(--up-border);
+}
+
+.up-nav-link {
+  @apply px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 transition-colors duration-200;
+}
+
+.up-nav-link.active {
+  color: var(--up-primary);
+  border-bottom-color: var(--up-primary);
+}
+
+.up-badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.up-badge-primary {
+  background-color: var(--up-primary);
+  @apply text-white;
+}
+
+.up-badge-secondary {
+  background-color: color-mix(in srgb, var(--up-text) 10%, transparent);
+  color: var(--up-text);
+}
+
+.up-badge-success {
+  @apply bg-green-100 text-green-800;
+}
+
+.up-badge-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.up-loading {
+  @apply inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin;
+}
+
+.up-stats-grid {
+  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8;
+}
+
+.up-stat-card {
+  @apply bg-white p-6 rounded-lg shadow-sm text-center border border-gray-100;
+}
+
+.up-stat-number {
+  @apply text-3xl font-bold mb-2;
+  color: var(--up-primary);
+}
+
+.up-stat-label {
+  @apply text-sm text-gray-600;
+}
+
+.up-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--up-primary);
+  @apply rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--up-primary-dark);
+}
+
+/* Focus improvements */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--up-primary);
+  outline-offset: 2px;
+}
+
+/* Image optimization */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Logo specific enhancements */
+img[alt*="Logo"],
+img[alt*="logo"] {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+/* Print styles */
+@media print {
+  .up-page-header,
+  .up-nav,
+  button {
+    display: none !important;
+  }
+} 
