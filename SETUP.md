@@ -121,8 +121,10 @@ source .venv/bin/activate
 # Windows:
 # .venv\Scripts\activate
 
-# Bağımlılıkları yükleyin
+# Bağımlılıkları yükleyin (hızlı/minimal)
 pip install -r api/requirements.txt
+# Opsiyonel: Yerelde ileri AI (vector DB, embeddings) özellikleri için ağır bağımlılıklar
+# pip install -r api/requirements-ai.txt
 
 # Mock veri yükleyin (opsiyonel)
 python scripts/mock_data.py --candidates 20 --jobs 10
@@ -225,6 +227,8 @@ rm -rf .venv
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r api/requirements.txt
+# Opsiyonel ağır AI bağımlılıkları (sadece local deneyler için önerilir):
+# pip install -r api/requirements-ai.txt
 ```
 
 #### 4. Node.js Bağımlılık Hataları

@@ -98,7 +98,9 @@ A comprehensive, production-ready platform tailored for women in technology, fea
 ### Backend Setup
 ```bash
 cd api
-pip install -r requirements.txt
+pip install -r requirements.txt  # minimal, fast install (CI-friendly)
+# Optional: for local AI experiments (vector DB, embeddings, transformers)
+# pip install -r requirements-ai.txt
 python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 

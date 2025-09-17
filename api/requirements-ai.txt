@@ -1,0 +1,22 @@
+"""
+Optional heavy AI dependencies for local experiments.
+Install alongside base requirements only if you need vector DB, embeddings,
+or model fine-tuning utilities. Avoid in CI to keep installs fast and small.
+
+Usage:
+  pip install -r api/requirements.txt
+  pip install -r api/requirements-ai.txt
+"""
+
+# Vector DB + embeddings + ML stack (heavy)
+langchain>=0.3.0
+langchain-google-genai>=2.0.0
+chromadb>=1.0.0
+sentence-transformers>=3.0.0
+transformers>=4.41.0
+scikit-learn>=1.3.0
+numpy>=1.26.4
+pandas>=2.2.0
+
+# Google Generative AI Python SDK (optional – HTTP calls also work without it)
+google-generativeai>=0.8.0
