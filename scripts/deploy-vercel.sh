@@ -53,6 +53,18 @@ deploy_api() {
         exit 1
     fi
     
+    # Test import
+    print_status "API import testi yapılıyor..."
+    if ! python -c "import fastapi" 2>/dev/null; then
+        print_warning "Dependencies eksik, local test için yükleniyor..."
+        pip install -r requirements.txt
+    fi
+    
+    if ! python -c "import main; print('API import başarılı')" 2>/dev/null; then
+        print_error "API import testi başarısız!"
+        exit 1
+    fi
+    
     print_status "API projesi deploy ediliyor..."
     vercel --prod --name up-hera-api
     

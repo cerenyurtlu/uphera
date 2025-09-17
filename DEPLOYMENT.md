@@ -13,9 +13,13 @@ API ve Web uygulaması ayrı Vercel projeleri olarak deploy edilecek:
 Vercel'in disk alanı sınırlaması nedeniyle AI servisleri (chat, document upload, insights) geçici olarak devre dışı bırakılmıştır. Bu servisler daha sonra ayrı bir AI servisi olarak deploy edilebilir.
 
 ### ✅ ÇÖZÜLEN SORUNLAR:
-- Disk alanı hatası çözüldü (minimal requirements)
-- Import hataları düzeltildi
-- Local test başarılı
+- ✅ Disk alanı hatası çözüldü (minimal requirements)
+- ✅ Import hataları düzeltildi (config.py import paths)
+- ✅ Local test başarılı (API import ve web build)
+- ✅ Requirements dosyaları senkronize edildi
+- ✅ Environment variable örnekleri güncellendi
+- ✅ Deployment scriptleri geliştirildi (bağımlılık kontrolü)
+- ✅ Build test otomasyonu eklendi
 
 ### 1. API Deploy (Backend)
 
@@ -186,17 +190,37 @@ vercel env ls --scope up-hera-web
 2. **Database Bağlantı Hatası**: DATABASE_URL'in doğru formatta olduğunu kontrol edin
 3. **Build Hatası**: requirements.txt'deki paketlerin uyumlu olduğunu kontrol edin
 4. **API URL Hatası**: Web projesinde VITE_API_URL'in doğru olduğunu kontrol edin
+5. **Import Hatası**: Python bağımlılıklarının yüklendiğini kontrol edin
+6. **Environment Variables**: Vercel dashboard'da tüm gerekli env var'ların eklendiğini kontrol edin
 
 #### Debug Komutları:
 ```bash
-# API build test
+# API build test (local)
 cd api
+pip install -r requirements.txt
 python -c "import main; print('✅ Import başarılı')"
 
-# Web build test
+# Web build test (local)
 cd web
 npm install
 npm run build
+
+# Deployment test (geliştirici için)
+./scripts/deploy-vercel.sh
+```
+
+#### Vercel Deploy Sorunları:
+```bash
+# Vercel logs kontrol
+vercel logs --scope up-hera-api
+vercel logs --scope up-hera-web
+
+# Environment variables kontrol
+vercel env ls --scope up-hera-api
+vercel env ls --scope up-hera-web
+
+# Yeniden deploy
+vercel --prod --force
 ```
 
 ### 10. Production Checklist

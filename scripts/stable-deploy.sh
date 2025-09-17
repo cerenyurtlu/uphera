@@ -67,6 +67,13 @@ print_status "Build testleri yapılıyor..."
 # API build test
 print_status "API build testi..."
 cd api
+
+# Check if Python dependencies are installed
+if ! python -c "import fastapi" 2>/dev/null; then
+    print_warning "Python bağımlılıkları eksik, yükleniyor..."
+    pip install -r requirements.txt
+fi
+
 if python -c "import main; print('✅ API import başarılı')" 2>/dev/null; then
     print_status "API build testi başarılı"
 else
@@ -78,6 +85,13 @@ cd ..
 # Web build test
 print_status "Web build testi..."
 cd web
+
+# Check if Node dependencies are installed
+if [ ! -d "node_modules" ]; then
+    print_warning "Node dependencies eksik, yükleniyor..."
+    npm install
+fi
+
 if npm run build 2>/dev/null; then
     print_status "Web build testi başarılı"
 else
