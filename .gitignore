@@ -21,4 +21,26 @@ venv/
 
 # Node
 node_modules/
+web/node_modules/
+dist/
+web/dist/
+
+# Build artifacts
+*.egg-info/
+build/
+.coverage
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Temporary files
+.tmp/
+tmp/
+*.tmp
+
+# Logs
+*.log
+api.log
 
