@@ -78,9 +78,6 @@ cp env.example .env
 # Database
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/uphera
 
-# OpenAI (https://platform.openai.com/api-keys adresinden alın)
-OPENAI_API_KEY=sk-your-openai-api-key-here
-
 # SendGrid (https://sendgrid.com/ adresinden alın)
 SENDGRID_API_KEY=your-sendgrid-api-key-here
 FROM_EMAIL=noreply@uphera.ai

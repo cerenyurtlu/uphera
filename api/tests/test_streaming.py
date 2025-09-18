@@ -136,21 +136,21 @@ class TestAIStreamingChat:
     @pytest.mark.asyncio
     async def test_enhanced_ai_service_streaming(self):
         """Test enhanced AI service streaming functionality"""
-        with patch.object(enhanced_ai_service, 'check_ollama_status', new_callable=AsyncMock) as mock_ollama_check:
-            with patch.object(enhanced_ai_service, 'chat_with_ollama') as mock_ollama_chat:
+        with patch.object(enhanced_ai_service, 'check_gemini_status', new_callable=AsyncMock) as mock_gemini_check:
+            with patch.object(enhanced_ai_service, 'chat_with_gemini_stream') as mock_gemini_chat:
                 with patch.object(enhanced_ai_service, 'save_chat_history') as mock_save_history:
                     
                     # Mock Ollama as available
-                    mock_ollama_check.return_value = True
+                    mock_gemini_check.return_value = True
                     
                     # Mock Ollama streaming response
-                    async def mock_ollama_generator():
-                        chunks = ["Test ", "streaming ", "response ", "from ", "Ollama"]
-                        for chunk in chunks:
-                            yield chunk
-                            await asyncio.sleep(0.01)
-                    
-                    mock_ollama_chat.return_value = mock_ollama_generator()
+            async def mock_gemini_generator():
+                chunks = ["Test ", "streaming ", "response ", "from ", "Gemini"]
+                for chunk in chunks:
+                    yield chunk
+                    await asyncio.sleep(0.01)
+            
+            mock_gemini_chat.return_value = mock_gemini_generator()
                     
                     # Test streaming
                     chunks = []
@@ -164,32 +164,32 @@ class TestAIStreamingChat:
                     
                     # Verify chunks
                     assert len(chunks) == 5
-                    assert chunks == ["Test ", "streaming ", "response ", "from ", "Ollama"]
+                    assert chunks == ["Test ", "streaming ", "response ", "from ", "Gemini"]
                     
                     # Verify methods were called
-                    mock_ollama_check.assert_called_once()
-                    mock_ollama_chat.assert_called_once()
+                    mock_gemini_check.assert_called_once()
+                    mock_gemini_chat.assert_called_once()
                     mock_save_history.assert_called_once()
                     
                     # Verify save_history was called with correct parameters
                     save_call_args = mock_save_history.call_args[0]
                     assert save_call_args[0] == "test_user"  # user_id
                     assert save_call_args[1] == "Test message"  # message
-                    assert save_call_args[2] == "Test streaming response from Ollama"  # full response
+                    assert save_call_args[2] == "Test streaming response from Gemini"  # full response
                     assert save_call_args[3] == "general"  # context
     
     @pytest.mark.asyncio
-    async def test_openai_fallback_streaming(self):
-        """Test OpenAI fallback when Ollama is unavailable"""
-        with patch.object(enhanced_ai_service, 'check_ollama_status', new_callable=AsyncMock) as mock_ollama_check:
-            with patch.object(enhanced_ai_service, 'chat_with_openai', new_callable=AsyncMock) as mock_openai_chat:
+    async def test_nonstream_fallback(self):
+        """Test non-stream fallback when streaming is unavailable"""
+        with patch.object(enhanced_ai_service, 'check_gemini_status', new_callable=AsyncMock) as mock_gemini_check:
+            with patch.object(enhanced_ai_service, 'chat_nonstream', new_callable=AsyncMock) as mock_nonstream_chat:
                 with patch.object(enhanced_ai_service, 'save_chat_history') as mock_save_history:
                     
-                    # Mock Ollama as unavailable
-                    mock_ollama_check.return_value = False
+                    # Simulate streaming unavailable
+                    mock_gemini_check.return_value = False
                     
-                    # Mock OpenAI response
-                    mock_openai_chat.return_value = "OpenAI fallback response"
+                    # Mock non-stream response
+                    mock_nonstream_chat.return_value = "Nonstream fallback response"
                     
                     # Test streaming (should fallback to non-streaming)
                     chunks = []
@@ -201,13 +201,13 @@ class TestAIStreamingChat:
                     ):
                         chunks.append(chunk)
                     
-                    # Should get single response from OpenAI
+                    # Should get single response from non-stream path
                     assert len(chunks) == 1
-                    assert chunks[0] == "OpenAI fallback response"
+                    assert chunks[0] == "Nonstream fallback response"
                     
                     # Verify methods were called
-                    mock_ollama_check.assert_called_once()
-                    mock_openai_chat.assert_called_once()
+                    mock_gemini_check.assert_called_once()
+                    mock_nonstream_chat.assert_called_once()
                     mock_save_history.assert_called_once()
     
     def test_streaming_error_handling(self, auth_headers):

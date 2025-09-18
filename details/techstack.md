@@ -38,8 +38,8 @@ Bu döküman, Up Hera platformunun güncel teknoloji yığınını ve mimari bil
 - Vercel notu: Sunucu dosya sistemi ephemeral; kalıcılık gerektiren senaryolarda harici depolama önerilir
 
 #### AI (Google Gemini, LangChain, Vektör)
-- Ana model: Google Gemini 2.5 Flash Lite (`google-generativeai`)
-- Servis: `api/services/enhanced_ai_coach.py` üzerinden yanıt üretimi ve akış
+- Ana model: Google Gemini (ör. `gemini-1.5-flash`) (`google-generativeai`)
+- Servis: `api/services/enhanced_ai_service.py` üzerinden yanıt üretimi ve akış
 - Ek bağımlılıklar: `langchain`, `langchain-google-genai`, `chromadb`, `sentence-transformers`
 - Not: Mevcut AI akışı doğrudan Gemini ile çalışır; Chroma/embeddings hazır olsa da temel akış için zorunlu değildir
 
@@ -88,7 +88,7 @@ Bu döküman, Up Hera platformunun güncel teknoloji yığınını ve mimari bil
 
 ### Ortam Değişkenleri (Seçki)
 - `DATABASE_URL` (vars: `sqlite:///./uphera.db`)
-- `OPENAI_API_KEY`, `GEMINI_API_KEY`, `OLLAMA_BASE_URL`
+- `GEMINI_API_KEY`
 - `SENDGRID_API_KEY`, `FROM_EMAIL`, `SENDGRID_SANDBOX_MODE`
 - `REDIS_URL`
 - `FRONTEND_URL`, `CORS_ORIGINS`
@@ -118,5 +118,4 @@ Bu döküman, Up Hera platformunun güncel teknoloji yığınını ve mimari bil
 - `sqlalchemy` kurulu fakat veri erişimi doğrudan `sqlite3`; ileride ORM’e geçiş planlanıyorsa tablolar/şema uyumu gözden geçirilmeli
 - Vercel dosya sistemi ephemeral; kalıcı doküman/CV arşivleri için harici depolama (S3, Supabase Storage vb.) tercih edilmeli
 - SSE streaming `AIChatbot` UI akışında varsayılan olarak non-stream’e düşebiliyor; mobil/Safari için `stream-get` endpoint kullanımı mevcut
-
 

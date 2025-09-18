@@ -9,14 +9,8 @@ class Settings:
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./uphera.db")
     
-    # OpenAI
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    
     # Google Gemini
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    
-    # Ollama
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     
     # SendGrid
     SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")

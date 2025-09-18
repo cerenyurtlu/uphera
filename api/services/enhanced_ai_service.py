@@ -1,5 +1,6 @@
 """
-Enhanced AI Service with real Ollama and OpenAI integration
+Enhanced AI Service
+- Gemini-first streaming (single provider)
 """
 import asyncio
 import json
@@ -9,18 +10,39 @@ from typing import AsyncGenerator, Dict, Any, Optional, List
 from pathlib import Path
 import sqlite3
 from datetime import datetime
+import os
+import threading
 
 from api.config import settings
 
 logger = logging.getLogger(__name__)
 
+# Optional import: google-generativeai (Gemini)
+try:
+    import google.generativeai as genai  # type: ignore
+except Exception:  # pragma: no cover
+    genai = None  # type: ignore
+
 class EnhancedAIService:
-    """Production-ready AI service with Ollama and OpenAI fallback"""
+    """Production-ready AI service using Gemini only"""
     
     def __init__(self):
-        self.ollama_url = settings.OLLAMA_BASE_URL
-        self.openai_api_key = settings.OPENAI_API_KEY
         self.db_path = "uphera.db"
+        
+        # Gemini configuration (primary provider)
+        self.gemini_api_key = settings.GEMINI_API_KEY
+        self.gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        self.gemini_model = None
+        self._gemini_ready = False
+        try:
+            if genai and self.gemini_api_key:
+                genai.configure(api_key=self.gemini_api_key)
+                # Create model instance (sync client; we stream via a background thread)
+                self.gemini_model = genai.GenerativeModel(self.gemini_model_name)
+                self._gemini_ready = True
+        except Exception as e:  # pragma: no cover
+            logger.warning(f"Gemini initialization failed: {e}")
+
         self.init_ai_tables()
     
     def init_ai_tables(self):
@@ -71,91 +93,63 @@ class EnhancedAIService:
         except Exception as e:
             logger.error(f"❌ AI tables initialization failed: {e}")
     
-    async def check_ollama_status(self) -> bool:
-        """Check if Ollama is running and accessible"""
-        try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"{self.ollama_url}/api/tags")
-                return response.status_code == 200
-        except Exception as e:
-            logger.warning(f"Ollama not available: {e}")
-            return False
+    async def check_gemini_status(self) -> bool:
+        """Returns True if Gemini is configured and initialized."""
+        return bool(self._gemini_ready)
     
-    async def chat_with_ollama(self, message: str, context: str = "general") -> AsyncGenerator[str, None]:
-        """Chat with Ollama with streaming response"""
-        try:
-            # Build context-aware prompt
-            system_prompt = self.get_system_prompt(context)
-            full_prompt = f"{system_prompt}\n\nKullanıcı: {message}\n\nAda AI:"
-            
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                async with client.stream(
-                    "POST",
-                    f"{self.ollama_url}/api/generate",
-                    json={
-                        "model": "llama3.2:3b",
-                        "prompt": full_prompt,
-                        "stream": True,
-                        "options": {
-                            "temperature": 0.7,
-                            "top_k": 40,
-                            "top_p": 0.9,
-                            "repeat_penalty": 1.1
-                        }
-                    }
-                ) as response:
-                    if response.status_code == 200:
-                        async for line in response.aiter_lines():
-                            if line:
-                                try:
-                                    data = json.loads(line)
-                                    if "response" in data:
-                                        yield data["response"]
-                                    if data.get("done"):
-                                        break
-                                except json.JSONDecodeError:
-                                    continue
-                    else:
-                        yield "❌ Ollama bağlantı hatası"
-                        
-        except Exception as e:
-            logger.error(f"Ollama chat error: {e}")
-            yield f"❌ AI servis hatası: {str(e)}"
+    async def chat_with_gemini_stream(self, message: str, context: str = "general") -> AsyncGenerator[str, None]:
+        """Streaming chat via Gemini."""
+        if not self._gemini_ready or not self.gemini_model:
+            yield "❌ Gemini API yapılandırılmadı"
+            return
+
+        # Build prompt
+        system_prompt = self.get_system_prompt(context)
+        full_prompt = f"{system_prompt}\n\nKullanıcı: {message}\n\nAda AI:"
+
+        queue: asyncio.Queue = asyncio.Queue()
+        loop = asyncio.get_event_loop()
+
+        def _producer():
+            try:
+                # google-generativeai is synchronous; stream in a background thread
+                response = self.gemini_model.generate_content(full_prompt, stream=True)
+                for chunk in response:
+                    text = self._extract_gemini_text(chunk)
+                    if text:
+                        asyncio.run_coroutine_threadsafe(queue.put(text), loop).result()
+            except Exception as e:  # pragma: no cover
+                asyncio.run_coroutine_threadsafe(queue.put(f"__ERROR__:{e}"), loop).result()
+            finally:
+                asyncio.run_coroutine_threadsafe(queue.put("__DONE__"), loop).result()
+
+        threading.Thread(target=_producer, daemon=True).start()
+
+        while True:
+            item = await queue.get()
+            if item == "__DONE__":
+                break
+            if isinstance(item, str) and item.startswith("__ERROR__:"):
+                yield f"❌ AI servis hatası: {item.split(':',1)[1]}"
+                break
+            yield item
     
-    async def chat_with_openai(self, message: str, context: str = "general") -> str:
-        """Fallback to OpenAI if Ollama is not available"""
-        if not self.openai_api_key:
-            return "❌ AI servisleri şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
-        
+    async def chat_nonstream(self, message: str, context: str = "general") -> str:
+        """Non-stream response via Gemini (sync API wrapped in thread)."""
         try:
-            system_prompt = self.get_system_prompt(context)
-            
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {self.openai_api_key}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": "gpt-3.5-turbo",
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": message}
-                        ],
-                        "temperature": 0.7,
-                        "max_tokens": 500
-                    }
-                )
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    return data["choices"][0]["message"]["content"]
-                else:
-                    return "❌ OpenAI API hatası"
-                    
+            if self._gemini_ready and self.gemini_model:
+                system_prompt = self.get_system_prompt(context)
+                full_prompt = f"{system_prompt}\n\nKullanıcı: {message}\n\nAda AI:"
+                def _run():
+                    try:
+                        resp = self.gemini_model.generate_content(full_prompt)
+                        return self._extract_gemini_text(resp) or ""
+                    except Exception as e:  # pragma: no cover
+                        return f"❌ AI servis hatası: {str(e)}"
+                return await asyncio.to_thread(_run)
+            return "❌ Gemini API yapılandırılmadı"
         except Exception as e:
-            logger.error(f"OpenAI chat error: {e}")
+            logger.error(f"Gemini chat error: {e}")
             return f"❌ AI servis hatası: {str(e)}"
     
     def get_system_prompt(self, context: str) -> str:
@@ -183,22 +177,18 @@ class EnhancedAIService:
     ) -> AsyncGenerator[str, None]:
         """Enhanced chat with user context and history"""
         
-        # Check Ollama availability
-        ollama_available = await self.check_ollama_status()
-        
-        if ollama_available and use_streaming:
-            # Use Ollama for streaming
+        # Gemini readiness
+        gemini_available = await self.check_gemini_status()
+
+        if gemini_available and use_streaming:
             full_response = ""
-            async for chunk in self.chat_with_ollama(message, context):
+            async for chunk in self.chat_with_gemini_stream(message, context):
                 full_response += chunk
                 yield chunk
-            
-            # Save to history
             self.save_chat_history(user_id, message, full_response, context)
-            
         else:
-            # Fallback to OpenAI
-            response = await self.chat_with_openai(message, context)
+            # Non-stream path uses Gemini non-stream
+            response = await self.chat_nonstream(message, context)
             self.save_chat_history(user_id, message, response, context)
             yield response
     
@@ -218,6 +208,31 @@ class EnhancedAIService:
             conn.close()
         except Exception as e:
             logger.error(f"Failed to save chat history: {e}")
+
+    def _extract_gemini_text(self, obj: Any) -> str:
+        """Best-effort extraction of text from Gemini response/chunk across versions."""
+        try:
+            # Most versions expose .text
+            text = getattr(obj, "text", None)
+            if text:
+                return str(text)
+            # Fallbacks: try candidates[0].content.parts
+            candidates = getattr(obj, "candidates", None)
+            if candidates:
+                try:
+                    content = candidates[0].content
+                    parts = getattr(content, "parts", None)
+                    if parts:
+                        return "".join(str(getattr(p, "text", "")) for p in parts)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        # Last resort string cast
+        try:
+            return str(obj)
+        except Exception:
+            return ""
     
     def get_chat_history(self, user_id: str, limit: int = 10) -> List[Dict]:
         """Get user's chat history"""
@@ -306,14 +321,14 @@ class EnhancedAIService:
             JSON formatında yanıt ver.
             """
             
-            ollama_available = await self.check_ollama_status()
+            gemini_available = await self.check_gemini_status()
             
-            if ollama_available:
+            if gemini_available:
                 response_text = ""
-                async for chunk in self.chat_with_ollama(analysis_prompt, "profile"):
+                async for chunk in self.chat_with_gemini_stream(analysis_prompt, "profile"):
                     response_text += chunk
             else:
-                response_text = await self.chat_with_openai(analysis_prompt, "profile")
+                response_text = await self.chat_nonstream(analysis_prompt, "profile")
             
             # Try to parse as JSON, fallback to structured text
             try:

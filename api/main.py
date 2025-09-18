@@ -623,10 +623,10 @@ async def ai_chat_stream_get(
     max_tokens: Optional[int] = Query(None),
     current_user: Optional[Dict] = Depends(get_current_user_optional)
 ):
-    """GET-based SSE endpoint for mobile/Safari compatibility (EventSource)."""
+    """GET-based SSE endpoint for mobile/Safari compatibility (EventSource).
+    Streams chunks from enhanced_ai_service directly.
+    """
     try:
-        from services.enhanced_ai_coach import get_enhanced_ai_response
-
         user_id = current_user.get('id', 'anonymous') if current_user else 'anonymous'
 
         async def generate():
@@ -634,48 +634,19 @@ async def ai_chat_stream_get(
                 # Initial ping
                 yield f"data: {json.dumps({'type': 'info', 'content': 'connected'})}\n\n"
 
-                # Build user_data with response preferences
-                user_data = {"response_mode": response_mode}
-                if max_tokens is not None:
-                    user_data["max_tokens"] = max_tokens
+                # Optional response preferences (not currently used downstream)
+                _ = {"response_mode": response_mode, "max_tokens": max_tokens}
 
-                queue: asyncio.Queue = asyncio.Queue()
+                # Stream AI chunks
+                async for chunk in enhanced_ai_service.enhanced_chat(
+                    user_id=user_id,
+                    message=message,
+                    context=context,
+                    use_streaming=True
+                ):
+                    yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
 
-                async def produce():
-                    try:
-                        async for chunk in get_enhanced_ai_response(
-                            user_id=user_id,
-                            message=message,
-                            context=context,
-                            user_data=user_data,
-                            conversation_history=[],
-                        ):
-                            await queue.put(chunk)
-                    except Exception as e:
-                        await queue.put(f"__ERROR__:{str(e)}")
-                    finally:
-                        await queue.put("__DONE__")
-
-                producer_task = asyncio.create_task(produce())
-
-                while True:
-                    try:
-                        item = await asyncio.wait_for(queue.get(), timeout=10)
-                    except asyncio.TimeoutError:
-                        yield ": keep-alive\n\n"
-                        continue
-
-                    if item == "__DONE__":
-                        break
-                    if isinstance(item, str) and item.startswith("__ERROR__:"):
-                        err_msg = item.split(":", 1)[1]
-                        yield f"data: {json.dumps({'type': 'content', 'content': '❌ Hata: ' + err_msg})}\n\n"
-                        break
-
-                    yield f"data: {json.dumps({'type': 'content', 'content': item})}\n\n"
-
-                await producer_task
-
+                # Finalize with suggestions
                 suggestions = [
                     "Mülakat hazırlığı yapalım",
                     "CV optimizasyonu",

@@ -89,7 +89,7 @@ Bu doküman, Up Hera’nın güncel ürün fikrini, hedeflerini ve stratejik yol
 ### Riskler ve Azaltım
 - AI halüsinasyonları: sıkı istem (prompt) kuralları, küçük ve net yanıt ilkesi, öneri/uyarı metinleri.
 - Veri güvenliği: HTTPS, access token ömrü, saklama politikası; güçlü parola hash’e geçiş.
-- Tedarikçi bağımlılığı: LLM soyutlama, alternatif sağlayıcılar (OpenAI, Ollama vb.).
+- Tedarikçi bağımlılığı: LLM soyutlama, alternatif sağlayıcılar (ör. farklı Gemini sürümleri) ve taşınabilir entegrasyon katmanı.
 - Ölçeklenebilirlik: SSE/WS backpressure, kuyruğa alma (ileride Celery/Redis), izleme.
 - İçerik ve veri kıtlığı: partnerlerle ilan akışı; topluluk kaynaklarıyla içerik üretimi.
 - Aktivasyon sürtünmesi: demo token akışı ve düşük bariyerli ilk deneyim.
@@ -117,5 +117,4 @@ Kısa özet
 - Up Hera; UpSchool mezunları ve teknolojiye adım atan kadınlar için AI destekli, Türkçe ve topluluk merkezli bir kariyer platformu.
 - Mevcut temel taşlar: AI koç, CV/insight analizi, iş akışı, gerçek zamanlı bildirim ve demo-dostu deneyim.
 - Odak: Üretimleşmeye giden güvenli yol, ölçülebilir etki ve sürdürülebilir büyüme.
-
 
