@@ -228,16 +228,20 @@ class UpHeraApiService {
     onChunk: (chunk: string) => void
   ): Promise<void> {
     try {
-      const url = `${this.baseUrl}/ai-coach/chat/stream`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({
-          message,
-          context,
-          use_streaming: true
-        })
-      });
+      // Prefer GET SSE endpoint for true real-time streaming and Safari compatibility
+      const params = new URLSearchParams({ message, context });
+      const sseUrl = `${this.baseUrl}/ai-coach/chat/stream-get?${params.toString()}`;
+      let response = await fetch(sseUrl, { method: 'GET', headers: this.getAuthHeaders() });
+
+      // Fallback to POST if GET SSE fails/non-ok
+      if (!response.ok || !response.body) {
+        const postUrl = `${this.baseUrl}/ai-coach/chat/stream`;
+        response = await fetch(postUrl, {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify({ message, context, use_streaming: true })
+        });
+      }
 
       if (!response.body) {
         throw new Error('No response body');
@@ -306,13 +310,17 @@ class UpHeraApiService {
         __meta: { timeoutMs: 90000, retryAttempts: 1, maxBaseUrls: 1 }
       });
       try {
-        if (resp && (resp as any).success && (resp as any).analysis) {
-          const payload = {
-            analysis: (resp as any).analysis?.analysis || '',
-            analyzed_at: new Date().toISOString(),
-            filename: (resp as any).filename || file.name,
-          };
-          localStorage.setItem('uphera_last_cv_analysis', JSON.stringify(payload));
+        if (resp && (resp as any).success && (resp as any).analysis !== undefined) {
+          const raw = (resp as any).analysis;
+          const analysisText = typeof raw === 'string' ? raw : (raw?.analysis || '');
+          if (analysisText) {
+            const payload = {
+              analysis: analysisText,
+              analyzed_at: new Date().toISOString(),
+              filename: (resp as any).filename || file.name,
+            };
+            localStorage.setItem('uphera_last_cv_analysis', JSON.stringify(payload));
+          }
         }
       } catch {}
       return resp;
@@ -329,13 +337,17 @@ class UpHeraApiService {
       __meta: { timeoutMs: 45000, retryAttempts: 1, maxBaseUrls: 1 }
     });
     try {
-      if (resp && (resp as any).success && (resp as any).analysis) {
-        const payload = {
-          analysis: (resp as any).analysis?.analysis || '',
-          analyzed_at: new Date().toISOString(),
-          filename: (resp as any).filename || file.name,
-        };
-        localStorage.setItem('uphera_last_cv_analysis', JSON.stringify(payload));
+      if (resp && (resp as any).success && (resp as any).analysis !== undefined) {
+        const raw = (resp as any).analysis;
+        const analysisText = typeof raw === 'string' ? raw : (raw?.analysis || '');
+        if (analysisText) {
+          const payload = {
+            analysis: analysisText,
+            analyzed_at: new Date().toISOString(),
+            filename: (resp as any).filename || file.name,
+          };
+          localStorage.setItem('uphera_last_cv_analysis', JSON.stringify(payload));
+        }
       }
     } catch {}
     return resp;

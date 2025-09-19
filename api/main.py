@@ -9,6 +9,7 @@ import json
 import logging
 import os
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import List, Dict, Optional, Any
 
 from fastapi import FastAPI, HTTPException, Depends, Header, File, UploadFile, Query, Request, BackgroundTasks, WebSocket, WebSocketDisconnect, Body
@@ -243,6 +244,13 @@ async def startup_event():
         
         # Initialize AI service
         logger.info("✅ AI service initialized")
+        # Optional warmup to reduce first-token latency
+        try:
+            if os.getenv("GEMINI_WARMUP", "0") == "1":
+                asyncio.create_task(enhanced_ai_service.chat_nonstream("Merhaba", "general"))
+                logger.info("🔥 Gemini warmup task scheduled")
+        except Exception as warm_e:
+            logger.debug(f"Warmup skip: {warm_e}")
         
         # Initialize job service
         logger.info("✅ Job service initialized")
@@ -529,13 +537,15 @@ async def ai_chat(
 
         message = data.message
         context = data.context
-        # Use enhanced_ai_service in non-streaming mode
+        # Use enhanced_ai_service in non-streaming mode (honor response_mode/max_tokens)
         chunks: List[str] = []
         async for chunk in enhanced_ai_service.enhanced_chat(
             user_id=user_id,
             message=message,
             context=context,
-            use_streaming=False
+            use_streaming=False,
+            response_mode=data.response_mode or "auto",
+            max_tokens=data.max_tokens
         ):
             chunks.append(chunk)
         response = "".join(chunks)
@@ -588,27 +598,29 @@ async def ai_chat_stream(
         # Pydantic validated input
         message = data.message
         context = data.context
-        
-        # Fully consume the streaming generator to catch errors early
-        collected: List[str] = []
-        async for chunk in enhanced_ai_service.enhanced_chat(
-            user_id=user_id,
-            message=message,
-            context=context,
-            use_streaming=True
-        ):
-            collected.append(chunk)
 
         async def generate():
-            for chunk in collected:
-                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
-            yield f"data: {json.dumps({'done': True})}\n\n"
+            try:
+                async for chunk in enhanced_ai_service.enhanced_chat(
+                    user_id=user_id,
+                    message=message,
+                    context=context,
+                    use_streaming=True,
+                    response_mode=data.response_mode or "auto",
+                    max_tokens=data.max_tokens
+                ):
+                    yield f"data: {json.dumps({'chunk': chunk})}\n\n"
+                yield f"data: {json.dumps({'done': True})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
         return StreamingResponse(
-            generate(), 
-            media_type="text/plain",
+            generate(),
+            media_type="text/event-stream; charset=utf-8",
             headers={
-                "Cache-Control": "no-cache"
+                "Cache-Control": "no-cache, no-transform",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no"
             }
         )
         
@@ -634,15 +646,14 @@ async def ai_chat_stream_get(
                 # Initial ping
                 yield f"data: {json.dumps({'type': 'info', 'content': 'connected'})}\n\n"
 
-                # Optional response preferences (not currently used downstream)
-                _ = {"response_mode": response_mode, "max_tokens": max_tokens}
-
                 # Stream AI chunks
                 async for chunk in enhanced_ai_service.enhanced_chat(
                     user_id=user_id,
                     message=message,
                     context=context,
-                    use_streaming=True
+                    use_streaming=True,
+                    response_mode=response_mode,
+                    max_tokens=max_tokens
                 ):
                     yield f"data: {json.dumps({'type': 'content', 'content': chunk})}\n\n"
 
@@ -677,10 +688,43 @@ async def upload_cv_endpoint(
     file: UploadFile = File(...)
 ):
     try:
-        from services.enhanced_ai_coach import upload_user_cv
-        content = await file.read()
-        result = await upload_user_cv(user_id, content, file.filename)
-        return result
+        # Read file content (best-effort UTF-8 decode)
+        raw = await file.read()
+        try:
+            text_content = raw.decode("utf-8", errors="ignore") if isinstance(raw, (bytes, bytearray)) else str(raw)
+        except Exception:
+            text_content = str(raw)
+
+        # Persist and analyze via enhanced_ai_service
+        insights_result = await enhanced_ai_service.upload_document(user_id, file.filename, text_content)
+
+        insights = insights_result.get("insights", {}) if isinstance(insights_result, dict) else {}
+
+        # Prefer a plain string summary for UI; fallback to JSON string
+        if isinstance(insights, dict):
+            analysis_text = insights.get("analysis") or insights.get("summary") or json.dumps(insights, ensure_ascii=False)
+        else:
+            analysis_text = str(insights)
+
+        cv_excerpt = text_content[:1000] if isinstance(text_content, str) else ""
+
+        # Save a lightweight insight snapshot as well (for history endpoints)
+        try:
+            enhanced_ai_service.save_ai_insights(user_id, "document_analysis", {
+                "analysis": analysis_text,
+                "filename": file.filename,
+            })
+        except Exception as _e:
+            logger.warning(f"Saving AI insight snapshot failed: {_e}")
+
+        return {
+            "success": True,
+            "filename": file.filename,
+            "analysis": analysis_text,
+            "cv_excerpt": cv_excerpt,
+            "document_id": insights_result.get("document_id") if isinstance(insights_result, dict) else None,
+            "message": insights_result.get("message", "CV başarıyla yüklendi ve analiz edildi") if isinstance(insights_result, dict) else "CV başarıyla yüklendi ve analiz edildi"
+        }
     except Exception as e:
         logger.error(f"CV upload error: {e}")
         return JSONResponse(status_code=400, content={
@@ -694,9 +738,33 @@ class CVInsightsRequest(BaseModel):
 @app.post("/ai-coach/cv/insights")
 async def cv_insights_endpoint(payload: CVInsightsRequest):
     try:
-        from services.enhanced_ai_coach import get_user_cv_insights
-        insights = await get_user_cv_insights(payload.user_id)
-        return insights
+        items = enhanced_ai_service.get_user_insights(payload.user_id)
+        # Pick the most recent document_analysis item
+        selected = None
+        for it in items:
+            if it.get("type") == "document_analysis":
+                selected = it
+                break
+
+        if not selected:
+            return {
+                "success": True,
+                "has_cv": False,
+                "message": "Henüz analiz bulunamadı. Lütfen CV yükleyin."
+            }
+
+        data = selected.get("data") or {}
+        if isinstance(data, dict):
+            analysis_text = data.get("analysis") or data.get("summary") or json.dumps(data, ensure_ascii=False)
+        else:
+            analysis_text = str(data)
+
+        return {
+            "success": True,
+            "has_cv": True,
+            "insights": analysis_text,
+            "analyzed_at": selected.get("created_at")
+        }
     except Exception as e:
         logger.error(f"CV insights error: {e}")
         return JSONResponse(status_code=400, content={
@@ -709,100 +777,32 @@ async def upload_document(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload and analyze document with comprehensive AI analysis for maximum token usage"""
+    """Upload and analyze document using enhanced_ai_service."""
     try:
-        from services.enhanced_ai_coach import EnhancedAICoach
-        
-        # Initialize AI coach
-        ai_coach = EnhancedAICoach()
-        
         # Read file content
-        content = await file.read()
-        file_content = content.decode('utf-8') if isinstance(content, bytes) else str(content)
-        
-        # Create comprehensive analysis prompt for maximum token usage
-        analysis_prompt = f"""
-        As an expert career coach and CV analyst specializing in women in technology, provide a comprehensive analysis of the following document.
-        
-        User Context:
-        - User ID: {current_user.get('id', 'anonymous')}
-        - User Name: {current_user.get('firstName', 'User')}
-        - Document Type: {file.filename}
-        
-        Document Content:
-        {file_content}
-        
-        Please provide a comprehensive analysis including:
-        
-        1. **Executive Summary** (100-150 words)
-           - Overall assessment of the document
-           - Key strengths and areas for improvement
-        
-        2. **Detailed Content Analysis** (300-400 words)
-           - Structure and organization evaluation
-           - Content relevance and impact
-           - Technical skills assessment
-           - Experience presentation analysis
-        
-        3. **Specific Recommendations** (200-250 words)
-           - Content improvements
-           - Structure enhancements
-           - Keyword optimization
-           - Formatting suggestions
-        
-        4. **Technical Skills Assessment** (150-200 words)
-           - Current skill level evaluation
-           - Skill gap analysis
-           - Industry alignment assessment
-           - Emerging technology recommendations
-        
-        5. **Career Development Insights** (200-250 words)
-           - Career trajectory analysis
-           - Growth opportunities
-           - Industry positioning
-           - Salary negotiation insights
-        
-        6. **Action Plan** (150-200 words)
-           - Immediate improvements (next 30 days)
-           - Medium-term development (3-6 months)
-           - Long-term career strategy (1-2 years)
-           - Resource recommendations
-        
-        7. **Industry-Specific Advice** (100-150 words)
-           - Women in tech considerations
-           - Networking opportunities
-           - Mentorship recommendations
-           - Community engagement
-        
-        8. **Interview Preparation** (100-150 words)
-           - Potential interview questions
-           - Story development suggestions
-           - Confidence building tips
-           - Negotiation strategies
-        
-        Make the analysis extremely detailed, actionable, and comprehensive. Provide specific examples, actionable steps, and valuable insights that will help the user advance their career in technology.
-        """
-        
-        # Get comprehensive analysis
-        analysis = await ai_coach.analyze_document(analysis_prompt)
-        
+        raw = await file.read()
+        try:
+            file_content = raw.decode('utf-8', errors='ignore') if isinstance(raw, (bytes, bytearray)) else str(raw)
+        except Exception:
+            file_content = str(raw)
+
+        # Analyze via enhanced_ai_service directly
+        analysis_dict = await enhanced_ai_service.analyze_document(file_content, Path(file.filename).suffix.lower())
+
+        if isinstance(analysis_dict, dict):
+            analysis_text = analysis_dict.get("analysis") or analysis_dict.get("summary") or json.dumps(analysis_dict, ensure_ascii=False)
+        else:
+            analysis_text = str(analysis_dict)
+
         return {
             "success": True,
-            "analysis": analysis,
+            "analysis": analysis_text,
             "filename": file.filename,
-            "file_size": len(content),
-            "token_usage": "comprehensive_analysis_completed",
-            "recommendations": [
-                "Implement suggested content improvements",
-                "Optimize technical skills section",
-                "Enhance achievement descriptions",
-                "Add industry-specific keywords",
-                "Improve overall document structure"
-            ]
+            "file_size": len(raw),
+            "token_usage": "analysis_completed"
         }
-        
     except Exception as e:
-        print(f"❌ Document Upload Error: {str(e)}")
+        logger.error(f"❌ Document Upload Error: {str(e)}")
         return {
             "success": False,
             "message": f"Document analysis error: {str(e)}",

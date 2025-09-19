@@ -34,11 +34,34 @@ class EnhancedAIService:
         self.gemini_model_name = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
         self.gemini_model = None
         self._gemini_ready = False
+        # Tunables for speed/quality balance (overridable via env)
+        try:
+            self.default_max_output_tokens = int(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "256"))
+        except Exception:
+            self.default_max_output_tokens = 256
+        try:
+            self.default_temperature = float(os.getenv("GEMINI_TEMPERATURE", "0.7"))
+        except Exception:
+            self.default_temperature = 0.7
+        try:
+            self.default_top_p = float(os.getenv("GEMINI_TOP_P", "0.95"))
+        except Exception:
+            self.default_top_p = 0.95
+        try:
+            self.default_top_k = int(os.getenv("GEMINI_TOP_K", "40"))
+        except Exception:
+            self.default_top_k = 40
         try:
             if genai and self.gemini_api_key:
                 genai.configure(api_key=self.gemini_api_key)
-                # Create model instance (sync client; we stream via a background thread)
-                self.gemini_model = genai.GenerativeModel(self.gemini_model_name)
+                # Create model instance with generation defaults
+                gen_config = {
+                    "max_output_tokens": self.default_max_output_tokens,
+                    "temperature": self.default_temperature,
+                    "top_p": self.default_top_p,
+                    "top_k": self.default_top_k,
+                }
+                self.gemini_model = genai.GenerativeModel(self.gemini_model_name, generation_config=gen_config)  # type: ignore[arg-type]
                 self._gemini_ready = True
         except Exception as e:  # pragma: no cover
             logger.warning(f"Gemini initialization failed: {e}")
@@ -97,15 +120,53 @@ class EnhancedAIService:
         """Returns True if Gemini is configured and initialized."""
         return bool(self._gemini_ready)
     
-    async def chat_with_gemini_stream(self, message: str, context: str = "general") -> AsyncGenerator[str, None]:
+    def _build_generation_config(self, max_tokens: Optional[int] = None, response_mode: str = "auto") -> Dict[str, Any]:
+        # Clamp and select sensible defaults per mode
+        def clamp(val: int, lo: int, hi: int) -> int:
+            return max(lo, min(hi, val))
+
+        # Defaults
+        max_out = self.default_max_output_tokens
+        temp = self.default_temperature
+        top_p = self.default_top_p
+        top_k = self.default_top_k
+
+        mode = (response_mode or "auto").lower()
+        if max_tokens is not None:
+            max_out = clamp(int(max_tokens or 0), 64, 1024)
+        else:
+            if mode == "short":
+                max_out = 128
+                temp = min(max(temp, 0.5), 0.7)
+            elif mode == "long":
+                max_out = 512
+                temp = min(max(temp, 0.7), 0.9)
+
+        return {
+            "max_output_tokens": max_out,
+            "temperature": float(temp),
+            "top_p": float(top_p),
+            "top_k": int(top_k),
+        }
+
+    def _augment_prompt_by_mode(self, base_prompt: str, response_mode: str) -> str:
+        mode = (response_mode or "auto").lower()
+        if mode == "short":
+            return base_prompt + "\n\nLütfen yanıtı kısa ve net tut (en fazla 5-7 cümle). Gerekirse madde işaretleri kullan. Gereksiz tekrar ve uzun cümlelerden kaçın."
+        if mode == "long":
+            return base_prompt + "\n\nLütfen yanıtı kapsamlı ve ayrıntılı ver (yaklaşık 200-300 kelime). Somut örnekler ve maddeler ekle; uygulanabilir öneriler sun."
+        return base_prompt
+
+    async def chat_with_gemini_stream(self, message: str, context: str = "general", *, response_mode: str = "auto", max_tokens: Optional[int] = None) -> AsyncGenerator[str, None]:
         """Streaming chat via Gemini."""
         if not self._gemini_ready or not self.gemini_model:
             yield "❌ Gemini API yapılandırılmadı"
             return
 
         # Build prompt
-        system_prompt = self.get_system_prompt(context)
+        system_prompt = self._augment_prompt_by_mode(self.get_system_prompt(context), response_mode)
         full_prompt = f"{system_prompt}\n\nKullanıcı: {message}\n\nAda AI:"
+        gen_config = self._build_generation_config(max_tokens=max_tokens, response_mode=response_mode)
 
         queue: asyncio.Queue = asyncio.Queue()
         loop = asyncio.get_event_loop()
@@ -113,7 +174,7 @@ class EnhancedAIService:
         def _producer():
             try:
                 # google-generativeai is synchronous; stream in a background thread
-                response = self.gemini_model.generate_content(full_prompt, stream=True)
+                response = self.gemini_model.generate_content(full_prompt, stream=True, generation_config=gen_config)
                 for chunk in response:
                     text = self._extract_gemini_text(chunk)
                     if text:
@@ -134,15 +195,16 @@ class EnhancedAIService:
                 break
             yield item
     
-    async def chat_nonstream(self, message: str, context: str = "general") -> str:
+    async def chat_nonstream(self, message: str, context: str = "general", *, response_mode: str = "auto", max_tokens: Optional[int] = None) -> str:
         """Non-stream response via Gemini (sync API wrapped in thread)."""
         try:
             if self._gemini_ready and self.gemini_model:
-                system_prompt = self.get_system_prompt(context)
+                system_prompt = self._augment_prompt_by_mode(self.get_system_prompt(context), response_mode)
                 full_prompt = f"{system_prompt}\n\nKullanıcı: {message}\n\nAda AI:"
+                gen_config = self._build_generation_config(max_tokens=max_tokens, response_mode=response_mode)
                 def _run():
                     try:
-                        resp = self.gemini_model.generate_content(full_prompt)
+                        resp = self.gemini_model.generate_content(full_prompt, generation_config=gen_config)
                         return self._extract_gemini_text(resp) or ""
                     except Exception as e:  # pragma: no cover
                         return f"❌ AI servis hatası: {str(e)}"
@@ -173,7 +235,10 @@ class EnhancedAIService:
         user_id: str, 
         message: str, 
         context: str = "general",
-        use_streaming: bool = True
+        use_streaming: bool = True,
+        *,
+        response_mode: str = "auto",
+        max_tokens: Optional[int] = None,
     ) -> AsyncGenerator[str, None]:
         """Enhanced chat with user context and history"""
         
@@ -182,13 +247,13 @@ class EnhancedAIService:
 
         if gemini_available and use_streaming:
             full_response = ""
-            async for chunk in self.chat_with_gemini_stream(message, context):
+            async for chunk in self.chat_with_gemini_stream(message, context, response_mode=response_mode, max_tokens=max_tokens):
                 full_response += chunk
                 yield chunk
             self.save_chat_history(user_id, message, full_response, context)
         else:
             # Non-stream path uses Gemini non-stream
-            response = await self.chat_nonstream(message, context)
+            response = await self.chat_nonstream(message, context, response_mode=response_mode, max_tokens=max_tokens)
             self.save_chat_history(user_id, message, response, context)
             yield response
     
